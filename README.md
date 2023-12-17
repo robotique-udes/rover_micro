@@ -1,4 +1,5 @@
 # Micro controllers projects
+This repo contains all microcontroller projects of the rovus team. **Warning: this repo cannot be cloned inside your ros2_ws.**
 
 ## Table of content
 - [ESP32 Setup](#esp32-setup)
@@ -113,3 +114,23 @@ To see your prints, you MUST launch the terminal_logger.py launchfile inside the
 ros2 launch rover_helper terminal_logger.py
 ```
 If you are connected to the ROS network, all print will be sent over to your computer by the ROS network and will show up inside the terminal_logger terminal. If for some reason your are not connected to the ROS network, your logs will be printed to the normal platformio serial monitor.
+
+## Including custom msgs from rover_msgs package
+To include custom msgs definitions from the rover_msgs package, follow these steps:
+  1. Copy the up to date "rover_msgs" folder from ros2_ws/rover/<rover_msgs> inside the <project-name>/extra_package/ folder.
+  2. delete the .pio folder
+  3. open the "platformio.ini file
+  4. ctrl+s to force a rebuild of the .pio folder
+  5. Wait (it's a long wait)
+
+### Platformio project folder structure example
+
+```bash
+esp32_template
+├── extra_packages
+│   └── rover_msgs
+
+├── platformio.ini
+└── src
+    └── main.cpp
+```
