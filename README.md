@@ -12,7 +12,7 @@ This repo contains all microcontroller projects of the rovus team. **Warning: th
   - [Usage](#usage)
 
 ## ESP32 Setup
-Since were running ROS2, all microcontrollers will run [microROS](https://micro.ros.org/) and all developpement will be in platformIO. This [tutorial](https://www.youtube.com/watch?v=Nf7HP9y6Ovo&t=435s) is a great first step at learning microROS.
+Since were running ROS2, all microcontrollers will run [microROS](https://micro.ros.org/) and all developpement will be in platformIO. This [tutorial](https://www.youtube.com/watch?v=Nf7HP9y6Ovo) is a great first step at learning microROS.
 ### General guidelines
  - Use ESP32 for all microcontrollers projects
  - Develop in VSCode with platformIO
