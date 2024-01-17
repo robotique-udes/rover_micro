@@ -45,7 +45,7 @@ ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
 ```
 This should be the result when no micro-controller is pluged-in:
 
-
+![alt text](https://github.com/robotique-udes/rover_micro/blob/release/circ2024/img/result_test_micro_agent.png)
 
 
 ### General guidelines
