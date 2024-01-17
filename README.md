@@ -12,7 +12,42 @@ This repo contains all microcontroller projects of the rovus team. **Warning: th
   - [Usage](#usage)
 
 ## ESP32 Setup
-Since were running ROS2, all microcontrollers will run [microROS](https://micro.ros.org/) and all developpement will be in platformIO. This [tutorial](https://www.youtube.com/watch?v=Nf7HP9y6Ovo) is a great first step at learning microROS.
+Since were running ROS2, all microcontrollers will run [microROS](https://micro.ros.org/) and all developpement will be in platformIO. This [tutorial](https://www.youtube.com/watch?v=Nf7HP9y6Ovo) is a great first step at learning microROS. Those are the steps from the tutorial you should do:
+
+```
+# You should always work in your ros2_ws
+cd ros2_ws
+git clone -b humble https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
+
+# Update dependencies using rosdep
+sudo apt update && rosdep update
+rosdep install --from-paths src --ignore-src -y
+
+# Install pip
+sudo apt-get install python3-pip
+
+# Build micro-ROS tools and source them
+colcon build
+source install/local_setup.bash
+```
+Then you need to install micro-ros Agent:
+```
+# Download packages
+ros2 run micro_ros_setup create_agent_ws.sh
+
+# Build
+ros2 run micro_ros_setup build_agent.sh
+source install/local_setup.bash
+```
+You can test your setup by running the micro-ROS agent:
+```
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
+```
+This should be the result when no micro-controller is pluged-in:
+
+
+
+
 ### General guidelines
  - Use ESP32 for all microcontrollers projects
  - Develop in VSCode with platformIO
