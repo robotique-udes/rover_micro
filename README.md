@@ -16,7 +16,7 @@ Since were running ROS2, all microcontrollers will run [microROS](https://micro.
 
 ```
 # You should always work in your ros2_ws
-cd ros2_ws
+cd ~/ros2_ws
 git clone -b humble https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
 
 # Update dependencies using rosdep
