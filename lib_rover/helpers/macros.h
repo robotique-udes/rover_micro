@@ -34,6 +34,6 @@
 // Do a while loop or, even better, a for(EVER) loop in your setup() function
 // This will keep all setup variables inside the scope and will remove the need
 // to declare them globally
-void loop() {}
+// void loop() {}
 
 #endif //(__MACRO_H__)
