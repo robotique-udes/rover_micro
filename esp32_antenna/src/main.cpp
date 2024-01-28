@@ -17,28 +17,28 @@
 #define NAME_NS "/esp32_antenna_ns"
 #define NAME_NODE "esp32_antenna"
 
-#define EN 34
-#define DIR 26
-#define PUL 25
+#define EN 19
+#define DIR 18
+#define PUL 5
 #define STEPS_PER_ROUND 1600
 
 // =============================================================================
 //  This project can be used as a starting template for ESP32 microROS project
 //
 //  Logging:
-//      Since microROS is talking over serial, you can't directly use 
+//      Since microROS is talking over serial, you can't directly use
 //      Serial.print to print. Instead use the LOG() macro ex:
 //          LOG(INFO, "some_text %i", some_int);
 //
 //      To see the log in a terminal, run this cmd in a terminal:
 //          ros2 launch rover_helper terminal_logger.py
 //
-//      If the node is connected with a micro_ros_agent, it will output in the 
-//      terminal. If, for some reasons, your node isn't connecting, the output 
+//      If the node is connected with a micro_ros_agent, it will output in the
+//      terminal. If, for some reasons, your node isn't connecting, the output
 //      will be printed in a terminal at 115200 baud.
 //
 //      The logging level setting can be changed in the platformio.ini file by
-//      changing the following entry: '-D LOGGER_LOWEST_LEVEL=10' to the level 
+//      changing the following entry: '-D LOGGER_LOWEST_LEVEL=10' to the level
 //      you want (10, 20, 30, 40, 50)
 //
 //  Developpement guidelines:
@@ -57,7 +57,7 @@ bool createEntities();
 void destroyEntities();
 void cbTimer(rcl_timer_t *timer, int64_t last_call_time);
 void cbGoal(const void *msg_);
-void tickStepper(uint32_t freq);
+void tickStepper(void *notUsed);
 
 // Global objects
 MicroROSManagerCustom rosManager = MicroROSManagerCustom(createEntities, destroyEntities, true);
@@ -71,10 +71,8 @@ rcl_subscription_t sub_goal;
 int32_t counter;
 TimerMicros timer_stepper;
 
-
 void setup()
 {
- 
     Serial.begin(115200);
     set_microros_serial_transports(Serial);
     pinMode(EN, OUTPUT);
@@ -83,22 +81,25 @@ void setup()
 
     digitalWrite(EN, LOW);
     digitalWrite(DIR, HIGH);
-    //MicroROSManagerCustom rosManager(createEntities, destroyEntities, true);
+    // MicroROSManagerCustom rosManager(createEntities, destroyEntities, true);
     rosManager.init();
+
+    xTaskCreatePinnedToCore(tickStepper, "", 4096, NULL, 1, NULL, 1);
 
     // for (EVER)
     // {
     //     // digitalWrite(LED_BUILTIN, HIGH);
-    //     // This check if any callback are ready (new msg received or a done 
-    //     // timer). It must be call quite often, each loop is a rule of thumb. 
-    //     // This is also where MicroROSManagerCustom check connection state and 
+    //     // This check if any callback are ready (new msg received or a done
+    //     // timer). It must be call quite often, each loop is a rule of thumb.
+    //     // This is also where MicroROSManagerCustom check connection state and
     //     // acts accordingly
 
     //     rosManager.spinSome(&executor, 0UL);
     // }
 }
 
-void loop() {
+void loop()
+{
 
     // digitalWrite(PUL,HIGH);
     // delayMicroseconds(200);
@@ -133,8 +134,8 @@ bool createEntities()
     // Add this line for each timer (links the timer with the executor)
     RCLC_RET_ON_ERR(rclc_executor_add_timer(&executor, &timer));
 
-    // Add these lines for each subscriber (links the sub with the executor), 
-    // You also need to create a temporary msg of the sub msg type and passed 
+    // Add these lines for each subscriber (links the sub with the executor),
+    // You also need to create a temporary msg of the sub msg type and passed
     // the pointer to the executor for memory allocation
     rover_msgs__msg__AntennaCmd msg;
     RCLC_RET_ON_ERR(rclc_executor_add_subscription(&executor, &sub_goal, &msg, &cbGoal, ON_NEW_DATA));
@@ -173,22 +174,25 @@ void cbTimer(rcl_timer_t *timer, int64_t last_call_time)
 
 void cbGoal(const void *msg_)
 {
-    const rover_msgs__msg__AntennaCmd *msg = (rover_msgs__msg__AntennaCmd*)msg_; 
-    //LOG(INFO, "Received: %f", msg->speed);
-    //tickStepper(1);
-    // if(msg->speed != 0.0)
-    // {
-    //     float freq = 360 / (STEPS_PER_ROUND * abs(msg->speed)) * 1e-6;
-    //     //LOG(INFO, "Received: %f", freq);        
-    // }
-    
-    tickStepper(200);
+    const rover_msgs__msg__AntennaCmd *msg = (rover_msgs__msg__AntennaCmd *)msg_;
+    // LOG(INFO, "Received: %f", msg->speed);
+    // tickStepper(1);
+    //  if(msg->speed != 0.0)
+    //  {
+    //      float freq = 360 / (STEPS_PER_ROUND * abs(msg->speed)) * 1e-6;
+    //      //LOG(INFO, "Received: %f", freq);
+    //  }
 
+    // tickStepper(200);
 }
 
-void tickStepper(uint32_t freq){
-    //LOG(INFO, "In tickStepper");
-    digitalWrite(PUL,HIGH);
-    digitalWrite(PUL,LOW);
-    timer_stepper.init(freq);
+void tickStepper(void *notUsed)
+{
+    for (;;)
+    {
+        digitalWrite(PUL, HIGH);
+        delayMicroseconds(100);
+        digitalWrite(PUL, LOW);
+        delayMicroseconds(100);
+    }
 }
