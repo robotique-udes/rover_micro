@@ -51,4 +51,52 @@ public:
     }
 };
 
+class TimerMicros
+{
+private:
+    unsigned long _prevMicros;
+    unsigned long _interval;
+
+    void setInterval(unsigned long interval)
+    {
+        _interval = interval;
+    }
+
+public:
+    TimerMicros()
+    {
+        _interval = 0;
+        _prevMicros = 0;
+    }
+    TimerMicros(unsigned long interval)
+    {
+        _interval = 0;
+        _prevMicros = 0;
+        this->init(interval);
+    }
+    ~TimerMicros() {}
+
+    void init(unsigned long interval)
+    {
+        setInterval(interval);
+        _prevMicros = micros();
+    }
+
+    bool done(bool reset = 1)
+    {
+        if ((_prevMicros + _interval) < micros())
+        {
+            if (reset)
+            {
+                _prevMicros = micros() - 1;
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+
 #endif //__TIMER_H__
