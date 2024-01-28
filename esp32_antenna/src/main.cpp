@@ -69,7 +69,7 @@ rcl_allocator_t allocator;
 rcl_publisher_t pub;
 rcl_subscription_t sub_goal;
 int32_t counter;
-TimerMillis timer_stepper;
+TimerMicros timer_stepper;
 
 
 void setup()
@@ -181,12 +181,14 @@ void cbGoal(const void *msg_)
     //     float freq = 360 / (STEPS_PER_ROUND * abs(msg->speed)) * 1e-6;
     //     //LOG(INFO, "Received: %f", freq);        
     // }
+    
+    tickStepper(200);
 
-    tickStepper(1);
 }
 
 void tickStepper(uint32_t freq){
     //LOG(INFO, "In tickStepper");
     digitalWrite(PUL,HIGH);
     digitalWrite(PUL,LOW);
+    timer_stepper.init(freq);
 }
