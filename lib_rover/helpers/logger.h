@@ -1,14 +1,15 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
-#include <rcl/rcl.h>
-#include <rcl_interfaces/msg/log.h>
-#include "helpers/macros.h"
-
 // Make sure code will execute fine even if LOGGER_LOWEST_LEVEL isn't defined
 #ifndef LOGGER_LOWEST_LEVEL
 #define LOGGER_LOWEST_LEVEL 0
 #endif
+
+#if defined(WITH_MICRO_ROS)
+#include <rcl/rcl.h>
+#include <rcl_interfaces/msg/log.h>
+#include "helpers/macros.h"
 
 // This class creates a publisher and publish msgs to rosout to log msgs the ROS
 // terminal running the node
@@ -119,4 +120,15 @@ public:
     }
 } Logger;
 
+#else // WITH_MICRO_ROS
+typedef enum eLoggerLevel
+{
+    DEBUG = 10u,
+    INFO = 20u,
+    WARN = 30u,
+    ERROR = 40u,
+    FATAL = 50u
+} eLoggerLevel;
+
+#endif // WITH_MICRO_ROS
 #endif // __LOGGER_H__

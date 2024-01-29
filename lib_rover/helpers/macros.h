@@ -2,6 +2,7 @@
 #define __MACRO_H__
 
 #include "Arduino.h"
+#include "log.h"
 
 // Like a while(true) but better
 #define EVER \
