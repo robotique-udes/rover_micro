@@ -1,62 +1,52 @@
 #include <Arduino.h>
-#include "helpers/macros.h"
 #include <arpa/inet.h>
 
-struct rover_msgs__msg__AntennaCmd;
-union rover_msgs__msg__AntennaCmd__packet;
+#define ROVER_ROS_SERIAL
+
+#include "helpers/macros.h"
+#include "rover_ros_serial.hpp"
+#include "rover_msgs/msg/rover_msgs__msg__antenna_cmd.hpp"
 
 void buildAndSendData(void *pvParameters);
-rover_msgs__msg__AntennaCmd__packet msgToPacket(rover_msgs__msg__AntennaCmd &msg);
-
-typedef struct rover_msgs__msg__AntennaCmd
-{
-    bool status;
-    float speed;
-} rover_msgs__msg__AntennaCmd;
-
-union rover_msgs__msg__AntennaCmd__packet
-{
-    rover_msgs__msg__AntennaCmd msg;
-    uint8_t data[sizeof(rover_msgs__msg__AntennaCmd)];
-};
 
 void setup()
 {
     Serial.begin(115200);
-    while (!Serial)
-        ;
+    delay(500);
+    // while (!Serial)
+    //     ;
 
     // LOG(INFO, "Starting program");
 
     // Start buildAndSendData on the second core
-    xTaskCreatePinnedToCore(buildAndSendData, NULL, 4096, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(buildAndSendData, NULL, 4096, NULL, 1, NULL, 0);
 }
 
 void buildAndSendData(void *pvParameters)
 {
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
+    rover_msgs__msg__AntennaCmd antennaMsg;
+    rover_ros_serial__msg__Logger logMsg;
     for (EVER)
     {
-        // LOG(INFO, "Building msg...\r");
-        // Serial.write((int8_t)-10);
+        // logMsg.msg.header = (uint8_t)rover_ros_serial::eHeaderCode::logs;
+        // logMsg.msg.severity = INFO;
+        // sprintf(logMsg.msg.msg, "This is a test!\r\n");
+        // Serial.write(logMsg.getSerializedData(), logMsg.getSerializedDataSize());
 
-        rover_msgs__msg__AntennaCmd msg;
-        msg.speed = 25000.0f;
-        msg.status = true;
+        antennaMsg.msg.header = rover_ros_serial::eHeaderCode::publisher;
+        antennaMsg.msg.speed = 20000.0f;
+        antennaMsg.msg.status = true;
+        antennaMsg.msg.ofl = '\n';
+        Serial.write(antennaMsg.getSerializedData(), antennaMsg.getSerializedDataSize());
 
-        rover_msgs__msg__AntennaCmd__packet packet = msgToPacket(msg);
-
-        Serial.write(packet.data, sizeof(packet.data));
+        antennaMsg.msg.header = rover_ros_serial::eHeaderCode::publisher + 1u;
+        antennaMsg.msg.speed = 20000.0f;
+        antennaMsg.msg.status = true;
+        antennaMsg.msg.ofl = '\n';
+        Serial.write(antennaMsg.getSerializedData(), antennaMsg.getSerializedDataSize());
 
         xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000u));
     }
-}
-
-rover_msgs__msg__AntennaCmd__packet msgToPacket(rover_msgs__msg__AntennaCmd &msg)
-{
-    rover_msgs__msg__AntennaCmd__packet packet;
-    packet.msg = msg;
-
-    return packet;
 }
