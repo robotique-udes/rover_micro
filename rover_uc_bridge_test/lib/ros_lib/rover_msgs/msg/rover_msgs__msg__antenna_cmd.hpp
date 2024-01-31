@@ -8,7 +8,7 @@ class rover_msgs__msg__AntennaCmd : protected Msg
 private:
     struct s__rover_msgs__msg__AntennaCmd
     {
-        uint8_t header;
+        uint8_t begin;
         bool status;
         float speed;
         uint8_t ofl;

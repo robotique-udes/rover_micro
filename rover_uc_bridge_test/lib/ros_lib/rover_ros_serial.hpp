@@ -11,7 +11,7 @@ class rover_ros_serial
 public:
     enum eHeaderCode : uint8_t
     {
-        logs = 128,
+        BEGIN = 128,
         publisher = 130,
         subscriber = 150,
         config = 170,
@@ -28,11 +28,11 @@ public:
 
 class rover_ros_serial__msg__Logger : protected Msg
 {
-private:
+public:
     struct s__rover_ros_serial__msg__Logger
     {
-        uint8_t header;
-        uint8_t severity;
+        uint8_t begin;
+        uint8_t length;
         char msg[98];
     };
 
