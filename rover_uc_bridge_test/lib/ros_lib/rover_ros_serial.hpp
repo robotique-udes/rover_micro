@@ -2,71 +2,108 @@
 #define __ROVER_ROS_SERIAL_HPP__
 
 #include <stdint.h>
-#include "helpers/log.h"
+#include <cstring>
 
 #define ROVER_ROS_SERIAL
 
-class rover_ros_serial
+namespace RoverRosSerial
 {
-public:
-    enum eHeaderCode : uint8_t
+    namespace Constant
     {
-        BEGIN = 128,
-        publisher = 130,
-        subscriber = 150,
-        config = 170,
-        eLast
-    };
-};
+        constexpr uint8_t BEGIN = 128u;
 
-class Msg
-{
-public:
-    virtual uint8_t *getSerializedData(void) = 0;
-    virtual uint8_t getSerializedDataSize(void) = 0;
-};
-
-class rover_ros_serial__msg__Logger : protected Msg
-{
-public:
-    struct s__rover_ros_serial__msg__Logger
-    {
-        uint8_t begin;
-        uint8_t length;
-        char msg[98];
-    };
-
-    union u__rover_ros_serial__msg__Logger
-    {
-        s__rover_ros_serial__msg__Logger msg;
-        uint8_t data[sizeof(s__rover_ros_serial__msg__Logger)];
-    };
-
-    uint8_t _sizeData = sizeof(u__rover_ros_serial__msg__Logger::data);
-
-public:
-    rover_ros_serial__msg__Logger()
-    {
-        FOR_ALL(msg.msg)
+        enum eHeaderType : uint8_t
         {
-            msg.msg[i] = '\0';
+            notInitialised = 0,
+            log = 130u,
+            msg = 140u,
+            srv = 150u
+        };
+
+        struct sHeader
+        {
+            uint16_t type;
+            uint16_t length;
+        };
+
+        union uHeader
+        {
+            sHeader header;
+            uint8_t data[sizeof(sHeader)];
+        };
+    }
+
+    class Msg
+    {
+    public:
+        virtual uint8_t *getSerializedData(void) = 0;
+        virtual uint8_t getSerializedDataSize(void) = 0;
+    };
+
+    class MsgLogger : protected RoverRosSerial::Msg
+    {
+    public:
+        struct sMsgLogger
+        {
+
+            char msg[93];
+        };
+
+        union uMsgLogger
+        {
+            sMsgLogger packetMsg;
+            uint8_t packetData[sizeof(sMsgLogger)];
+        };
+
+    public:
+        MsgLogger()
+        {
+            uHeader.header.type = Constant::eHeaderType::log;
+            uHeader.header.length = sizeof(uMsgLogger::packetData);
+
+            for (uint8_t i = 0; i < sizeof(uData.packetMsg.msg); i++)
+            {
+                uData.packetMsg.msg[i] = '\0';
+            }
         }
-    }
-    ~rover_ros_serial__msg__Logger() {}
+        ~MsgLogger() {}
 
-    uint8_t *getSerializedData(void)
-    {
-        uData.msg = msg;
-        return uData.data;
-    }
+        uint8_t *getSerializedHeader(void)
+        {
+            return uHeader.data;
+        }
 
-    uint8_t getSerializedDataSize(void)
-    {
-        return _sizeData;
-    }
+        uint8_t getSerializedheaderSize(void)
+        {
+            return sizeof(uHeader.data);
+        }
 
-    s__rover_ros_serial__msg__Logger msg;
-    u__rover_ros_serial__msg__Logger uData;
-};
+        uint8_t *getSerializedData(void)
+        {
+            return uData.packetData;
+        }
 
+        uint8_t getSerializedDataSize(void)
+        {
+            return uHeader.header.length;
+        }
+
+        void setLog(const char *str)
+        {
+            
+            uHeader.header.length = (uint8_t)strlen(str) + 1u;
+            memcpy(this->uData.packetMsg.msg, str, uHeader.header.length);
+        }
+
+        void sendMsg(HardwareSerial *serial)
+        {
+            serial->write(Constant::BEGIN);
+            serial->write(getSerializedHeader(), getSerializedheaderSize());
+            serial->write(getSerializedData(), getSerializedDataSize());
+        }
+
+        Constant::uHeader uHeader;
+        uMsgLogger uData;
+    };
+}
 #endif // __ROVER_ROS_SERIAL_HPP__

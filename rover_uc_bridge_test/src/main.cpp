@@ -26,27 +26,15 @@ void buildAndSendData(void *pvParameters)
 {
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    rover_msgs__msg__AntennaCmd antennaMsg;
-    rover_ros_serial__msg__Logger logMsg;
+    RoverRosSerial::MsgLogger logMsg;
     for (EVER)
     {
-        logMsg.msg.begin = (uint8_t)rover_ros_serial::eHeaderCode::BEGIN;
-        logMsg.msg.length = sizeof(rover_ros_serial__msg__Logger::s__rover_ros_serial__msg__Logger::msg);
-        sprintf(logMsg.msg.msg, "This is a test!\r\n");
-        Serial.write(logMsg.getSerializedData(), logMsg.getSerializedDataSize());
+        logMsg.setLog("This is a first msg!");
+        logMsg.sendMsg(&Serial);
 
-        // antennaMsg.msg.begin = rover_ros_serial::eHeaderCode::BEGIN;
-        // antennaMsg.msg.speed = 20000.0f;
-        // antennaMsg.msg.status = true;
-        // antennaMsg.msg.ofl = '\n';
-        // Serial.write(antennaMsg.getSerializedData(), antennaMsg.getSerializedDataSize());
+        logMsg.setLog("This is a second msg!");
+        logMsg.sendMsg(&Serial);
 
-        // antennaMsg.msg.header = rover_ros_serial::eHeaderCode::BEGIN;
-        // antennaMsg.msg.speed = 20000.0f;
-        // antennaMsg.msg.status = true;
-        // antennaMsg.msg.ofl = '\n';
-        // Serial.write(antennaMsg.getSerializedData(), antennaMsg.getSerializedDataSize());
-
-        xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000u));
+        // xTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000u));
     }
 }
