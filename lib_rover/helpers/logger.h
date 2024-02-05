@@ -121,7 +121,7 @@ public:
 } Logger;
 
 #else // WITH_MICRO_ROS
-typedef enum eLoggerLevel
+typedef enum eLoggerLevel : uint8_t
 {
     DEBUG = 10u,
     INFO = 20u,

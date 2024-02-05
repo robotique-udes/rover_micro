@@ -50,10 +50,18 @@
         }                                                                                       \
     }
 
+#elif defined(ROVER_ROS_SERIAL)
+#include "rover_ros_serial/base_objects.hpp"
+
+#define LOG(severity, ...)                 \
+    {                                      \
+        RoverRosSerial::Logger.log(severity, __VA_ARGS__); \
+    }
+
 #elif !defined(WITH_MICRO_ROS)
 #define LOG(severity, ...)                                                                  \
     {                                                                                       \
-        if (severity >= LOGGER_LOWEST_LEVEL)                                                 \
+        if (severity >= LOGGER_LOWEST_LEVEL)                                                \
         {                                                                                   \
             char severityStr[6] = "0_0";                                                    \
             char colorStr[8] = "\033[97m";                                                  \
