@@ -26,9 +26,9 @@ namespace RoverRosSerial
             uHeader.header.type = Constant::eHeaderType::log;
             uHeader.header.length = sizeof(uMsgLogger::packetData);
 
-            for (uint8_t i = 0; i < sizeof(uData.packetMsg.msg); i++)
+            for (uint8_t i = 0; i < sizeof(uMsg.packetMsg.msg); i++)
             {
-                uData.packetMsg.msg[i] = '\0';
+                uMsg.packetMsg.msg[i] = '\0';
             }
         }
         ~SerialLogger() {}
@@ -37,20 +37,20 @@ namespace RoverRosSerial
         {
             uint8_t sizeOfMsg = static_cast<uint8_t>(strlen(str)) + 1u;
 
-            uData.packetMsg.severity = severity;
-            memcpy(this->uData.packetMsg.msg, str, sizeOfMsg);
+            uMsg.packetMsg.severity = severity;
+            memcpy(this->uMsg.packetMsg.msg, str, sizeOfMsg);
 
             uHeader.header.length = sizeof(severity) + sizeOfMsg;
 
             this->sendMsg();
         }
 
-        uMsgLogger uData;
+        uMsgLogger uMsg;
 
     private:
         uint8_t *getSerializedData(void)
         {
-            return uData.packetData;
+            return uMsg.packetData;
         }
 
         uint8_t getSerializedDataSize(void)

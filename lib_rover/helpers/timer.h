@@ -3,44 +3,45 @@
 
 #include "Arduino.h"
 
-class TimerMillis
+template <typename T, unsigned long (*clockFunc)(void)>
+class Timer
 {
 private:
-    unsigned long _prevMillis;
-    unsigned long _interval;
+    T _prevClock;
+    T _interval;
 
-    void setInterval(unsigned long interval)
+    void setInterval(T interval)
     {
         _interval = interval;
     }
 
 public:
-    TimerMillis()
+    Timer()
     {
         _interval = 0;
-        _prevMillis = 0;
+        _prevClock = 0;
     }
-    TimerMillis(unsigned long interval)
+    Timer(T interval)
     {
         _interval = 0;
-        _prevMillis = 0;
+        _prevClock = 0;
         this->init(interval);
     }
-    ~TimerMillis() {}
+    ~Timer() {}
 
-    void init(unsigned long interval)
+    void init(T interval)
     {
         setInterval(interval);
-        _prevMillis = millis();
+        _prevClock = clockFunc();
     }
 
-    bool done(bool reset = 1)
+    bool isDone(bool reset = 1)
     {
-        if ((_prevMillis + _interval) < millis())
+        if ((_prevClock + _interval) < clockFunc())
         {
             if (reset)
             {
-                _prevMillis = millis() - 1;
+                _prevClock = clockFunc();
             }
             return true;
         }
@@ -49,53 +50,10 @@ public:
             return false;
         }
     }
-};
 
-class TimerMicros
-{
-private:
-    unsigned long _prevMicros;
-    unsigned long _interval;
-
-    void setInterval(unsigned long interval)
+    void reset()
     {
-        _interval = interval;
-    }
-
-public:
-    TimerMicros()
-    {
-        _interval = 0;
-        _prevMicros = 0;
-    }
-    TimerMicros(unsigned long interval)
-    {
-        _interval = 0;
-        _prevMicros = 0;
-        this->init(interval);
-    }
-    ~TimerMicros() {}
-
-    void init(unsigned long interval)
-    {
-        setInterval(interval);
-        _prevMicros = micros();
-    }
-
-    bool done(bool reset = 1)
-    {
-        if ((_prevMicros + _interval) < micros())
-        {
-            if (reset)
-            {
-                _prevMicros = micros() - 1;
-            }
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        _prevClock = clockFunc();
     }
 };
 

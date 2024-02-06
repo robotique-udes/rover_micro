@@ -35,8 +35,8 @@ public:
         _withLED = withLED;
         _ledPIN = ledPIN;
 
-        TimerMillis _timerCheckReconnect = TimerMillis(reconnectionInterval);
-        TimerMillis _timerCheckDisconnect = TimerMillis(connectionValidationInterval);
+        Timer<unsigned long, millis> _timerCheckReconnect = TimerMillis<unsigned long, millis>(reconnectionInterval);
+        Timer<unsigned long, millis> _timerCheckDisconnect = TimerMillis<unsigned long, millis>(connectionValidationInterval);
     }
     ~MicroROSManager() {}
     
@@ -56,7 +56,7 @@ public:
         switch (_connectionState)
         {
         case WAITING_AGENT:
-            if (_timerCheckReconnect.done())
+            if (_timerCheckReconnect.isDone())
             {
                 _connectionState = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;
             }
@@ -69,7 +69,7 @@ public:
             };
             break;
         case AGENT_CONNECTED:
-            if (_timerCheckDisconnect.done())
+            if (_timerCheckDisconnect.isDone())
             {
                 _connectionState = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;
             }
