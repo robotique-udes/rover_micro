@@ -26,7 +26,7 @@ public:
         uHeader.header.type = RoverRosSerial::Constant::msg + 1;
         uHeader.header.length = sizeof(uAntennaCmd);
     }
-    ~AntennaCmd();
+    ~AntennaCmd(){}
 
     uint8_t *getSerializedData(void)
     {

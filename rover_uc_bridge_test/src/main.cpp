@@ -1,24 +1,28 @@
 #include <Arduino.h>
 
 #include "rover_ros_serial/rover_ros_serial.hpp"
+#include "rover_msgs/msg/Gps.hpp"
 
-void mainLoop(void *pvParameters);
+void computeGpsMsg();
 
 void setup()
 {
     Serial.begin(115200, SERIAL_8N1);
 
-    // Start taskCommunication on the second core
-    xTaskCreatePinnedToCore(mainLoop, NULL, 8'192, NULL, 1, NULL, 0);
-}
-
-void mainLoop(void *pvParameters)
-{
     LOG(eLoggerLevel::WARN, "Init...");
-    Heartbeat hearbeat(10u, &Serial);
+    RoverRosSerial::Node<0u> node;
 
     for (EVER)
     {
-        hearbeat.update();
+        computeGpsMsg();
+        node.spinSome();
     }
+}
+
+void computeGpsMsg()
+{
+    RoverRosSerial::rover_msgs::msg::Gps gpsMsg;
+    gpsMsg.uMsg.packetMsg.heading = 10.0f;
+
+    gpsMsg.sendMsg();
 }
