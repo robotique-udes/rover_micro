@@ -9,7 +9,7 @@ namespace RoverRosSerial
     class Node
     {
     public:
-        Node(HardwareSerial *serialPtr_ = &Serial, uint8_t heartbeatFrequency = 10u)
+        Node(HardwareSerial *serialPtr_ = &Serial, uint8_t heartbeatFrequency = 20u)
         {
             _pub_heartbeat = Heartbeat(heartbeatFrequency, serialPtr_);
         }

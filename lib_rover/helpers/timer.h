@@ -57,4 +57,28 @@ public:
     }
 };
 
+template <typename T, T (*clockFunc)(void)>
+class Chrono
+{
+public:
+    Chrono()
+    {
+        this->start();
+    }
+    ~Chrono() {}
+
+    void start()
+    {
+        startTime = clockFunc();
+    }
+
+    T getTime()
+    {
+        return clockFunc() - startTime;
+    }
+
+private:
+    T startTime;
+};
+
 #endif //__TIMER_H__
