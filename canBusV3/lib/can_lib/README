@@ -1,0 +1,60 @@
+README for CAN Library
+Overview
+
+This repository contains a simple CAN (Controller Area Network) library for ESP-IDF (Espressif IoT Development Framework) based on the ESP-IDF CAN API. The library provides an easy-to-use interface for initializing CAN communication and sending CAN messages using Espressif's ESP32.
+Library Files
+
+    can_lib.h: Header file containing the declaration of the CAN library class with functions for initialization and message transmission.
+    can_lib.cpp: Implementation file containing the code for the functions declared in can_lib.h.
+
+How to Use
+
+    Clone this repository to your ESP-IDF project directory.
+
+    bash
+
+git clone <repository_url>
+
+Include the library in your project by adding the following line to your source code.
+
+cpp
+
+#include "can_lib.h"
+
+Create an instance of the can_lib class and initialize the CAN interface.
+
+cpp
+
+can_lib myCan;
+myCan.can_init();
+
+Send CAN messages using the can_write_msg function.
+
+cpp
+
+    uint32_t id = 0x123;
+    uint8_t data[] = {0x01, 0x02, 0x03};
+    uint8_t data_length = sizeof(data) / sizeof(data[0]);
+
+    if (myCan.can_write_msg(id, data_length, data) == 0) {
+        printf("Message queued for transmission\n");
+    } else {
+        printf("Failed to queue message for transmission\n");
+    }
+
+Customization
+
+    You can customize the CAN pins by providing the desired GPIO numbers when initializing the CAN interface.
+
+    cpp
+
+    myCan.can_init(GPIO_NUM_X, GPIO_NUM_Y);
+
+    Adjust the CAN message parameters, such as identifier, flags, and data, according to your application's requirements.
+
+Example
+
+An example project using this CAN library can be found in the example directory. The example demonstrates how to initialize the CAN interface and send a simple CAN message.
+Dependencies
+
+    This library relies on the ESP-IDF CAN API. Ensure that your ESP-IDF version supports the API used in this library.
