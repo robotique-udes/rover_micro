@@ -8,6 +8,9 @@ namespace RoverRosSerial
     class Msg
     {
     public:
+#if !defined(ESP32)
+        Msg() {}
+#else // !defined(ESP32)
         Msg(HardwareSerial *serial_ = &Serial)
         {
             if (serial_ == NULL)
@@ -30,6 +33,7 @@ namespace RoverRosSerial
                 pSerial->write(getSerializedData(), getSerializedDataSize());
             }
         }
+#endif // !defined(ESP32)
 
     protected:
         Constant::uHeader uHeader;
@@ -47,8 +51,10 @@ namespace RoverRosSerial
         virtual uint8_t *getSerializedData(void) = 0;
         virtual uint8_t getSerializedDataSize(void) = 0;
 
+#if defined(ESP32)
     private:
         HardwareSerial *pSerial = NULL;
+#endif // defined(ESP32)
     };
 }
 #endif // __MSG_HPP__

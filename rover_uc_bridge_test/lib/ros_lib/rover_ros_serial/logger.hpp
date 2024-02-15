@@ -1,7 +1,10 @@
 #ifndef __LOGGER_HPP__
 #define __LOGGER_HPP__
 
+#if defined(ESP32)
 #include "Arduino.h"
+#endif // defined(ESP32)
+
 #include "rover_ros_serial/base_objects.hpp"
 
 namespace RoverRosSerial
@@ -21,6 +24,17 @@ namespace RoverRosSerial
         };
 
     public:
+        SerialLogger()
+        {
+            uHeader.header.type = Constant::eHeaderType::log;
+            uHeader.header.length = sizeof(uMsgLogger::packetData);
+
+            for (uint8_t i = 0; i < sizeof(uMsg.packetMsg.msg); i++)
+            {
+                uMsg.packetMsg.msg[i] = '\0';
+            }
+        }
+#if defined(ESP32)
         SerialLogger(HardwareSerial *serial_ = &Serial) : Msg(serial_)
         {
             uHeader.header.type = Constant::eHeaderType::log;
@@ -44,7 +58,7 @@ namespace RoverRosSerial
 
             this->sendMsg();
         }
-
+#endif // defined(ESP32)
         uMsgLogger uMsg;
 
     private:
@@ -58,6 +72,9 @@ namespace RoverRosSerial
             return uHeader.header.length;
         }
     };
+
+#if defined(ESP32)
     static SerialLogger Logger(&Serial);
+#endif
 }
 #endif // __LOGGER_HPP__

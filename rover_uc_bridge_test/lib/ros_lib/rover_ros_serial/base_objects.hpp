@@ -2,10 +2,6 @@
 #define __BASE_OBJECTS_HPP__
 
 #include <stdint.h>
-#include <cstring>
-
-#include "Arduino.h"
-#include "helpers/log.h"
 
 namespace RoverRosSerial
 {
@@ -18,10 +14,8 @@ namespace RoverRosSerial
             notInitialised = 0u,
             heartbeat = 129u,
             log = 130u,
-            msg = 0x500u,
             Gps,
             AntennaCmd,
-            srv = 0x1000u
         };
 
         struct sHeader
