@@ -57,7 +57,7 @@ bool createEntities();
 void destroyEntities();
 void cbTimer(rcl_timer_t *timer, int64_t last_call_time);
 void cbGoal(const void *msg_);
-void tickStepper(void *notUsed);
+void rosSpin(void *notUsed);
 
 // Global objects
 MicroROSManagerCustom rosManager = MicroROSManagerCustom(createEntities, destroyEntities, true);
@@ -81,32 +81,16 @@ void setup()
 
     digitalWrite(EN, LOW);
     digitalWrite(DIR, HIGH);
-    // MicroROSManagerCustom rosManager(createEntities, destroyEntities, true);
-    rosManager.init();
 
-    xTaskCreatePinnedToCore(tickStepper, "", 4096, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(rosSpin, "", 4096, NULL, 1, NULL, 0);
 
-    // for (EVER)
-    // {
-    //     // digitalWrite(LED_BUILTIN, HIGH);
-    //     // This check if any callback are ready (new msg received or a done
-    //     // timer). It must be call quite often, each loop is a rule of thumb.
-    //     // This is also where MicroROSManagerCustom check connection state and
-    //     // acts accordingly
-
-    //     rosManager.spinSome(&executor, 0UL);
-    // }
+    for (EVER)
+    {
+        // Nothing for now
+    }
 }
 
-void loop()
-{
-
-    // digitalWrite(PUL,HIGH);
-    // delayMicroseconds(200);
-    // digitalWrite(PUL,LOW);
-    // tickStepper(200);
-    rosManager.spinSome(&executor, 0UL);
-}
+void loop() {}
 
 bool createEntities()
 {
@@ -186,13 +170,15 @@ void cbGoal(const void *msg_)
     // tickStepper(200);
 }
 
-void tickStepper(void *notUsed)
+void rosSpin(void *notUsed)
 {
+    MicroROSManagerCustom rosManager(createEntities, destroyEntities, true);
+    rosManager.init();
+
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;)
     {
-        digitalWrite(PUL, HIGH);
-        delayMicroseconds(100);
-        digitalWrite(PUL, LOW);
-        delayMicroseconds(100);
+        rosManager.spinSome(&executor, 0UL);
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1)); // Delay for 1 second
     }
 }
