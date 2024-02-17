@@ -2,7 +2,14 @@
 #define __MICRO_ROS_MANAGER_H__
 
 #include "Arduino.h"
-#include "helpers/timer.h"
+#include <micro_ros_platformio.h>
+#include <rcl/rcl.h>
+// #include <rcl/error_handling.h>
+// #include <rclc/rclc.h>
+// #include <rclc/executor.h>
+// #include <rmw_microros/rmw_microros.h>
+
+#include "timer.h"
 
 // This class is wrapper that connections with micro-ros-agent to simplify
 // microROS developpement. Virtual class for future wrapper implementation with
@@ -30,8 +37,6 @@ protected:
 public:
     MicroROSManager(bool withLED = 0, uint8_t ledPIN = LED_BUILTIN, uint32_t connectionValidationInterval = 200UL, uint32_t reconnectionInterval = 500UL)
     {
-        LOG(INFO, "%s()", __FUNCTION__);
-
         _withLED = withLED;
         _ledPIN = ledPIN;
 
@@ -115,6 +120,7 @@ public:
 // createEntities and destroyEntities function that are called when the
 // connection state change. This allow creation of custom entities (pub, sub,
 // srv, timers, etc.) easily from the "main".
+template<uint8_t NB_SUBCRIBER, uint8_t NB_TIMER> 
 class MicroROSManagerCustom : public MicroROSManager
 {
 private:
@@ -129,6 +135,8 @@ private:
     {
         (*_destroyEntities)();
     }
+
+
 
 public:
     MicroROSManagerCustom(bool (*createEntities_)(void),
