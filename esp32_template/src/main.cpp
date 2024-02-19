@@ -1,16 +1,9 @@
 #include <Arduino.h>
-#include <micro_ros_platformio.h>
-#include <stdio.h>
-#include <rcl/rcl.h>
-#include <rcl/error_handling.h>
-#include <rclc/rclc.h>
-#include <rclc/executor.h>
-#include <rmw_microros/rmw_microros.h>
 
 #include <std_msgs/msg/int32.h>
 
-#include "helpers/log.h"
-#include "helpers/microROS_manager.h"
+#include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
+#include "helpers/log.hpp"
 
 #define NAME_NS "/template_ESP32"
 #define NAME_NODE "simple_example"
@@ -24,7 +17,7 @@
 //          LOG(INFO, "some_text %i", some_int);
 //
 //      To see the log in a terminal, run this cmd in a terminal:
-//          ros2 launch rover_helper terminal_logger.py
+//          ros2 launch rover_helper terminal_logger.launch.py
 //
 //      If the node is connected with a micro_ros_agent, it will output in the
 //      terminal. If, for some reasons, your node isn't connecting, the output
@@ -46,47 +39,81 @@
 // =============================================================================
 
 // Function forward declarations
-// void cbTimer(rcl_timer_t *timer, int64_t last_call_time);
-// void cbSubscriber(const void *msg_);
+void microRosLoop(void *pvParameters);
+void cbTimer(rcl_timer_t *timer, int64_t last_call_time);
+void cbSubscriber(const void *msg_);
+
+SemaphoreHandle_t MutexLoopAvgTime = xSemaphoreCreateMutex();
+static float loopAvgTime = 0;
 
 // Global objects
-MicroRosPublisher pub = MicroRosPublisher(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "/pub_test_topic");
-// rcl_subscription_t sub;
-// int32_t counter;
+RoverMicroRosLib::Publisher pub = RoverMicroRosLib::Publisher(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "/pub_test_topic");
+RoverMicroRosLib::Timer timer = RoverMicroRosLib::Timer(RCL_MS_TO_NS(100), cbTimer);
+RoverMicroRosLib::Subscriber sub = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "/pub_test_topic", cbSubscriber);
 
 void setup()
 {
-    // Open USB serial port and give it to micro_ros for communication with
-    // micro_ros_agent.
     Serial.begin(115200);
-    set_microros_serial_transports(Serial);
 
-    MicroROSManager<1u, 0u> rosManager(NAME_NS, NAME_NODE);
-    rosManager.init();
-    rosManager.addPublisher(&pub);
+    xTaskCreatePinnedToCore(microRosLoop, "", 4096, NULL, 1, NULL, 0);
+
+    Timer<unsigned long, micros> timer(3u);
+    Timer<unsigned long, millis> timerLog(1000u);
+    uint8_t motorStep = HIGH;
+    uint8_t PIN_PULSE = 10u;
+
+    Chrono<unsigned long, micros> chrono;
+    uint64_t counter;
+    for (EVER)
+    {
+        if (timer.done())
+        {
+            motorStep = motorStep == HIGH ? LOW : HIGH; // Switch between low and high each loop
+            digitalWrite(PIN_PULSE, motorStep);
+            counter++;
+
+            if (counter > 50'000UL)
+            {
+                xSemaphoreTake(MutexLoopAvgTime, portMAX_DELAY);
+                loopAvgTime = (float)chrono.getTime() / 50'000.0f;
+                xSemaphoreGive(MutexLoopAvgTime);
+                counter = 0;
+                chrono.restart();
+            }
+        }
+    }
+}
+
+void microRosLoop(void *pvParameters)
+{
+    set_microros_serial_transports(Serial);
+    RoverMicroRosLib::Node<1u, 1u, 1u> node(NAME_NS, NAME_NODE);
+    node.init();
+    node.addPublisher(&pub);
+    node.addTimer(&timer);
+    node.addSubscriber(&sub);
 
     for (EVER)
     {
-        rosManager.spinSome(0UL);
+        xSemaphoreTake(MutexLoopAvgTime, portMAX_DELAY);
+        LOG(INFO, "%f", loopAvgTime);
+        xSemaphoreGive(MutexLoopAvgTime);
+        node.spinSome(RCL_MS_TO_NS(0UL));
     }
 }
 
 // // This function is called each at the set timer frequency
-// void cbTimer(rcl_timer_t *timer, int64_t last_call_time)
-// {
-//     (void)last_call_time;
-//     if (timer != NULL)
-//     {
-//         std_msgs__msg__Int32 msg;
-//         msg.data = counter++;
-//         REMOVE_WARN_UNUSED(rcl_publish(&pub, &msg, NULL));
-//         LOG(INFO, "Sent %i", msg.data);
-//     }
-// }
+void cbTimer(rcl_timer_t *timer, int64_t last_call_time)
+{
+    std_msgs__msg__Int32 msg;
+    msg.data = 88L;
+    pub.publish(&msg);
+}
 
-// void cbSubscriber(const void *msg_)
-// {
-//     const std_msgs__msg__Int32 *msg = (std_msgs__msg__Int32*)msg_;
+void cbSubscriber(const void *msg_)
+{
+    const std_msgs__msg__Int32 *msg = (std_msgs__msg__Int32 *)msg_;
+    // LOG(INFO, "Received: %i", msg->data);
+}
 
-//     LOG(INFO, "Received: %i", msg->data);
-// }
+void loop() {}

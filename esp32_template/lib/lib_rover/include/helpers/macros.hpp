@@ -1,5 +1,5 @@
-#ifndef __MACRO_H__
-#define __MACRO_H__
+#ifndef __MACRO_HPP__
+#define __MACRO_HPP__
 
 #include "Arduino.h"
 
@@ -30,10 +30,4 @@
 
 #define GET_WORST_OF(a, b) ((a == false || b == false) ? false : true)
 
-// DO NOT USE
-// Do a while loop or, even better, a for(EVER) loop in your setup() function
-// This will keep all setup variables inside the scope and will remove the need
-// to declare them globally
-void loop() {}
-
-#endif //(__MACRO_H__)
+#endif // __MACRO_HPP__

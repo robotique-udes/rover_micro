@@ -1,46 +1,24 @@
-#ifndef __LOGGER_H__
-#define __LOGGER_H__
+#include "rover_micro_ros_lib/logger.hpp"
 
-#include <rcl/rcl.h>
-#include <rcl_interfaces/msg/log.h>
-#include "helpers/macros.h"
-
-// Make sure code will execute fine even if LOGGER_LOWEST_LEVEL isn't defined
-#ifndef LOGGER_LOWEST_LEVEL
-#define LOGGER_LOWEST_LEVEL 0
-#endif
-
-// This class creates a publisher and publish msgs to rosout to log msgs the ROS
-// terminal running the node
-typedef enum eLoggerLevel
+namespace RoverMicroRosLib
 {
-    DEBUG = rcl_interfaces__msg__Log__DEBUG,
-    INFO = rcl_interfaces__msg__Log__INFO,
-    WARN = rcl_interfaces__msg__Log__WARN,
-    ERROR = rcl_interfaces__msg__Log__ERROR,
-    FATAL = rcl_interfaces__msg__Log__FATAL
-} eLoggerLevel;
+    Logger G_Logger;
 
-class Logger
-{
-private:
-    rcl_publisher_t _pubLogger;
-    bool _alive = false;
-
-    char *_nodeName = NULL;
-    char *_ns = NULL;
-
-public:
-    Logger() {}
-    ~Logger() {}
-
-    bool createLogger(rcl_node_t *node, const char *nodeName_, const char *ns_)
+    Logger::Logger(void)
     {
-        _nodeName = (char *)(nodeName_);
-        _ns = (char *)(ns_);
+    }
+
+    Logger::~Logger(void)
+    {
+    }
+
+    bool Logger::createLogger(rcl_node_t *node_, const char *nodeName_, const char *ns_)
+    {
+        _nodeName = nodeName_;
+        _ns = ns_;
 
         RCLC_RET_ON_ERR(rclc_publisher_init_default(&_pubLogger,
-                                                    node,
+                                                    node_,
                                                     ROSIDL_GET_MSG_TYPE_SUPPORT(rcl_interfaces, msg, Log),
                                                     NAME_LOG_TOPIC));
 
@@ -48,13 +26,13 @@ public:
         return true;
     }
 
-    void destroyLogger(rcl_node_t *node)
+    void Logger::destroyLogger(rcl_node_t *node_)
     {
         _alive = false;
-        REMOVE_WARN_UNUSED(rcl_publisher_fini(&_pubLogger, node));
+        REMOVE_WARN_UNUSED(rcl_publisher_fini(&_pubLogger, node_));
     }
 
-    void log(eLoggerLevel lvl_, const char *file_, const char *function_, int line_, const char *str_, ...)
+    void Logger::log(eLoggerLevel lvl_, const char *file_, const char *function_, int line_, const char *str_, ...)
     {
         if (lvl_ < LOGGER_LOWEST_LEVEL)
         {
@@ -113,10 +91,8 @@ public:
         va_end(strArgs);
     }
 
-    bool isAlive()
+    bool Logger::isAlive(void)
     {
         return _alive;
     }
-} Logger;
-
-#endif // __LOGGER_H__
+}
