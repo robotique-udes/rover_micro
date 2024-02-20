@@ -7,7 +7,7 @@
 #include <std_msgs/msg/int32.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 
 #define NAME_NS "/template_ESP32"
 #define NAME_NODE "simple_example"
@@ -17,7 +17,7 @@ void setup()
     Serial.begin(115200);
     set_microros_serial_transports(Serial);
     
-    MovingAverage<float, 10> avg(5.0f);
+    RoverHelpers::MovingAverage<float, 10> avg(5.0f);
 
     RoverMicroRosLib::Publisher pub(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "Test");
     RoverMicroRosLib::Node<1u, 0u, 0u> node(NAME_NS, NAME_NODE);

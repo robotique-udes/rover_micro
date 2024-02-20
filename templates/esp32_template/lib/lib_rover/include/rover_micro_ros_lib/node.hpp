@@ -10,7 +10,7 @@
 #include <rclc/executor.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 
 namespace RoverMicroRosLib
 {

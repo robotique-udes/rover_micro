@@ -6,10 +6,10 @@
 // To be priorized since the order can be important in some cases.
 // =============================================================================
 
-#include "helpers/log.hpp"
-#include "helpers/assert.hpp"
-#include "helpers/macros.hpp"
-#include "helpers/timer.hpp"
-#include "helpers/moving_average.hpp"
+#include "rover_helpers/log.hpp"
+#include "rover_helpers/assert.hpp"
+#include "rover_helpers/macros.hpp"
+#include "rover_helpers/timer.hpp"
+#include "rover_helpers/moving_average.hpp"
 
 #endif // __HELPER_HPP__

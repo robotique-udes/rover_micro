@@ -13,7 +13,7 @@
 #define MICRO_ROS_LOGGER
 #endif // MICRO_ROS_LOGGER
 
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 
 // Make sure code will execute fine even if LOGGER_LOWEST_LEVEL isn't defined
 #ifndef LOGGER_LOWEST_LEVEL

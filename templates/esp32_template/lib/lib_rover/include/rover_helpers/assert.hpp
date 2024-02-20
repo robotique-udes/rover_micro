@@ -21,7 +21,7 @@
 // =============================================================================
 
 #if defined(VERBOSE)
-#include "helpers/log.hpp"
+#include "rover_helpers/log.hpp"
 
 #define GET_MACRO_ASSERT(_0, _1, _2, ASSERT, ...) ASSERT
 #define ASSERT(...) GET_MACRO_ASSERT(_0, ##__VA_ARGS__, ASSERT2, ASSERT1, ASSERT0)(__VA_ARGS__)
