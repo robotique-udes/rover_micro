@@ -15,16 +15,21 @@ namespace RoverMicroRosLib
     bool Publisher::create(rcl_node_t *nodePtr_)
     {
         RCLC_RET_ON_ERR(rclc_publisher_init_default(&_pub, nodePtr_, _msgStruct, _topicName));
+        _alive = true;
         return true;
     }
 
     void Publisher::destroy(rcl_node_t *nodePtr_)
     {
+        _alive = false;
         REMOVE_WARN_UNUSED(rcl_publisher_fini(&_pub, nodePtr_));
     }
 
     void Publisher::publish(const void *msg)
     {
-        REMOVE_WARN_UNUSED(rcl_publish(&_pub, msg, NULL));
+        if (_alive)
+        {
+            REMOVE_WARN_UNUSED(rcl_publish(&_pub, msg, NULL));
+        }
     }
 }

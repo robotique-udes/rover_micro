@@ -1,6 +1,10 @@
 #ifndef __TIMER_HPP__
 #define __TIMER_HPP__
 
+#if !defined (ESP32)
+#error CPU not supported
+#endif
+
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 

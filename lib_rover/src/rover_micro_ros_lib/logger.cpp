@@ -86,9 +86,9 @@ namespace RoverMicroRosLib
         msg.msg.data = (char *)msgBuffer;
         msg.msg.size = strlen(msg.msg.data);
 
-        REMOVE_WARN_UNUSED(rcl_publish(&_pubLogger, &msg, NULL));
-
         va_end(strArgs);
+
+        REMOVE_WARN_UNUSED(rcl_publish(&_pubLogger, &msg, NULL));
     }
 
     bool Logger::isAlive(void)

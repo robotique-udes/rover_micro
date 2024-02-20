@@ -1,6 +1,10 @@
 #ifndef __PUBLISHER_HPP__
 #define __PUBLISHER_HPP__
 
+#if !defined (ESP32)
+#error CPU not supported
+#endif
+
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 
@@ -21,6 +25,7 @@ namespace RoverMicroRosLib
         rcl_publisher_t _pub;
         const rosidl_message_type_support_t *_msgStruct;
         const char *_topicName;
+        bool _alive = false;
     };
 }
 

@@ -1,6 +1,10 @@
 #ifndef __NODE_HPP__
 #define __NODE_HPP__
 
+#if !defined (ESP32)
+#error CPU not supported
+#endif
+
 #include "micro_ros_platformio.h"
 #include <rcl/rcl.h>
 #include <rclc/executor.h>

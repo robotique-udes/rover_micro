@@ -36,7 +36,7 @@ public:
         _prevClock = clockFunc();
     }
 
-    bool done(bool reset = 1)
+    bool isDone(bool reset = 1)
     {
         if ((_prevClock + _interval) < clockFunc())
         {

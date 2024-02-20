@@ -1,8 +1,6 @@
 #ifndef __MACRO_HPP__
 #define __MACRO_HPP__
 
-#include "Arduino.h"
-
 // Like a while(true) but better
 #define EVER \
     ;        \

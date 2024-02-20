@@ -1,31 +1,35 @@
 #ifndef __LOGGER_HPP__
 #define __LOGGER_HPP__
 
+#if !defined (ESP32)
+#error CPU not supported
+#endif
+
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <rcl_interfaces/msg/log.h>
 
-#include "helpers/macros.hpp"
-
 #ifndef MICRO_ROS_LOGGER
 #define MICRO_ROS_LOGGER
 #endif // MICRO_ROS_LOGGER
+
+#include "helpers/helpers.hpp"
 
 // Make sure code will execute fine even if LOGGER_LOWEST_LEVEL isn't defined
 #ifndef LOGGER_LOWEST_LEVEL
 #define LOGGER_LOWEST_LEVEL 0
 #endif // LOGGER_LOWEST_LEVEL
 
-// This class creates a publisher and publish msgs to rosout to log msgs the ROS
-// terminal running the node
-typedef enum eLoggerLevel
-{
-    DEBUG = rcl_interfaces__msg__Log__DEBUG,
-    INFO = rcl_interfaces__msg__Log__INFO,
-    WARN = rcl_interfaces__msg__Log__WARN,
-    ERROR = rcl_interfaces__msg__Log__ERROR,
-    FATAL = rcl_interfaces__msg__Log__FATAL
-} eLoggerLevel;
+    // This class creates a publisher and publish msgs to rosout to log msgs the ROS
+    // terminal running the node
+    typedef enum eLoggerLevel
+    {
+        DEBUG = rcl_interfaces__msg__Log__DEBUG,
+        INFO = rcl_interfaces__msg__Log__INFO,
+        WARN = rcl_interfaces__msg__Log__WARN,
+        ERROR = rcl_interfaces__msg__Log__ERROR,
+        FATAL = rcl_interfaces__msg__Log__FATAL
+    } eLoggerLevel;
 
 namespace RoverMicroRosLib
 {
