@@ -3,16 +3,16 @@
 
 #include "helpers/helpers.hpp"
 
-template <class T, uint16_t COEFF_NB>
+template <class TYPE, uint16_t COEFF_NB>
 class MovingAverage
 {
 private:
-    T _avgTable[COEFF_NB] = {0};
+    TYPE _avgTable[COEFF_NB] = {0};
     uint16_t _cursor = 0;
     float _avg = 0.0f;
 
 public:
-    MovingAverage(T startingValue)
+    MovingAverage(TYPE startingValue)
     {
         for (uint16_t i = 0u; i < COEFF_NB; i++)
         {
@@ -21,7 +21,7 @@ public:
     }
     ~MovingAverage() {}
 
-    float addValue(T value)
+    float addValue(TYPE value)
     {
         _avg -= (float)_avgTable[_cursor];
         _avg += (float)value;
