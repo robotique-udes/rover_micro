@@ -36,7 +36,7 @@ namespace RoverHelpers
         MovingAverage(TYPE startingValue_ = static_cast<TYPE>(0));
 
         /// @brief MovingAverage's destructor
-        ~MovingAverage();
+        ~MovingAverage(void);
 
         /// @brief Adds a value to the movingAverage.
         /// @param value_ value to add to the average.

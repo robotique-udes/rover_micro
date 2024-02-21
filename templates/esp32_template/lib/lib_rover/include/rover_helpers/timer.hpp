@@ -3,6 +3,25 @@
 
 namespace RoverHelpers
 {
+    /// @brief Timer helper class. A wrapper to do block of code after a certain
+    /// time or at a certain frequency.
+    /// @tparam TYPE The return type of the clock function used in 2nd template
+    /// argument
+    /// @tparam CLOCK_FUNC A function that returns the current clock of the
+    /// processor. In arduino framework: millis or micros
+    /// @example Executing a block of code at 1 Hz (each 1000 milliseconds)
+    /// void setup()
+    /// {
+    ///     RoverHelpers::Timer<unsigned long, millis> timer(1000);
+    ///     
+    ///     for (EVER)
+    ///     {
+    ///         if (timer.isDone())
+    ///         {
+    ///             /* Do something at 1 Hz*/
+    ///         }
+    ///     }
+    /// }
     template <typename T, T (*clockFunc)(void)>
     class Timer
     {
@@ -13,11 +32,11 @@ namespace RoverHelpers
         void setInterval(T interval);
 
     public:
-        Timer();
+        Timer(void);
         Timer(T interval_);
-        ~Timer();
-        void init(T interval);
-        bool isDone(bool reset = 1);
+        ~Timer(void);
+        void init(T interval_);
+        bool isDone(bool reset_ = 1);
         void updateInterval(T newInterval_);
         void reset(void);
     };

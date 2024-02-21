@@ -17,7 +17,7 @@ namespace RoverHelpers
 
     template <typename TYPE, uint16_t COEFF_NB>
     MovingAverage<TYPE, COEFF_NB>::
-        ~MovingAverage() {}
+        ~MovingAverage(void) {}
 
     template <typename TYPE, uint16_t COEFF_NB>
     float MovingAverage<TYPE, COEFF_NB>::

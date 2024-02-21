@@ -7,7 +7,7 @@ namespace RoverHelpers
 {
     template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
     Chrono<TYPE, CLOCK_FUNC>::
-        Chrono()
+        Chrono(void)
     {
         _paused = false;
         _accumulatedTime = 0;
@@ -17,13 +17,13 @@ namespace RoverHelpers
 
     template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
     Chrono<TYPE, CLOCK_FUNC>::
-        ~Chrono()
+        ~Chrono(void)
     {
     }
 
     template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
     void Chrono<TYPE, CLOCK_FUNC>::
-        init()
+        init(void)
     {
         _accumulatedTime = 0;
         _startClock = CLOCK_FUNC();
