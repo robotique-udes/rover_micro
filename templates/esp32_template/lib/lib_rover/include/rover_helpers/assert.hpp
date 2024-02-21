@@ -16,6 +16,16 @@
 //          Check the condition. If it's true, the custom msg "..." is logged
 //          and then the code execution is stopped.
 //
+//      Usage Example:
+//          void setup (void)
+//          {
+//              int* intPointer = NULL;
+//              ASSERT(intPointer == NULL);
+//          }
+//
+//          This will print the following: [FATAL][...]"intPointer == NULL"
+//          and will cancel code execution
+//
 // On certain boards, assertion will reboot the controller instead of calling a 
 // for(;;) loop.
 // =============================================================================

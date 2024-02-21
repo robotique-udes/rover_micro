@@ -4,6 +4,12 @@
 // =============================================================================
 // log.hpp helps redirecting log to either microRos or the Serial or to not 
 // compiled them at all for performance enhancement
+//
+//  Usage example:
+//      void setup(void)
+//      {
+//          LOG(INFO, "This is a log message");
+//      }
 // =============================================================================
 
 #if defined(VERBOSE)

@@ -44,8 +44,8 @@ namespace RoverMicroRosLib
 
     private:
         eConnectionStates _connectionState = eConnectionStates::WAITING_AGENT;
-        TimerMillis _timerCheckReconnect;
-        TimerMillis _timerCheckDisconnect;
+        RoverHelpers::Timer<unsigned long, millis> _timerCheckReconnect;
+        RoverHelpers::Timer<unsigned long, millis> _timerCheckDisconnect;
         bool _withLED;
         uint8_t _ledPIN;
 

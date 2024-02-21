@@ -21,7 +21,7 @@ void setup()
 
     RoverMicroRosLib::Publisher pub(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "Test");
     RoverMicroRosLib::Node<1u, 0u, 0u> node(NAME_NS, NAME_NODE);
-    Timer<unsigned long, millis> timerTest(1000ul);
+    RoverHelpers::Timer<unsigned long, millis> timerTest(1000ul);
     node.init();
     node.addPublisher(&pub);
     

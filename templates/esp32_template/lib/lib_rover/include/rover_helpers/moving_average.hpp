@@ -14,6 +14,18 @@ namespace RoverHelpers
     /// @tparam TYPE The type of data stored into the MovingAverage, it's the user
     /// job to make sure the type makes sense for a MovingAverage.
     /// @tparam COEFF_NB The number of elements contained into the moving average.
+    /// @example
+    /// void setup(void)
+    /// {
+    ///     RoverHelpers::MovingAverage<float, 10> avg;
+    ///
+    ///     for (uint8_t i = 0; i < 10; i++)
+    ///     {
+    ///         LOG(INFO, "currentAvg = %f", avg.addValue(10.0f));
+    ///     }
+    /// }
+    ///
+    /// Output: "1.0, 2.0, 3.0, ... 10.0"
     template <typename TYPE, uint16_t COEFF_NB>
     class MovingAverage
     {

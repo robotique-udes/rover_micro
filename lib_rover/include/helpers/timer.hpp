@@ -3,14 +3,14 @@
 
 #include "Arduino.h"
 
-template <typename T, T (*clockFunc)(void)>
+template <typename TYPE, TYPE (*clockFunc)(void)>
 class Timer
 {
 private:
-    T _prevClock;
-    T _interval;
+    TYPE _prevClock;
+    TYPE _interval;
 
-    void setInterval(T interval)
+    void setInterval(TYPE interval)
     {
         _interval = interval;
     }
@@ -21,7 +21,7 @@ public:
         _interval = 0;
         _prevClock = 0;
     }
-    Timer(T interval_)
+    Timer(TYPE interval_)
     {
         _interval = 0;
         _prevClock = 0;
@@ -30,7 +30,7 @@ public:
     }
     ~Timer() {}
 
-    void init(T interval)
+    void init(TYPE interval)
     {
         setInterval(interval);
         _prevClock = clockFunc();
@@ -52,7 +52,7 @@ public:
         }
     }
 
-    void updateInterval(T newInterval_)
+    void updateInterval(TYPE newInterval_)
     {
         _interval = newInterval_;
     }
@@ -63,12 +63,12 @@ public:
     }
 };
 
-template <typename T, T (*clockFunc)(void)>
+template <typename TYPE, TYPE (*clockFunc)(void)>
 class Chrono
 {
 private:
-    T _startClock;
-    T _accumulatedTime;
+    TYPE _startClock;
+    TYPE _accumulatedTime;
     bool _paused;
 
 public:
@@ -87,7 +87,7 @@ public:
         _startClock = clockFunc();
     }
 
-    T pause(void)
+    TYPE pause(void)
     {
         if (!_paused)
         {
@@ -105,7 +105,7 @@ public:
         }
     }
 
-    T getTime(void)
+    TYPE getTime(void)
     {
         if (_paused)
         {

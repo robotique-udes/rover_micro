@@ -5,17 +5,17 @@
 
 namespace RoverHelpers
 {
-    template <typename T, T (*clockFunc)(void)>
-    Timer<T, clockFunc>::
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    Timer<TYPE, CLOCK_FUNC>::
         Timer()
     {
         _interval = 0;
         _prevClock = 0;
     }
 
-    template <typename T, T (*clockFunc)(void)>
-    Timer<T, clockFunc>::
-        Timer(T interval_)
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    Timer<TYPE, CLOCK_FUNC>::
+        Timer(TYPE interval_)
     {
         _interval = 0;
         _prevClock = 0;
@@ -23,27 +23,27 @@ namespace RoverHelpers
         this->init(interval_);
     }
 
-    template <typename T, T (*clockFunc)(void)>
-    Timer<T, clockFunc>::
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    Timer<TYPE, CLOCK_FUNC>::
         ~Timer() {}
 
-    template <typename T, T (*clockFunc)(void)>
-    void Timer<T, clockFunc>::
-        init(T interval)
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Timer<TYPE, CLOCK_FUNC>::
+        init(TYPE interval_)
     {
-        setInterval(interval);
-        _prevClock = clockFunc();
+        setInterval(interval_);
+        _prevClock = CLOCK_FUNC();
     }
 
-    template <typename T, T (*clockFunc)(void)>
-    bool Timer<T, clockFunc>::
-        isDone(bool reset = 1)
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    bool Timer<TYPE, CLOCK_FUNC>::
+        isDone(bool reset_)
     {
-        if ((_prevClock + _interval) < clockFunc())
+        if ((_prevClock + _interval) < CLOCK_FUNC())
         {
-            if (reset)
+            if (reset_)
             {
-                _prevClock = clockFunc() - 1;
+                _prevClock = CLOCK_FUNC() - 1;
             }
             return true;
         }
@@ -53,25 +53,25 @@ namespace RoverHelpers
         }
     }
 
-    template <typename T, T (*clockFunc)(void)>
-    void Timer<T, clockFunc>::
-        updateInterval(T newInterval_)
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Timer<TYPE, CLOCK_FUNC>::
+        updateInterval(TYPE newInterval_)
     {
         _interval = newInterval_;
     }
 
-    template <typename T, T (*clockFunc)(void)>
-    void Timer<T, clockFunc>::
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Timer<TYPE, CLOCK_FUNC>::
         reset(void)
     {
-        _prevClock = clockFunc();
+        _prevClock = CLOCK_FUNC();
     }
 
-    template <typename T, T (*clockFunc)(void)>
-    void Timer<T, clockFunc>::
-        setInterval(T interval)
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Timer<TYPE, CLOCK_FUNC>::
+        setInterval(TYPE interval_)
     {
-        _interval = interval;
+        _interval = interval_;
     }
 }
 
