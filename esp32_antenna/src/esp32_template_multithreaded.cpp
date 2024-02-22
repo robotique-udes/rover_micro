@@ -20,7 +20,9 @@
 #define EN 27
 
 #define PI 3.1415
-#define N_STEPS 800
+#define MICRO_STEPS 800
+#define RATIO_MOTOR 77
+// 800 micro-step/tour * ratio de la gearbox
 
 // =============================================================================
 //  This project can be used as a starting template for ESP32 microROS project
@@ -142,8 +144,7 @@ void cbSubscriber(const void *msg_)
     //LOG(INFO, "Received: %f", msg->speed);
     if(msg->speed != 0)
     {
-        step_timer = 2 * PI * 1e6 / (N_STEPS * abs(msg->speed));
-        // step_timer = 360 * 1e6 / (N_STEPS * abs(msg->speed));
+        step_timer = 2 * PI * 1e6 / (MICRO_STEPS * abs(msg->speed) * RATIO_MOTOR);
         LOG(INFO, "Received: %i", step_timer);
 
         if(xSemaphoreTake( xSemaphore, ( TickType_t ) 100 ) == pdTRUE)
