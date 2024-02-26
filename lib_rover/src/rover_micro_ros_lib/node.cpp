@@ -3,6 +3,8 @@
 #ifndef __NODE_CPP__
 #define __NODE_CPP__
 
+#if defined(MICRO_ROS_LOGGER)
+
 namespace RoverMicroRosLib
 {
     template <uint8_t NB_PUBLISHER, uint8_t NB_TIMER, uint8_t NB_SUBSCRIBER>
@@ -230,4 +232,5 @@ namespace RoverMicroRosLib
     }
 }
 
+#endif // defined(MICRO_ROS_LOGGER)
 #endif // __NODE_CPP__
