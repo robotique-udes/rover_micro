@@ -1,5 +1,7 @@
 #include "rover_micro_ros_lib/subscriber.hpp"
 
+#if defined(MICRO_ROS_LOGGER)
+
 namespace RoverMicroRosLib
 {
     Subscriber::Subscriber(const rosidl_message_type_support_t *msgTypeStruct_,
@@ -33,3 +35,5 @@ namespace RoverMicroRosLib
         REMOVE_WARN_UNUSED(rcl_subscription_fini(&_sub, node_));
     }
 }
+
+#endif // defined(MICRO_ROS_LOGGER)

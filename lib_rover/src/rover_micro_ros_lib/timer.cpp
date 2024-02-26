@@ -1,5 +1,7 @@
 #include "rover_micro_ros_lib/timer.hpp"
 
+#if defined(MICRO_ROS_LOGGER)
+
 namespace RoverMicroRosLib
 {
     Timer::Timer(const uint64_t interval_, const rcl_timer_callback_t callbackFunc_) : _timeoutNs(interval_),
@@ -23,3 +25,5 @@ namespace RoverMicroRosLib
         REMOVE_WARN_UNUSED(rcl_timer_fini(&_timer));
     }
 }
+
+#endif // defined(MICRO_ROS_LOGGER)

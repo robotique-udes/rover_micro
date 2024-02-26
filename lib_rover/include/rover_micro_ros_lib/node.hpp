@@ -5,6 +5,8 @@
 #error CPU not supported
 #endif
 
+#if defined(MICRO_ROS_LOGGER)
+
 #include "micro_ros_platformio.h"
 #include <rcl/rcl.h>
 #include <rclc/executor.h>
@@ -69,4 +71,5 @@ namespace RoverMicroRosLib
 }
 #include "rover_micro_ros_lib/node.cpp"
 
+#endif // defined(MICRO_ROS_LOGGER)
 #endif // __NODE_HPP__
