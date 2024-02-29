@@ -3,8 +3,8 @@
 #endif
 
 #include <Arduino.h>
-#include "CAN.h"
 
+#include "CAN.h"
 #include "helpers/helpers.hpp"
 
 void setup()
@@ -16,12 +16,13 @@ void setup()
     LOG(INFO, "CAN Sender");
 
     // start the CAN bus at 1000 kbps
-    ASSERT(!CAN.begin(1'000'000L), "Starting CAN failed!");
+    CAN.setPins(18, 4);
+    ASSERT(!CAN.begin(500E3), "Starting CAN failed!");
 
     for (EVER)
     {
         // send packet: id is 11 bits, packet can contain up to 8 bytes of data
-        Serial.print("Sending packet ... ");
+        LOG(INFO, "Sending packet");
 
         CAN.beginPacket(0x12);
         CAN.write('h');
@@ -31,24 +32,24 @@ void setup()
         CAN.write('o');
         CAN.endPacket();
 
-        Serial.println("done");
+        LOG(INFO, "Done");
 
         delay(1000);
 
         // send extended packet: id is 29 bits, packet can contain up to 8 bytes of data
-        Serial.print("Sending extended packet ... ");
+        // Serial.print("Sending extended packet ... ");
 
-        CAN.beginExtendedPacket(0xabcdef);
-        CAN.write('w');
-        CAN.write('o');
-        CAN.write('r');
-        CAN.write('l');
-        CAN.write('d');
-        CAN.endPacket();
+        // CAN.beginExtendedPacket(0xabcdef);
+        // CAN.write('w');
+        // CAN.write('o');
+        // CAN.write('r');
+        // CAN.write('l');
+        // CAN.write('d');
+        // CAN.endPacket();
 
-        Serial.println("done");
+        // Serial.println("done");
 
-        delay(1000);
+        // delay(1000);
     }
 }
 
