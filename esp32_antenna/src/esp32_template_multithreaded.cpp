@@ -21,7 +21,7 @@
 
 #define PI 3.1415
 #define MICRO_STEPS 800
-#define RATIO_MOTOR 77
+#define RATIO_MOTOR 99.51
 // 800 micro-step/tour * ratio de la gearbox
 
 // =============================================================================
