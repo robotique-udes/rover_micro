@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace PropulsionMotorMsg
+namespace RoverCanLib::Msg::PropulsionMotor
 {
     enum eMsgID : uint8_t
     {

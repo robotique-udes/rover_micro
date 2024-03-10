@@ -1,28 +1,25 @@
 #include "Arduino.h"
-#include "config.hpp"
 
 #include "helpers/helpers.hpp"
-#include "rover_can_lib/can_bus_manager.hpp"
-#include "rover_can_lib/propulsion_motor_msg.hpp"
-#include "rover_can_lib/union_type_definition.hpp"
-#include "rover_can_lib/helpers.hpp"
+#include "rover_can_lib/rover_can_lib.hpp"
 
 #include "actuators/talon_srx.hpp"
-#include "driver/twai.h"
+
+#include "config_local.hpp"
 
 #define PIN_PWM 23
 #define PIN_GND 22
 
-void canCB(CanBusManager *canBusManager_, const twai_message_t *msg_);
-void parseDeviceIdMsg(CanBusManager *canBusManager_, const twai_message_t *msg_);
+void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
+void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 
-PropulsionMotorMsg::sMsgData propMsgStruct;
+RoverCanLib::Msg::PropulsionMotor::sMsgData propMsgStruct;
 
 void setup()
 {
     Serial.begin(115200);
 
-    CanBusManager canBus(DEVICE_ID, GPIO_NUM_4, GPIO_NUM_18, canCB, (gpio_num_t)LED_BUILTIN);
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, GPIO_NUM_4, GPIO_NUM_18, canCB, (gpio_num_t)LED_BUILTIN);
     canBus.init();
 
     pinMode(PIN_GND, OUTPUT);
@@ -50,7 +47,7 @@ void setup()
 
 void loop() {}
 
-void canCB(CanBusManager *canBusManager_, const twai_message_t *msg_)
+void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_)
 {
     switch (msg_->identifier)
     {
@@ -71,47 +68,47 @@ void canCB(CanBusManager *canBusManager_, const twai_message_t *msg_)
     }
 }
 
-void parseDeviceIdMsg(CanBusManager *canBusManager_, const twai_message_t *msg_)
+void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_)
 {
     canBusManager_->resetWatchDog();
 
     switch (msg_->data[0])
     {
-    case PropulsionMotorMsg::eMsgID::CLOSE_LOOP:
+    case RoverCanLib::Msg::PropulsionMotor::eMsgID::CLOSE_LOOP:
         propMsgStruct.closeLoop = msg_->data[1];
         LOG(WARN, "Unsupported feature");
         canBusManager_->setWarningFlag();
         break;
 
-    case PropulsionMotorMsg::eMsgID::ENABLE:
+    case RoverCanLib::Msg::PropulsionMotor::eMsgID::ENABLE:
         propMsgStruct.enable = msg_->data[1];
 
-    case PropulsionMotorMsg::eMsgID::TARGET_SPEED:
+    case RoverCanLib::Msg::PropulsionMotor::eMsgID::TARGET_SPEED:
         RoverCanLib::Helpers::canMsgToStruct<float,
                                              RoverCanLib::UnionDefinition::FloatUnion>(&(msg_->data[1]),
                                                                                        &propMsgStruct.targetSpeed);
         break;
 
-    case PropulsionMotorMsg::eMsgID::KP:
+    case RoverCanLib::Msg::PropulsionMotor::eMsgID::KP:
         RoverCanLib::Helpers::canMsgToStruct<float,
                                              RoverCanLib::UnionDefinition::FloatUnion>(&(msg_->data[1]),
                                                                                        &propMsgStruct.kp);
         break;
 
-    case PropulsionMotorMsg::eMsgID::KI:
+    case RoverCanLib::Msg::PropulsionMotor::eMsgID::KI:
         RoverCanLib::Helpers::canMsgToStruct<float,
                                              RoverCanLib::UnionDefinition::FloatUnion>(&(msg_->data[1]),
                                                                                        &propMsgStruct.ki);
         break;
 
-    case PropulsionMotorMsg::eMsgID::KD:
+    case RoverCanLib::Msg::PropulsionMotor::eMsgID::KD:
         RoverCanLib::Helpers::canMsgToStruct<float,
                                              RoverCanLib::UnionDefinition::FloatUnion>(&(msg_->data[1]),
                                                                                        &propMsgStruct.kd);
         break;
 
     default:
-        LOG(WARN, "Unknowed \"Message Specific Id\"");
+        LOG(WARN, "Unknown \"Message Specific Id\"");
         canBusManager_->setWarningFlag();
     }
 }
