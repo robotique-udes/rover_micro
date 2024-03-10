@@ -6,6 +6,7 @@
 #include "helpers/assert.hpp"
 #include "helpers/macros.hpp"
 #include "helpers/timer.hpp"
+#include "helpers/led_blinker.hpp"
 #include "helpers/moving_average.hpp"
 
 #endif // __HELPER_HPP__

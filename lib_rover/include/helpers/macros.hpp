@@ -6,6 +6,10 @@
     ;        \
     ;
 
+#define IN    // Specify pointer value is used inside function
+#define OUT   // Specify pointer value will be overwritten inside function
+#define INOUT // Specify pointer is first used and then overwritten
+
 // Use this macro to removed unused warnings when compiling
 #define REMOVE_WARN_UNUSED(fn) \
     {                          \
@@ -20,6 +24,15 @@
             return false;            \
         }                            \
     }
+
+template <typename T>
+constexpr T MAP(T x, T in_min, T in_max, T out_min, T out_max)
+{
+    const T run = in_max - in_min;
+    const T rise = out_max - out_min;
+    const T delta = x - in_min;
+    return (delta * rise) / run + out_min;
+}
 
 // #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
