@@ -1,7 +1,11 @@
 #ifndef __HELPERS_HPP__
 #define __HELPERS_HPP__
 
-#include "rover_can_lib/union_type_definition.hpp"
+#include "rover_can_lib/rover_can_lib.hpp"
+
+#if !defined(ESP32)
+#include "rovus_lib/macros.h"
+#endif // !defined(ESP32)
 
 namespace RoverCanLib::Helpers
 {
