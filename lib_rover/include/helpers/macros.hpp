@@ -34,6 +34,16 @@ constexpr T MAP(T x, T in_min, T in_max, T out_min, T out_max)
     return (delta * rise) / run + out_min;
 }
 
+// It's the user's job to make sure both pointers are bigger or equal to the 
+// provided size_.
+constexpr void COPY_ARRAY(uint8_t *src_, uint8_t *dest_, uint8_t size_)
+{
+    for (uint8_t i = 0; i < size_; i++)
+    {
+        dest_[i] = src_[i];
+    }
+}
+
 // #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 #define GET_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
