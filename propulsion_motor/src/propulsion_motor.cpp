@@ -54,7 +54,7 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
     case (DEVICE_ID):
         if (msg_->data_length_code == 0)
         {
-            LOG(WARN, "I'll formed msg, dropping");
+            LOG(WARN, "Ill formed msg, dropping");
             canBusManager_->setWarningFlag();
         }
         else
