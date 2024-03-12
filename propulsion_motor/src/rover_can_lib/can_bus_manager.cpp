@@ -36,6 +36,9 @@ namespace RoverCanLib
     void CanBusManager::init()
     {
         ASSERT(twai_start() != ESP_OK);
+        // Sending the state of _errorStateMsg which should be OK, this make sure
+        // the master resets the node error state after a node reboot
+        this->sendMsg(&_errorStateMsg);
 
         _canBusState = eCanBusStatus::idle;
 
