@@ -1,11 +1,12 @@
 #include <Arduino.h>
 
-#if !defined (ESP32)
+#if !defined(ESP32)
 #error CPU not supported
 #endif
 
 #include <std_msgs/msg/int32.h>
 #include "rover_msgs/msg/antenna_cmd.h"
+#include <std_msgs/msg/empty.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
 #include "helpers/helpers.hpp"
@@ -22,6 +23,9 @@
 #define PI 3.1415
 #define MICRO_STEPS 800
 #define RATIO_MOTOR 99.51
+
+#define HEARTBEAT_HZ 4
+
 // 800 micro-step/tour * ratio de la gearbox
 
 // =============================================================================
@@ -45,12 +49,12 @@
 //      you want (10, 20, 30, 40, 50)
 //
 //      Limitations:
-//          Not thread safe, don't use in different threads, instead, share a 
+//          Not thread safe, don't use in different threads, instead, share a
 //          buffer between both core and LOG from the other core.
 //
 //  RoverMicroRosLib:
 //      You can use this in house library to help writing node faster and safer
-//      If you have any question with it you can contact the maintainer in the 
+//      If you have any question with it you can contact the maintainer in the
 //      lib_rover/library.properties file.
 //      Current limitiation can be found in each header files
 //
@@ -59,10 +63,15 @@
 // Function forward declarations
 void microRosLoop(void *pvParameters);
 void cbSubscriber(const void *msg_);
+void cbSubHeartbeat(const void *msg_);
 
 // Global objects
 RoverMicroRosLib::Subscriber sub = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(rover_msgs, msg, AntennaCmd), "/base/antenna/cmd/out/goal", cbSubscriber);
+RoverMicroRosLib::Subscriber subHeartbeat = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Empty), "/base/base_heartbeat", cbSubHeartbeat);
 Timer<unsigned long, micros> timer(200ul);
+Timer<unsigned long, millis> timer_heartbeat(500);
+bool root_heartbeat_state = false;
+bool state_heartbeat = false;
 bool motor_status = false;
 bool stepper_direction;
 
@@ -74,7 +83,7 @@ void setup()
     Serial.begin(115200);
     pinMode(PUL, OUTPUT);
     pinMode(EN, OUTPUT);
-    pinMode(DIR,OUTPUT);
+    pinMode(DIR, OUTPUT);
 
     xTaskCreatePinnedToCore(microRosLoop, "", 8192, NULL, 1, NULL, 0);
 
@@ -86,33 +95,45 @@ void setup()
     digitalWrite(EN, LOW);
     digitalWrite(DIR, HIGH);
 
-
     for (EVER)
     {
-        if( xSemaphoreTake( xSemaphore, ( TickType_t ) 10 ) == pdTRUE )
+        if (root_heartbeat_state)
         {
-            if (timer.isDone() && motor_status)
+            state_heartbeat = true;
+        }
+        else
+        {
+            state_heartbeat = false;
+        }
+
+        if (timer_heartbeat.isDone())
+        {
+            root_heartbeat_state = false;
+        }
+
+        if (state_heartbeat)
+        {
+            if (xSemaphoreTake(xSemaphore, (TickType_t)10) == pdTRUE)
             {
-                // Switch between LOW and HIGH each loop at period/2
-                motorStep = motorStep == HIGH ? LOW : HIGH;
-                // digitalWrite(PIN_PULSE, motorStep);
-                digitalWrite(DIR, stepper_direction);
-                digitalWrite(PUL, motorStep);
+                if (timer.isDone() && motor_status)
+                {
+                    motorStep = motorStep == HIGH ? LOW : HIGH;
+                    digitalWrite(DIR, stepper_direction);
+                    digitalWrite(PUL, motorStep);
+                }
+                xSemaphoreGive(xSemaphore);
             }
-            xSemaphoreGive( xSemaphore );
         }
     }
 }
 
 void microRosLoop(void *pvParameters)
 {
-    // Use the same transports as set in platformio.ini, wifi isn't supported 
-    // yet.
     set_microros_serial_transports(Serial);
 
-    // Create the microROS node. Template parameters are: 
+    // Create the microROS node. Template parameters are:
     // <Number of publisher, Number of timers, Number of subscriber>.
-    RoverMicroRosLib::Node<0, 0, 1u> node(NAME_NS, NAME_NODE);
+    RoverMicroRosLib::Node<0, 1u, 2u> node(NAME_NS, NAME_NODE);
     // Necessary
     node.init();
 
@@ -120,36 +141,36 @@ void microRosLoop(void *pvParameters)
     // later allow the node to call subscriber and timer callback when those are
     // ready (on new data for example).
     node.addSubscriber(&sub);
+    node.addSubscriber(&subHeartbeat);
 
     for (EVER)
     {
-        // This handle the connection with the ROS network and calls ready 
+        // This handle the connection with the ROS network and calls ready
         // callbacks.
         node.spinSome(RCL_MS_TO_NS(0UL));
     }
 }
 
-
-// This function is called each time new data is available on the 
+// This function is called each time new data is available on the
 // /pub_test_topic topic.
 void cbSubscriber(const void *msg_)
 {
-    // Cast the void pointer into the correct message type for the topic. This 
+    // Cast the void pointer into the correct message type for the topic. This
     // is necessary to access the data in the correct format. It then logs the
-    // msg data into the terminal logger. 
+    // msg data into the terminal logger.
     // (ros2 launch rover_helper terminal_logger.launch.py)
 
     unsigned long step_timer;
     const rover_msgs__msg__AntennaCmd *msg = (rover_msgs__msg__AntennaCmd *)msg_;
-    //LOG(INFO, "Received: %f", msg->speed);
-    if(msg->speed != 0)
+    // LOG(INFO, "Received: %f", msg->speed);
+    if (msg->speed != 0)
     {
         step_timer = 2 * PI * 1e6 / (MICRO_STEPS * abs(msg->speed) * RATIO_MOTOR);
-        LOG(INFO, "Received: %i", step_timer);
+        // LOG(INFO, "Received: %i", step_timer);
 
-        if(xSemaphoreTake( xSemaphore, ( TickType_t ) 100 ) == pdTRUE)
+        if (xSemaphoreTake(xSemaphore, (TickType_t)100) == pdTRUE)
         {
-            if(msg->speed < 0)
+            if (msg->speed < 0)
             {
                 stepper_direction = false;
             }
@@ -160,15 +181,25 @@ void cbSubscriber(const void *msg_)
 
             motor_status = true;
             timer.updateInterval(step_timer);
-            xSemaphoreGive( xSemaphore );
+            xSemaphoreGive(xSemaphore);
         }
     }
     else
     {
         motor_status = false;
     }
-    //LOG(INFO, "Received: %i", step_timer);
+    // LOG(INFO, "Received: %i", step_timer);
+    LOG(INFO, "heartbeat: %d", root_heartbeat_state);
+}
+
+void cbSubHeartbeat(const void *msg_)
+{
+    root_heartbeat_state = true;
+    timer_heartbeat.init(500);
 }
 
 // Do not use when using FreeRTOS.
 void loop() {}
+
+// checker la led bleu qui indique la connection du esp au noeud ros et essayer
+// de l<utiliser pour s<Assurer que notre noeud roule encore
