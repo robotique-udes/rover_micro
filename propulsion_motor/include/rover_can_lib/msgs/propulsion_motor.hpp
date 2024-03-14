@@ -40,7 +40,12 @@ namespace RoverCanLib::Msgs
         {
             if (msg_->data[(uint8_t)Constant::eDataIndex::MSG_ID] != (uint8_t)Constant::eMsgId::PROPULSION_MOTOR)
             {
-                LOG(ERROR, "Mismatch in message types, maybe the lib version isn't the same between all nodes... Dropping msg");
+                LOG(ERROR,
+                    "Mismatch in message types. "
+                    "Received type: %u but expected %u, maybe the lib version isn't the same between all nodes... "
+                    "Dropping msg",
+                    msg_->data[(uint8_t)Constant::eDataIndex::MSG_ID],
+                    (uint8_t)Constant::eMsgId::PROPULSION_MOTOR);
                 return Constant::eInternalErrorCode::WARNING;
             }
 
@@ -49,7 +54,7 @@ namespace RoverCanLib::Msgs
             case Msgs::PropulsionMotor::eMsgID::ENABLE:
                 Helpers::canMsgToStruct<bool, UnionDefinition::BoolUnion>(msg_, &this->data.enable);
                 break;
-                
+
             case Msgs::PropulsionMotor::eMsgID::TARGET_SPEED:
 
                 Helpers::canMsgToStruct<float, UnionDefinition::FloatUnion>(msg_, &this->data.targetSpeed);

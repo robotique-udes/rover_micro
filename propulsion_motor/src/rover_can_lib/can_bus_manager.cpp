@@ -225,6 +225,13 @@ namespace RoverCanLib
                 // No more msgs
                 break;
             }
+            else if (msg.identifier == (uint8_t)Constant::eDeviceId::MASTER_COMPUTER_UNIT)
+            {
+                if (msg.data[(uint8_t)Constant::eDataIndex::MSG_ID] == (uint8_t)Constant::eMsgId::HEARTBEAT)
+                {
+                    this->resetWatchDog();
+                }
+            }
             else
             {
                 _canMsgCallbackFunc(this, &msg);
