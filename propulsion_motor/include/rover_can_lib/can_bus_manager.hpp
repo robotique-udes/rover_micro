@@ -5,6 +5,7 @@
 
 #include "rover_can_lib/msgs/msg.hpp"
 #include "rover_can_lib/msgs/error_state.hpp"
+#include "rover_can_lib/msgs/heartbeat.hpp"
 #include "rover_can_lib/config.hpp"
 
 namespace RoverCanLib
@@ -136,6 +137,7 @@ namespace RoverCanLib
         eCanBusStatus _canBusState = eCanBusStatus::notInit;
         bool _flagWarning = false;
         Timer<unsigned long, millis> _timerHeartbeat;
+        RoverCanLib::Msgs::Heartbeat _msgHeartbeat;
         Timer<unsigned long, millis> _timerWatchdog = Timer<unsigned long, millis>(RoverCanLib::Constant::WATCHDOG_TIMEOUT_MS);
         bool _watchDogAlive = false;
         void (*_canMsgCallbackFunc)(CanBusManager *canBusManager_, const twai_message_t *msgPtr_) = NULL;

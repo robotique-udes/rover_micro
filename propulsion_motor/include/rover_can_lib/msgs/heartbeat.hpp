@@ -29,6 +29,7 @@ namespace RoverCanLib::Msgs
         enum class eMsgID : uint8_t
         {
             NOT_USED = 0x00,
+            DONT_USE = 0x01,
             eLAST
         };
 
@@ -42,13 +43,26 @@ namespace RoverCanLib::Msgs
 
         Constant::eInternalErrorCode parseMsg(const twai_message_t *msg_)
         {
-            LOG(ERROR, "Should parse heartbeat msgs");
+            LOG(ERROR, "Shouldn't parse heartbeat msgs");
+            return Constant::eInternalErrorCode::ERROR;
         }
 
         Constant::eInternalErrorCode getMsg(IN uint8_t msgId_, OUT twai_message_t *msg_)
         {
             msg_->data[(uint8_t)Constant::eDataIndex::MSG_ID] = (uint8_t)Constant::eMsgId::HEARTBEAT;
             msg_->data[(uint8_t)Constant::eDataIndex::MSG_CONTENT_ID] = msgId_;
+
+            switch ((RoverCanLib::Msgs::Heartbeat::eMsgID)msgId_)
+            {
+            case eMsgID::DONT_USE:
+                Helpers::structToCanMsg<uint8_t, UnionDefinition::Uint8_tUnion>(&data.dontUse, msg_);
+                break;
+
+            default:
+                LOG(ERROR, "Shouldn't ever fall here, implementation error");
+                *msg_ = RoverCanLib::Helpers::getErrorIdMsg();
+                Constant::eInternalErrorCode::ERROR;
+            }
 
             return Constant::eInternalErrorCode::OK;
         }
