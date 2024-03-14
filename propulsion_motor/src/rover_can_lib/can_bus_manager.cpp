@@ -208,8 +208,7 @@ namespace RoverCanLib
     {
         if (_timerHeartbeat.isDone())
         {
-            uint8_t data[] = {0};
-            this->sendMsg(_id, data, sizeof(data), false);
+            this->sendMsg(&_msgHeartbeat);
         }
     }
 

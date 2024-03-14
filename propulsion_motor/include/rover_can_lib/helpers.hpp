@@ -19,7 +19,6 @@ namespace RoverCanLib::Helpers
     // queue
 #if defined(ESP32)
     extern twai_message_t getErrorIdMsg(void);
-#endif // defined(ESP32)
 
     template <typename COPY_TYPE, typename UNION_TYPE>
     void canMsgToStruct(IN const twai_message_t *msg_, OUT COPY_TYPE *dest_)
@@ -70,21 +69,7 @@ namespace RoverCanLib::Helpers
         }
     }
 
-    // void sendErrorMsg(RoverCanLib::Constant::eInternalErrorCode errCode, RoverCanLib::CanBusManager* canManager_)
-    // {
-//     if (errCode == Constant::eInternalErrorCode::WARNING)
-    //     {
-    //         canManager_->setWarningFlag();
-    //         // _errorStateMsg.data.warning = true;
-    //         // this->sendMsg(&_errorStateMsg, true);
-    //     }
-
-    //     if (errCode == Constant::eInternalErrorCode::WARNING)
-    //     {
-    //         // _errorStateMsg.data.error = true;
-    //         // this->sendMsg(&_errorStateMsg, true);
-    //     }
-    // }
+#endif // defined(ESP32)
 }
 
 #endif // __HELPERS_HPP__

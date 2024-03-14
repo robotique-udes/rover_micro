@@ -5,7 +5,6 @@
 
 namespace RoverCanLib::Constant
 {
-
     enum class eDeviceId : uint16_t
     {
         // RESERVED_FOR_MASTER = 0x000,
