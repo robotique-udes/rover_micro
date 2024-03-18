@@ -47,14 +47,14 @@ namespace RoverCanLib::Constant
         PROPULSION_MOTOR = 0x11
     };
 
-    enum class eDataIndex: uint8_t
+    enum class eDataIndex : uint8_t
     {
         MSG_ID = 0x00,
         MSG_CONTENT_ID = 0x01,
         START_OF_DATA = 0x02
     };
 
-    enum class eInternalErrorCode: uint8_t
+    enum class eInternalErrorCode : uint8_t
     {
         OK,
         WARNING,
