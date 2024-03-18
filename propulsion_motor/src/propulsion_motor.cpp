@@ -20,7 +20,7 @@ void setup()
 {
     Serial.begin(115200);
 
-    RoverCanLib::CanBusManager canBus(DEVICE_ID, GPIO_NUM_4, GPIO_NUM_18, canCB, (gpio_num_t)LED_BUILTIN);
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, GPIO_NUM_4, GPIO_NUM_18, canCB, true, (gpio_num_t)LED_BUILTIN);
     canBus.init();
 
     pinMode(PIN_GND, OUTPUT);
