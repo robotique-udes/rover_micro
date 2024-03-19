@@ -103,22 +103,6 @@ def generate_cpp_header(input_file):
 #include <linux/can.h>
 #endif // defined(ESP32)
 
-namespace RoverCanLib
-{{
-    namespace Helpers
-    {{
-#if defined(ESP32)
-        twai_message_t getErrorIdMsg(void);
-
-        template <typename COPY_TYPE, typename UNION_TYPE>
-        void canMsgToStruct(IN const twai_message_t *msg_, OUT COPY_TYPE *dest_);
-
-        template <typename COPY_TYPE, typename UNION_TYPE>
-        void structToCanMsg(IN const COPY_TYPE *structMember_, OUT twai_message_t *msg_);
-#endif
-    }}
-}}
-
 #include "rover_can_lib/helpers.hpp"
 
 namespace RoverCanLib::Msgs
@@ -202,6 +186,25 @@ namespace RoverCanLib::Msgs
             }}
 
             return Constant::eInternalErrorCode::OK;
+        }}
+        
+        Constant::eInternalErrorCode sendMsg(RoverCanLib::Constant::eDeviceId deviceID_, int canSocket_, rclcpp::Logger logger_)
+        {{
+            can_frame canFrame;
+            canFrame.can_id = (canid_t)deviceID_;
+
+            static_assert((size_t)eMsgID::eLAST < UINT8_MAX); // Make sure to not overflow counter
+            for (uint8_t i = (uint8_t)eMsgID::NOT_USED + 1u; i < (uint8_t)eMsgID::eLAST; i++)
+            {{
+                this->getMsg(i, &canFrame, logger_);
+                if (write(canSocket_, &canFrame, sizeof(canFrame)) != sizeof(canFrame))
+                {{
+                    RCLCPP_ERROR(logger_, "Error while sending error state msg");
+                    return RoverCanLib::Constant::eInternalErrorCode::ERROR;
+                }}
+            }}
+
+            return RoverCanLib::Constant::eInternalErrorCode::OK;
         }}
 #endif // defined(ESP32)
 
