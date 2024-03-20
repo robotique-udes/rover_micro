@@ -16,9 +16,9 @@
 #define NAME_NS "/template_ESP32"
 #define NAME_NODE "simple_example"
 
-#define PUL 25
+#define PUL 27
 #define DIR 26
-#define EN 27
+#define EN 25
 
 #define PI 3.1415
 #define MICRO_STEPS 800
@@ -97,21 +97,21 @@ void setup()
 
     for (EVER)
     {
-        if (root_heartbeat_state)
-        {
-            state_heartbeat = true;
-        }
-        else
-        {
-            state_heartbeat = false;
-        }
+        // if (root_heartbeat_state)
+        // {
+        //     state_heartbeat = true;
+        // }
+        // else
+        // {
+        //     state_heartbeat = false;
+        // }
 
         if (timer_heartbeat.isDone())
         {
             root_heartbeat_state = false;
         }
 
-        if (state_heartbeat)
+        if (root_heartbeat_state)
         {
             if (xSemaphoreTake(xSemaphore, (TickType_t)10) == pdTRUE)
             {
@@ -140,8 +140,8 @@ void microRosLoop(void *pvParameters)
     // Link global publisher, timer and subscriber with the node, this will
     // later allow the node to call subscriber and timer callback when those are
     // ready (on new data for example).
-    node.addSubscriber(&sub);
     node.addSubscriber(&subHeartbeat);
+    node.addSubscriber(&sub);
 
     for (EVER)
     {
@@ -200,6 +200,3 @@ void cbSubHeartbeat(const void *msg_)
 
 // Do not use when using FreeRTOS.
 void loop() {}
-
-// checker la led bleu qui indique la connection du esp au noeud ros et essayer
-// de l<utiliser pour s<Assurer que notre noeud roule encore
