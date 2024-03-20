@@ -111,7 +111,7 @@ void setup()
             root_heartbeat_state = false;
         }
 
-        if (state_heartbeat)
+        if (root_heartbeat_state)
         {
             if (xSemaphoreTake(xSemaphore, (TickType_t)10) == pdTRUE)
             {
@@ -195,6 +195,3 @@ void cbSubHeartbeat(const void *msg_)
 
 // Do not use when using FreeRTOS.
 void loop() {}
-
-// checker la led bleu qui indique la connection du esp au noeud ros et essayer
-// de l<utiliser pour s<Assurer que notre noeud roule encore
