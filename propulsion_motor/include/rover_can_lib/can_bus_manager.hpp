@@ -360,7 +360,6 @@ namespace RoverCanLib
         {
             this->readMsg(&msg);
 
-                
             if (msg.identifier == 0x00) // No more msgs
             {
 
@@ -377,8 +376,10 @@ namespace RoverCanLib
                 }
 
                 // When receiving ErrorState from master, each node must send back their current status, this will then
-                // be forwarded to a ros topic by the master
-                if (msg.data[(uint8_t)Constant::eDataIndex::MSG_ID] == (uint8_t)Constant::eMsgId::ERROR_STATE)
+                // be forwarded to a ros topic by the master. But only answer on a last element of a message to not
+                // flood the network for no reasons
+                if (msg.data[(uint8_t)Constant::eDataIndex::MSG_ID] == (uint8_t)Constant::eMsgId::ERROR_STATE &&
+                    RoverCanLib::Helpers::msgContentIsLastElement<Msgs::ErrorState>(&msg))
                 {
                     LOG(WARN, "Asked by master to send error code, sending...");
                     Constant::eInternalErrorCode errorState;
