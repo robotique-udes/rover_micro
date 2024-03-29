@@ -101,9 +101,10 @@ When buying ESP32 or any microcontrollers, make sure it comes with a unique USB 
 - To avoid:
   - CP2102 
   - CH430
+ 
+To order: https://fr.aliexpress.com/item/1005005906529113.html
 
 Here is an example of a good FTDI chip (CP2102N):
-
 ![test](../doc/img/esp32-ftdi.gif)
 
 ## Creating a new project
