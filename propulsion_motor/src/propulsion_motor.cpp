@@ -4,7 +4,8 @@
 
 #include "helpers/helpers.hpp"
 #include "rover_can_lib/rover_can_lib.hpp"
-#include "rover_can_lib/msgs/propulsion_motor.hpp"
+#include "rover_can_lib/msgs/propulsion_motor_cmd.hpp"
+#include "rover_can_lib/msgs/propulsion_motor_status.hpp"
 
 #include "actuators/talon_srx.hpp"
 
@@ -14,7 +15,8 @@
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 
-RoverCanLib::Msgs::PropulsionMotor msgProp;
+RoverCanLib::Msgs::PropulsionMotorCmd msgPropCmd;
+RoverCanLib::Msgs::PropulsionMotorStatus msgPropStatus;
 
 void setup()
 {
@@ -30,18 +32,34 @@ void setup()
     motorDrive.init(1500.0f);
 
     Serial.printf("Init done, starting Loop!\n");
-
+    Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
     for (;;)
     {
         canBus.update();
 
-        if (canBus.isOk() && msgProp.data.enable)
+        if (canBus.isOk() && msgPropCmd.data.enable)
         {
-            motorDrive.writeMicroseconds(MAP(msgProp.data.targetSpeed, -100.0f, 100.0f, 1000.0f, 2000.0f));
+            motorDrive.writeMicroseconds(MAP(msgPropCmd.data.targetSpeed, -100.0f, 100.0f, 1000.0f, 2000.0f));
         }
         else
         {
             motorDrive.writeMicroseconds(TalonSrxConstant::SIGNAL_FULL_STOP_MS);
+        }
+
+        if (timerFeedback.isDone())
+        {
+            if (!msgPropCmd.data.closeLoop)
+            {
+                msgPropStatus.data.currentSpeed = msgPropCmd.data.targetSpeed;
+            }
+            else
+            {
+                LOG(ERROR, "Close loop not implemented yet");
+                canBus.sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::ERROR);
+                msgPropStatus.data.currentSpeed = -69.0f; 
+            }
+
+            canBus.sendMsg(&msgPropStatus);
         }
     }
 }
@@ -57,11 +75,12 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
         {
             LOG(WARN, "Ill formed msg, dropping");
             canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
+            return;
         }
         else
         {
             canBusManager_->resetWatchDog();
-            canBusManager_->sendErrorCode(msgProp.parseMsg(msg_));
+            canBusManager_->sendErrorCode(msgPropCmd.parseMsg(msg_));
         }
         break;
 
