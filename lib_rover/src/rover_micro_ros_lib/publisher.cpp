@@ -1,7 +1,5 @@
 #include "rover_micro_ros_lib/publisher.hpp"
 
-#if defined(MICRO_ROS_LOGGER)
-
 namespace RoverMicroRosLib
 {
     Publisher::Publisher(const rosidl_message_type_support_t *msgStruct_, const char *topicName_)
@@ -35,5 +33,3 @@ namespace RoverMicroRosLib
         }
     }
 }
-
-#endif // defined(MICRO_ROS_LOGGER)

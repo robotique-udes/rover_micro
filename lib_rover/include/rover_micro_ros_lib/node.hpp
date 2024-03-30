@@ -1,18 +1,16 @@
 #ifndef __NODE_HPP__
 #define __NODE_HPP__
 
-#if !defined (ESP32)
+#if !defined(ESP32)
 #error CPU not supported
 #endif
-
-#if defined(MICRO_ROS_LOGGER)
 
 #include "micro_ros_platformio.h"
 #include <rcl/rcl.h>
 #include <rclc/executor.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 
 namespace RoverMicroRosLib
 {
@@ -46,8 +44,8 @@ namespace RoverMicroRosLib
 
     private:
         eConnectionStates _connectionState = eConnectionStates::WAITING_AGENT;
-        TimerMillis _timerCheckReconnect;
-        TimerMillis _timerCheckDisconnect;
+        RoverHelpers::Timer<unsigned long, millis> _timerCheckReconnect;
+        RoverHelpers::Timer<unsigned long, millis> _timerCheckDisconnect;
         bool _withLED;
         uint8_t _ledPIN;
 
@@ -71,5 +69,4 @@ namespace RoverMicroRosLib
 }
 #include "rover_micro_ros_lib/node.cpp"
 
-#endif // defined(MICRO_ROS_LOGGER)
 #endif // __NODE_HPP__

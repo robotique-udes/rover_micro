@@ -7,7 +7,6 @@
 #include <std_msgs/msg/int32.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
-#include "helpers/helpers.hpp"
 
 #define NAME_NS "/template_ESP32"
 #define NAME_NODE "simple_example"

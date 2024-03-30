@@ -5,12 +5,15 @@
 #error CPU not supported
 #endif
 
-#if defined(MICRO_ROS_LOGGER)
-
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
 #include <rcl_interfaces/msg/log.h>
-#include "helpers/helpers.hpp"
+
+#ifndef MICRO_ROS_LOGGER
+#define MICRO_ROS_LOGGER
+#endif // MICRO_ROS_LOGGER
+
+#include "rover_helpers/helpers.hpp"
 
 // Make sure code will execute fine even if LOGGER_LOWEST_LEVEL isn't defined
 #ifndef LOGGER_LOWEST_LEVEL
@@ -52,5 +55,4 @@ namespace RoverMicroRosLib
     extern Logger G_Logger;
 }
 
-#endif // MICRO_ROS_LOGGER
 #endif // __LOGGER_HPP__

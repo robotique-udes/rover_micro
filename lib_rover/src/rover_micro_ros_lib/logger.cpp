@@ -1,7 +1,5 @@
 #include "rover_micro_ros_lib/logger.hpp"
 
-#if defined(MICRO_ROS_LOGGER)
-
 namespace RoverMicroRosLib
 {
     Logger G_Logger;
@@ -98,5 +96,3 @@ namespace RoverMicroRosLib
         return _alive;
     }
 }
-
-#endif // defined(MICRO_ROS_LOGGER)

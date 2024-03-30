@@ -7,7 +7,6 @@
 #include <std_msgs/msg/int32.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
-#include "helpers/helpers.hpp"
 
 #define NAME_NS "/template_ESP32"
 #define NAME_NODE "simple_example"
@@ -64,7 +63,7 @@ void setup()
 
     // This a basic stepper control loop with a fixed period of 200*2 = 400us
     // between steps just for the example puposes.
-    Timer<unsigned long, micros> timer(200ul);
+    RoverHelpers::Timer<unsigned long, micros> timer(200ul);
     uint8_t motorStep = HIGH;
     uint8_t PIN_PULSE = 10u;
 

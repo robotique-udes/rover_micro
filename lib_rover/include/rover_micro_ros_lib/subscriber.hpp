@@ -5,12 +5,10 @@
 #error CPU not supported
 #endif
 
-#if defined(MICRO_ROS_LOGGER)
-
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 
 namespace RoverMicroRosLib
 {
@@ -34,5 +32,4 @@ namespace RoverMicroRosLib
     };
 }
 
-#endif // defined(MICRO_ROS_LOGGER)
 #endif // __SUBSCRIBER_HPP__

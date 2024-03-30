@@ -3,8 +3,6 @@
 #ifndef __NODE_CPP__
 #define __NODE_CPP__
 
-#if defined(MICRO_ROS_LOGGER)
-
 namespace RoverMicroRosLib
 {
     template <uint8_t NB_PUBLISHER, uint8_t NB_TIMER, uint8_t NB_SUBSCRIBER>
@@ -27,8 +25,8 @@ namespace RoverMicroRosLib
         _withLED = withLED_;
         _ledPIN = ledPIN_;
 
-        TimerMillis _timerCheckDisconnect = TimerMillis(connectionValidationInterval_);
-        TimerMillis _timerCheckReconnect = TimerMillis(reconnectionInterval_);
+        RoverHelpers::Timer<unsigned long, millis> _timerCheckDisconnect = RoverHelpers::Timer<unsigned long, millis>(connectionValidationInterval_);
+        RoverHelpers::Timer<unsigned long, millis> _timerCheckReconnect = RoverHelpers::Timer<unsigned long, millis>(reconnectionInterval_);
 
         for (uint8_t i = 0; i < NB_PUBLISHER; i++)
         {
@@ -83,7 +81,7 @@ namespace RoverMicroRosLib
         switch (_connectionState)
         {
         case WAITING_AGENT:
-            if (_timerCheckReconnect.done())
+            if (_timerCheckReconnect.isDone())
             {
                 _connectionState = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;
             }
@@ -96,7 +94,7 @@ namespace RoverMicroRosLib
             };
             break;
         case AGENT_CONNECTED:
-            if (_timerCheckDisconnect.done())
+            if (_timerCheckDisconnect.isDone())
             {
                 _connectionState = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;
             }
@@ -232,5 +230,4 @@ namespace RoverMicroRosLib
     }
 }
 
-#endif // defined(MICRO_ROS_LOGGER)
 #endif // __NODE_CPP__

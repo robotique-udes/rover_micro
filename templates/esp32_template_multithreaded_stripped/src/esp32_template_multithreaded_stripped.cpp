@@ -7,7 +7,6 @@
 #include <std_msgs/msg/int32.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
-#include "helpers/helpers.hpp"
 
 #define NAME_NS "/template_ESP32"
 #define NAME_NODE "simple_example"
@@ -32,7 +31,7 @@ void setup()
     Serial.begin(115200);
     xTaskCreatePinnedToCore(microRosLoop, "", 8192, NULL, 1, NULL, 0);
 
-    Timer<unsigned long, micros> timer(200ul);
+    RoverHelpers::Timer<unsigned long, micros> timer(200ul);
     uint8_t motorStep = HIGH;
     uint8_t PIN_PULSE = 10u;
 
