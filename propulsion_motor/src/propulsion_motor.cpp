@@ -2,7 +2,7 @@
 
 #include "config_local.hpp"
 
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 #include "rover_can_lib/rover_can_lib.hpp"
 #include "rover_can_lib/msgs/propulsion_motor_cmd.hpp"
 #include "rover_can_lib/msgs/propulsion_motor_status.hpp"
@@ -32,7 +32,7 @@ void setup()
     motorDrive.init(1500.0f);
 
     Serial.printf("Init done, starting Loop!\n");
-    Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
+    RoverHelpers::Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
     for (;;)
     {
         canBus.update();

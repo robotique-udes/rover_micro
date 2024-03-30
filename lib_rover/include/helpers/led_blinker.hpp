@@ -7,7 +7,7 @@
 
 #include "Arduino.h"
 #include "driver/ledc.h"
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 
 /// @brief Helper wrapper class to make it easier to blink led
 /// @example The follwing code will blink the onboard led at 1Hz with a 
