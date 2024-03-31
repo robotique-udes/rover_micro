@@ -68,6 +68,12 @@
 /// @brief Loop with 'i' iterator (ARRAY[i]) for all index of an array
 #define FOR_ALL(ARRAY) for (uint8_t i = 0; i < GET_ARRAY_SIZE(ARRAY); i++)
 
+#define COPY_ARRAY(src, dest, len)   \
+    for (size_t i = 0; i < len; i++) \
+    {                                \
+        dest[i] = src[i];            \
+    }
+
 /// @example
 ///  void setup(void)
 ///  {
@@ -75,15 +81,21 @@
 ///     bool b = false;
 ///     GET_WORST_OF(a, b) // Return False
 ///  }
-///  
+///
 ///  Truth table:
 ///  |   | A | B | R |
 ///  | 0 | 0 | 0 | 0 |
 ///  | 1 | 0 | 1 | 0 |
 ///  | 2 | 1 | 0 | 0 |
 ///  | 3 | 1 | 1 | 1 |
-///  
+///
 /// @brief Return false if one of the arguments are false
 #define GET_WORST_OF(a, b) ((a == false || b == false) ? false : true)
 
+#define IN
+#define OUT
+#define INOUT
+
+#define MAP(x, in_min, in_max, out_min, out_max) \
+    (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) + (float)(out_min))
 #endif // __MACROS_HPP__

@@ -5,7 +5,6 @@
 #error CPU is not supported
 #else
 
-#include "Arduino.h"
 #include "driver/ledc.h"
 #include "rover_helpers/helpers.hpp"
 

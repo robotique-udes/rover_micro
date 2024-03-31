@@ -8,6 +8,8 @@
 #include "rover_can_lib/msgs/heartbeat.hpp"
 #include "rover_can_lib/config.hpp"
 
+#include "rover_helpers/led_blinker.hpp"
+
 namespace RoverCanLib
 {
     /// @brief CanBusManager class: wrapper to help communicate on the canbus
@@ -110,11 +112,11 @@ namespace RoverCanLib
         eCanBusStatus _canBusState = eCanBusStatus::notInit;
 
         RoverCanLib::Msgs::Heartbeat _msgHeartbeat;
-        Timer<unsigned long, millis> _timerHeartbeat;
+        RoverHelpers::Timer<unsigned long, millis> _timerHeartbeat;
 
         bool _watchDogAlive = false;
         bool _disableMasterWatchdog = false;
-        Timer<unsigned long, millis> _timerWatchdog = Timer<unsigned long, millis>(RoverCanLib::Constant::WATCHDOG_TIMEOUT_MS);
+        RoverHelpers::Timer<unsigned long, millis> _timerWatchdog = RoverHelpers::Timer<unsigned long, millis>(RoverCanLib::Constant::WATCHDOG_TIMEOUT_MS);
 
         void (*_canMsgCallbackFunc)(CanBusManager *canBusManager_, const twai_message_t *msgPtr_) = NULL;
 
@@ -385,7 +387,7 @@ namespace RoverCanLib
                 if (msg.data[(uint8_t)Constant::eDataIndex::MSG_ID] == (uint8_t)Constant::eMsgId::ERROR_STATE &&
                     RoverCanLib::Helpers::msgContentIsLastElement<Msgs::ErrorState>(&msg))
                 {
-                    LOG(WARN, "Asked by master to send error code, sending...");
+                    LOG(INFO, "Asked by master to send error code, sending...");
                     Constant::eInternalErrorCode errorState;
                     if (_canBusState > eCanBusStatus::ERROR_DELIMITER)
                     {
@@ -399,7 +401,7 @@ namespace RoverCanLib
                     {
                         this->sendErrorCode(Constant::eInternalErrorCode::OK);
                     }
-                    LOG(WARN, "Done sending");
+                    LOG(INFO, "Done sending");
                 }
             }
             else // Msgs for this node with custom execution
