@@ -7,10 +7,10 @@
   [{
       "name": "Philippe Michaud",
       "email": "micp1402@usherbrooke.ca",
-      "maintainer": true,
+      "maintainer": true
     }],
   "dependencies": {
-    "micro-ros-platformio": "https://github.com/micro-ROS/micro_ros_platformio",
+    "micro-ros-platformio": "https://github.com/micro-ROS/micro_ros_platformio"
   },
   "frameworks": "*",
   "platforms": "*"
