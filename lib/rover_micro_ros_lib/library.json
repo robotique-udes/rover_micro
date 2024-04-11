@@ -1,0 +1,17 @@
+{
+  "name": "rover_micro_ros_lib",
+  "version": "0.0.1",
+  "description": "A micro_ros platformio oop based wrapper",
+  "keywords": "micro_ros, rovus",
+  "authors":
+  [{
+      "name": "Philippe Michaud",
+      "email": "micp1402@usherbrooke.ca",
+      "maintainer": true
+    }],
+  "dependencies": {
+    "micro-ros-platformio": "https://github.com/micro-ROS/micro_ros_platformio"
+  },
+  "frameworks": "*",
+  "platforms": "*"
+}

@@ -35,8 +35,6 @@ namespace RoverHelpers
         TYPE getTime(void);
         void restart(void);
     };
-    
-    #include "rover_helpers/chrono.cpp"
 }
 
 #endif // __CHRONO_HPP__
