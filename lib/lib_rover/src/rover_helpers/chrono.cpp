@@ -71,8 +71,6 @@ namespace RoverHelpers
     {
         this->init();
     }
-
-#include "rover_helpers/chrono.cpp"
 }
 
 #endif // __CHRONO_CPP__
