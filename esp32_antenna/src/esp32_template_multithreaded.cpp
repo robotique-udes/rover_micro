@@ -108,12 +108,7 @@ void setup()
 
         if (timer_heartbeat.isDone())
         {
-            root_heartbeat_state = false;
-        }
-
-        if (root_heartbeat_state)
-        {
-            if (xSemaphoreTake(xSemaphore, (TickType_t)10) == pdTRUE)
+            if (timer.isDone() && motor_status)
             {
                 motorStep = motorStep == HIGH ? LOW : HIGH;
                 digitalWrite(DIR, stepper_direction);
