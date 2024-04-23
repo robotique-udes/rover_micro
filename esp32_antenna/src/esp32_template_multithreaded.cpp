@@ -62,11 +62,11 @@
 
 // Function forward declarations
 void microRosLoop(void *pvParameters);
-void cbSubscriber(const void *msg_);
+void cbGoal(const void *msg_);
 void cbSubHeartbeat(const void *msg_);
 
 // Global objects
-RoverMicroRosLib::Subscriber sub = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(rover_msgs, msg, AntennaCmd), "/base/antenna/cmd/out/goal", cbSubscriber);
+RoverMicroRosLib::Subscriber subGoal = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(rover_msgs, msg, AntennaCmd), "/base/antenna/cmd/out/goal", cbGoal);
 RoverMicroRosLib::Subscriber subHeartbeat = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Empty), "/base/base_heartbeat", cbSubHeartbeat);
 Timer<unsigned long, micros> timer(200ul);
 Timer<unsigned long, millis> timer_heartbeat(500);
@@ -97,32 +97,15 @@ void setup()
 
     for (EVER)
     {
-        // if (root_heartbeat_state)
-        // {
-        //     state_heartbeat = true;
-        // }
-        // else
-        // {
-        //     state_heartbeat = false;
-        // }
-
-        if (timer_heartbeat.isDone())
+        if (xSemaphoreTake(xSemaphore, (TickType_t)10) == pdTRUE)
         {
-            root_heartbeat_state = false;
-        }
-
-        if (root_heartbeat_state)
-        {
-            if (xSemaphoreTake(xSemaphore, (TickType_t)10) == pdTRUE)
+            if (timer.isDone() && motor_status)
             {
-                if (timer.isDone() && motor_status)
-                {
-                    motorStep = motorStep == HIGH ? LOW : HIGH;
-                    digitalWrite(DIR, stepper_direction);
-                    digitalWrite(PUL, motorStep);
-                }
-                xSemaphoreGive(xSemaphore);
+                motorStep = motorStep == HIGH ? LOW : HIGH;
+                digitalWrite(DIR, stepper_direction);
+                digitalWrite(PUL, motorStep);
             }
+            xSemaphoreGive(xSemaphore);
         }
     }
 }
@@ -141,7 +124,7 @@ void microRosLoop(void *pvParameters)
     // later allow the node to call subscriber and timer callback when those are
     // ready (on new data for example).
     node.addSubscriber(&subHeartbeat);
-    node.addSubscriber(&sub);
+    node.addSubscriber(&subGoal);
 
     for (EVER)
     {
@@ -151,19 +134,18 @@ void microRosLoop(void *pvParameters)
     }
 }
 
-// This function is called each time new data is available on the
-// /pub_test_topic topic.
-void cbSubscriber(const void *msg_)
+void cbGoal(const void *msg_)
 {
-    // Cast the void pointer into the correct message type for the topic. This
-    // is necessary to access the data in the correct format. It then logs the
-    // msg data into the terminal logger.
-    // (ros2 launch rover_helper terminal_logger.launch.py)
-
     unsigned long step_timer;
     const rover_msgs__msg__AntennaCmd *msg = (rover_msgs__msg__AntennaCmd *)msg_;
     // LOG(INFO, "Received: %f", msg->speed);
-    if (msg->speed != 0)
+
+    if (timer_heartbeat.isDone())
+    {
+        root_heartbeat_state = false;
+    }
+
+    if (msg->speed != 0 && root_heartbeat_state)
     {
         step_timer = 2 * PI * 1e6 / (MICRO_STEPS * abs(msg->speed) * RATIO_MOTOR);
         // LOG(INFO, "Received: %i", step_timer);
@@ -188,14 +170,13 @@ void cbSubscriber(const void *msg_)
     {
         motor_status = false;
     }
-    // LOG(INFO, "Received: %i", step_timer);
-    LOG(INFO, "heartbeat: %d", root_heartbeat_state);
 }
 
 void cbSubHeartbeat(const void *msg_)
 {
     root_heartbeat_state = true;
     timer_heartbeat.init(500);
+    LOG(INFO, "heartbeat: %d", root_heartbeat_state);
 }
 
 // Do not use when using FreeRTOS.
