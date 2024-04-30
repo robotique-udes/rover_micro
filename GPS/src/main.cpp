@@ -58,8 +58,7 @@ void splitData(const char pGpsData[BUFFER_SIZE])
   }
   else
   {
-    uint8_t i = 0;
-    for (; pGpsData[i] != '\n' && pGpsData[i] != '\0' && i < BUFFER_SIZE && indexElements < NB_ELEMENTS && indexChar < SIZE_ELEMENTS; i++)
+    for (uint8_t i = 0; pGpsData[i] != '\n' && pGpsData[i] != '\0' && i < BUFFER_SIZE && indexElements + 1 < NB_ELEMENTS && indexChar + 1 < SIZE_ELEMENTS; i++)
     {
       if (pGpsData[i] == ',')
       {
@@ -85,8 +84,8 @@ void splitData(const char pGpsData[BUFFER_SIZE])
     valide = false;
   }
 
-  fixType = atoi(data[6]);
-  if (fixType == 0)
+  fixType = uint8_t(atoi(data[6]));
+  if (fixType == 0u)
   {
     valide = false;
     LOG(WARN, "Invalid signal, no position available");
@@ -122,7 +121,6 @@ float getLatitude(char latData[SIZE_ELEMENTS], char latSign[SIZE_ELEMENTS])
 {
   float allDegrees = 0.0f;
   float allMinutes = 0.0f;
-  // uint8_t i = 0;
   int8_t iDeg = 1;
   int8_t iMin = 1;
 
@@ -157,7 +155,6 @@ float getLongitude(char longData[SIZE_ELEMENTS], char longSign[SIZE_ELEMENTS])
 {
   float allDegrees = 0.0f;
   float allMinutes = 0.0f;
-  // uint8_t i = 0;
   int8_t iDeg = 2;
   int8_t iMin = 1;
 
