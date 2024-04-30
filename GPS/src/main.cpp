@@ -1,22 +1,21 @@
 #include <Arduino.h>
-#include "rover_helpers/helpers.hpp"
-#include "string.h"
 #include "math.h"
+#include "rover_helpers/helpers.hpp"
 
 #define RX1PIN GPIO_NUM_12
 #define TX1PIN GPIO_NUM_13
 #define BUFFER_SIZE 255
 
 #define NB_ELEMENTS 20
-#define SIZE_VALUES 255
+#define SIZE_ELEMENTS 255
 
-float getLatitude(char latData[], char latSign[]);
-int splitData(const char *pGpsData);
-float getLongitude(char longData[], char longSign[]);
+float getLatitude(char latData[SIZE_ELEMENTS], char latSign[SIZE_ELEMENTS]);
+void splitData(const char pGpsData[BUFFER_SIZE]);
+float getLongitude(char longData[SIZE_ELEMENTS], char longSign[SIZE_ELEMENTS]);
 
 float latitude;
 float longitude;
-float fixType;
+uint8_t fixType;
 
 void setup()
 {
@@ -26,15 +25,18 @@ void setup()
   for (EVER)
   {
     char bufferGpsReceive[BUFFER_SIZE] = {0};
-    uint8_t dataSize = Serial1.readBytesUntil('\n', bufferGpsReceive, BUFFER_SIZE - 1);
+    uint8_t dataSize = Serial1.readBytesUntil('\n', bufferGpsReceive, BUFFER_SIZE);
 
     if (dataSize > 0)
     {
-      // Good Received data: $GNGGA,201427.00,4522.65273,N,07155.50339,W,2,12,0.71,282.0,M,-31.5,M,,0000*78
       bufferGpsReceive[dataSize] = '\0';
       const char *pGpsData = bufferGpsReceive;
-      char gpsDataTest[BUFFER_SIZE] = {'$', 'G', 'N', 'G', 'G', 'A', ',', '2', '0', '1', '4', '2', '7', '.', '0', '0', ',', '4', '5', '2', '2', '.', '6', '5', '2', '7', '3', ',', 'N', ',', '0', '7', '1', '5', '5', '.', '5', '0', '3', '3', '9', ',', 'W', ',', '2', ',', '1', '2', ',', '0', '.', '7', '1', ',', '2', '8', '2', '.', '0', ',', 'M', ',', '-', '3', '1', '.', '5', ',', 'M', ',', ',', '0', '0', '0', '0', '*', '7', '8', '\0'};
-      const char *pGpsDataTest = gpsDataTest;
+
+      // Test data
+      // Good Received data: $GNGGA,201427.00,4522.65273,N,07155.50339,W,2,12,0.71,282.0,M,-31.5,M,,0000*78
+      // char gpsDataTest[BUFFER_SIZE] = {'$', 'G', 'N', 'G', 'G', 'A', ',', '2', '0', '1', '4', '2', '7', '.', '0', '0', ',', '4', '5', '2', '2', '.', '6', '5', '2', '7', '3', ',', 'N', ',', '0', '7', '1', '5', '5', '.', '5', '0', '3', '3', '9', ',', 'W', ',', '2', ',', '1', '2', ',', '0', '.', '7', '1', ',', '2', '8', '2', '.', '0', ',', 'M', ',', '-', '3', '1', '.', '5', ',', 'M', ',', ',', '0', '0', '0', '0', '*', '7', '8', '\0'};
+      // const char *pGpsDataTest = gpsDataTest;
+
       splitData(pGpsData);
     }
   }
@@ -42,9 +44,9 @@ void setup()
 
 void loop() {}
 
-int splitData(const char *pGpsData)
+void splitData(const char pGpsData[BUFFER_SIZE])
 {
-  char data[NB_ELEMENTS][SIZE_VALUES] = {0};
+  char data[NB_ELEMENTS][SIZE_ELEMENTS] = {0};
   uint8_t indexElements = 0;
   uint8_t indexChar = 0;
   bool valide = true;
@@ -56,8 +58,8 @@ int splitData(const char *pGpsData)
   }
   else
   {
-    uint16_t i = 0;
-    for (; pGpsData[i] != '\n' && pGpsData[i] != '\0' && i < UINT8_MAX; i++)
+    uint8_t i = 0;
+    for (; pGpsData[i] != '\n' && pGpsData[i] != '\0' && i < BUFFER_SIZE && indexElements < NB_ELEMENTS && indexChar < SIZE_ELEMENTS; i++)
     {
       if (pGpsData[i] == ',')
       {
@@ -87,7 +89,7 @@ int splitData(const char *pGpsData)
   if (fixType == 0)
   {
     valide = false;
-    LOG(WARN, "Invalid messages");
+    LOG(WARN, "Invalid signal, no position available");
   }
 
   if (valide)
@@ -114,19 +116,17 @@ int splitData(const char *pGpsData)
       LOG(WARN, "Empty messages");
     }
   }
-
-  return 0;
 }
 
-float getLatitude(char latData[], char latSign[])
+float getLatitude(char latData[SIZE_ELEMENTS], char latSign[SIZE_ELEMENTS])
 {
-  float allDegrees = 0;
-  float allMinutes = 0;
-  uint8_t i = 0;
+  float allDegrees = 0.0f;
+  float allMinutes = 0.0f;
+  // uint8_t i = 0;
   int8_t iDeg = 1;
   int8_t iMin = 1;
 
-  for (; latData[i] != '\0'; i++)
+  for (uint8_t i = 0; latData[i] != '\0' && i < SIZE_ELEMENTS; i++)
   {
     uint8_t temp = 0;
     if (latData[i] != '.' && latData[i] != '-')
@@ -145,23 +145,23 @@ float getLatitude(char latData[], char latSign[])
       }
     }
   }
-  float latitude = allDegrees + (allMinutes / 60);
+  float latitude = allDegrees + (allMinutes / 60.0f);
   if (latSign[0] == 'S')
   {
-    latitude *= -1;
+    latitude *= -1.0f;
   }
   return latitude;
 }
 
-float getLongitude(char longData[], char longSign[])
+float getLongitude(char longData[SIZE_ELEMENTS], char longSign[SIZE_ELEMENTS])
 {
-  float allDegrees = 0;
-  float allMinutes = 0;
-  uint8_t i = 0;
+  float allDegrees = 0.0f;
+  float allMinutes = 0.0f;
+  // uint8_t i = 0;
   int8_t iDeg = 2;
   int8_t iMin = 1;
 
-  for (; longData[i] != '\0'; i++)
+  for (uint8_t i = 0; longData[i] != '\0' && i < SIZE_ELEMENTS; i++)
   {
     uint8_t temp = 0;
     if (longData[i] != '.' && longData[i] != '-')
@@ -184,11 +184,11 @@ float getLongitude(char longData[], char longSign[])
   float longitude = allDegrees + (allMinutes / 60);
   if (longSign[0] == 'W')
   {
-    longitude *= -1;
+    longitude *= -1.0f;
   }
   else if (longSign[0] == 'E')
   {
-    longitude -= 360.0;
+    longitude -= 360.0f;
   }
   return longitude;
 }
