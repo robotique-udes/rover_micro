@@ -78,17 +78,16 @@ void splitData(const char pGpsData[BUFFER_SIZE])
   if (strcmp(data[0], compareMsgType) == 0)
   {
     LOG(INFO, "Good format of received data: %s", pGpsData);
+    fixType = (uint8_t)atoi(data[6]);
+    if (fixType == 0u)
+    {
+      valide = false;
+      LOG(WARN, "Invalid signal, no position available");
+    }
   }
   else
   {
     valide = false;
-  }
-
-  fixType = (uint8_t)atoi(data[6]);
-  if (fixType == 0u)
-  {
-    valide = false;
-    LOG(WARN, "Invalid signal, no position available");
   }
 
   if (valide)
