@@ -99,6 +99,9 @@ namespace RoverCanLib
         /// this will allow us to see which node is having problems
         void sendErrorCode(RoverCanLib::Constant::eInternalErrorCode errCode);
 
+        /// @brief Return if the internal watchdog is alive
+        bool isWatchdogAlive(void);
+
     private:
         void updateLedStatus(void);
         void updateHeartbeat(void);
@@ -368,8 +371,8 @@ namespace RoverCanLib
 
             if (msg.identifier == 0x00) // No more msgs
             {
-
                 break;
+                
             }
             else if (msg.identifier == (uint8_t)Constant::eDeviceId::MASTER_COMPUTER_UNIT) // Global msg coming from Master
             {
@@ -461,6 +464,11 @@ namespace RoverCanLib
             _errorStateMsg.data.error = true;
             this->sendMsg(&_errorStateMsg, false);
         }
+    }
+
+    bool CanBusManager::isWatchdogAlive(void)
+    {
+        return _watchDogAlive;
     }
 }
 
