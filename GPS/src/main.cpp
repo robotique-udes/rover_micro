@@ -84,7 +84,7 @@ void splitData(const char pGpsData[BUFFER_SIZE])
     valide = false;
   }
 
-  fixType = uint8_t(atoi(data[6]));
+  fixType = (uint8_t)atoi(data[6]);
   if (fixType == 0u)
   {
     valide = false;
