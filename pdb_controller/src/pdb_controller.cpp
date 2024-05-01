@@ -34,7 +34,7 @@ void setup()
     {
         canBus.update();
 
-        if (!canBus.isWatchdogAlive())
+        if (!canBus.isOk())
         {
             digitalWrite(CAM_ENABLE_A2, LOW);
             digitalWrite(CAM_ENABLE_R1M_1, LOW);
@@ -90,6 +90,7 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
         break;
 
     case (RoverCanLib::Constant::eDeviceId::CAMERA_R1M_1):
+        LOG(INFO, "Here");
         controlCamera(canBusManager_, msg_, CAM_ENABLE_R1M_1);
         break;
 
@@ -129,10 +130,12 @@ void controlCamera(RoverCanLib::CanBusManager *canBusManager_, const twai_messag
 
         if (camMsg.data.enable)
         {
+            LOG(INFO, "High!");
             digitalWrite(camGPIO_, HIGH);
         }
         else
         {
+            LOG(INFO, "Low!");
             digitalWrite(camGPIO_, LOW);
         }
     }

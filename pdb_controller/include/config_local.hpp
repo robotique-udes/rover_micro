@@ -16,8 +16,8 @@ constexpr gpio_num_t CAM_ENABLE_A2_ROT_SIDE = GPIO_NUM_21;
 constexpr gpio_num_t CAM_ENABLE_A2_ROT_UP = GPIO_NUM_22;
 
 constexpr gpio_num_t CAM_ENABLE_R1M_1 = GPIO_NUM_19;
-constexpr gpio_num_t CAM_ENABLE_R1M_2 = GPIO_NUM_32;
-constexpr gpio_num_t CAM_ENABLE_R1M_3 = GPIO_NUM_33;
+constexpr gpio_num_t CAM_ENABLE_R1M_2 = GPIO_NUM_33;
+constexpr gpio_num_t CAM_ENABLE_R1M_3 = GPIO_NUM_32;
 
 constexpr gpio_num_t LIGHT_ENABLE = GPIO_NUM_23;
 constexpr gpio_num_t KLAXON_ENABLE = GPIO_NUM_25;

@@ -465,11 +465,6 @@ namespace RoverCanLib
             this->sendMsg(&_errorStateMsg, false);
         }
     }
-
-    bool CanBusManager::isWatchdogAlive(void)
-    {
-        return _watchDogAlive;
-    }
 }
 
 #endif // !defined(ESP32)
