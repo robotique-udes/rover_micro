@@ -1,5 +1,5 @@
-#ifndef __DC_MOTOR_HPP__
-#define __DC_MOTOR_HPP__
+#ifndef __TALONSRX_DRIVE_HPP__
+#define __TALONSRX_DRIVE_HPP__
 
 #if !defined(ESP32)
 #error CPU is not supported
@@ -7,6 +7,8 @@
 
 #include "Arduino.h"
 #include "driver/ledc.h"
+#include "actuators/motor_driver.hpp"
+#include "rover_helpers/log.hpp"
 
 namespace TalonSrxConstant
 {
@@ -23,7 +25,7 @@ namespace TalonSrxConstant
     }
 }
 
-class TalonSrx
+class TalonSrx : public MotorDriver
 {
 public:
     // Try using the same timer for all same frequency signal. Don't use the same channel
@@ -39,10 +41,9 @@ public:
         ledc_stop(LEDC_LOW_SPEED_MODE, _channel, 0u);
     }
 
-    void init(float microseconds_ = TalonSrxConstant::SIGNAL_FULL_STOP_MS, uint32_t signalFrequencyHz_ = 50u)
+    void init(float microseconds_ = TalonSrxConstant::SIGNAL_FULL_STOP_MS, float signalFrequencyHz_ = 50.0F)
     {
-        _freqSignal = signalFrequencyHz_;
-
+        _freqSignal = (uint32_t)round(signalFrequencyHz_);
         ledc_timer_config_t ledc_timer;
         ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;
         ledc_timer.timer_num = _timer;
@@ -67,6 +68,46 @@ public:
         this->writeMicroseconds(microseconds_);
     }
 
+    // -100 to 100 for speed
+    void setSpd(float spd)
+    {   
+        if (spd < -_maxSpeed || spd > _maxSpeed)
+        {
+            LOG(WARN, "Speed value exceed max power: %f",spd);
+            _spd = (spd < -_maxSpeed) ? -_maxSpeed : _maxSpeed;
+        }
+        else
+        {
+            _spd = spd;
+        }
+        writeMicroseconds(MAP(spd, -100.0f, 100.0f, 1000.0f, 2000.0f));
+    }
+
+    void enableMot(void){/*code to enable the motor if applied.*/}
+    void disableMot(void)
+    {
+        stop();
+    }
+    void resetMot(void){/*code to reset the motor if applied.*/}
+
+    // Return true if the motor is moving.
+    bool isMoving(void)
+    {
+        if(_spd !=0)
+            return true;
+        else
+            return false;
+    }
+
+    // Set max dutycycle from 0-100% to limit the output power.
+    void setMaxSpeed(uint8_t spd)
+    {
+        _maxSpeed = spd;
+        LOG(INFO, "Max speed set at : %i",spd);
+    }
+    
+private:
+
     void writeMicroseconds(float microseconds_)
     {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, _channel, TalonSrxConstant::MS_TO_DUTY(_freqSignal, microseconds_));
@@ -78,11 +119,12 @@ public:
         writeMicroseconds(TalonSrxConstant::SIGNAL_FULL_STOP_MS);
     }
 
-private:
+    uint8_t _maxSpeed = 50;
     gpio_num_t _pinPWM;
     ledc_timer_t _timer;
     ledc_channel_t _channel;
     uint32_t _freqSignal;
+    float _spd;
 };
 
 #endif // !defined(ESP32)
