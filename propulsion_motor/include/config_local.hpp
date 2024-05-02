@@ -5,8 +5,9 @@
 // device of the same type. For example, all propulsion motors should have the
 // same code other then the constant specified here.
 #include <cstdint>
+#include "rover_can_lib/constant.hpp"
 
-constexpr uint16_t DEVICE_ID = 0x101;
+constexpr uint16_t DEVICE_ID = (uint16_t)RoverCanLib::Constant::eDeviceId::REARRIGHT_MOTOR;
 
 constexpr gpio_num_t PMW_MOT = GPIO_NUM_26;
 constexpr gpio_num_t BTN_1 = GPIO_NUM_34;

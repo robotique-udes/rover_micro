@@ -8,7 +8,7 @@
 #include "Arduino.h"
 #include "driver/ledc.h"
 #include "actuators/motor_driver.hpp"
-#include "rover_helpers/log.hpp"
+#include "rover_helpers/helpers.hpp"
 
 class TalonSrx : public MotorDriver
 {
