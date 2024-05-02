@@ -32,7 +32,7 @@ void setup()
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
     RoverHelpers::Timer<unsigned long, millis> timerSetCmd(10);
 
-    RoverHelpers::MovingAverage<float, 75u> cmdAverage(0.0f);
+    RoverHelpers::MovingAverage<float, 35u> cmdAverage(0.0f);
 
     float speedCmd = 0.0f;
     for (;;)
