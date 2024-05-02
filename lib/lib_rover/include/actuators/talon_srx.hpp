@@ -84,7 +84,7 @@ public:
             _speed = speed_;
         }
 
-        if (_speed == 0.0f)
+        if (IN_ERROR(_speed, 0.01f, 0.0f))
         {
             this->stop();
         }
