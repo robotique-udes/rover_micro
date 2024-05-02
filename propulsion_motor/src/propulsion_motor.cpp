@@ -48,14 +48,14 @@ void setup()
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
     RoverHelpers::Timer<unsigned long, millis> timer500(100);
     float testSpeed = 0;
-    talonDrive.setMaxSpeed(20);
+    // talonDrive.setMaxSpeed(64); // enlever par sécurité
 
     for (;;)
     {
         if(timer500.isDone())
         {
             digitalWrite(LED_1,!digitalRead(LED_1));
-            talonDrive.setSpd(30);
+            talonDrive.setSpd(64);
         }
 
         // talonDrive.writeMicroseconds(MAP(testSpeed, -100.0f, 100.0f, 1000.0f, 2000.0f));

@@ -20,8 +20,8 @@ namespace TalonSrxConstant
 
     constexpr uint32_t MS_TO_DUTY(uint32_t freq_, float microSeconds_)
     {
-        float period = 1.0f/static_cast<float>(freq_);
-        return static_cast<uint32_t>(round(((microSeconds_/1'000'000.f)/period)*1048576.0f));
+        float period = 1.0f / static_cast<float>(freq_);
+        return static_cast<uint32_t>(round(((microSeconds_ / 1'000'000.f) / period) * 1048576.0f));
     }
 }
 
@@ -70,30 +70,46 @@ public:
 
     // -100 to 100 for speed
     void setSpd(float spd)
-    {   
+    {
         if (spd < -_maxSpeed || spd > _maxSpeed)
         {
-            LOG(WARN, "Speed value exceed max power: %f",spd);
+            LOG(WARN, "Speed value exceed max power: %f", spd);
             _spd = (spd < -_maxSpeed) ? -_maxSpeed : _maxSpeed;
         }
         else
         {
             _spd = spd;
         }
-        writeMicroseconds(MAP(spd, -100.0f, 100.0f, 1000.0f, 2000.0f));
+        writeMicroseconds(MAP(_spd, -100.0f, 100.0f, 1000.0f, 2000.0f));
     }
 
-    void enableMot(void){/*code to enable the motor if applied.*/}
+    void setSpd(float spd, bool override_)
+    {
+        if (override_ == true)
+        {
+            if (spd < -_maxSpeed || spd > _maxSpeed)
+            {
+                LOG(WARN, "Speed value exceed max power: %f", spd);
+            }
+            writeMicroseconds(MAP(spd, -100.0f, 100.0f, 1000.0f, 2000.0f));
+        }
+        else
+        {
+            LOG(WARN, "Cant't override max speed: %f", spd);
+        }
+    }
+
+    void enableMot(void) { /*code to enable the motor if applied.*/ }
     void disableMot(void)
     {
         stop();
     }
-    void resetMot(void){/*code to reset the motor if applied.*/}
+    void resetMot(void) { /*code to reset the motor if applied.*/ }
 
     // Return true if the motor is moving.
     bool isMoving(void)
     {
-        if(_spd !=0)
+        if (_spd != 0)
             return true;
         else
             return false;
@@ -103,11 +119,10 @@ public:
     void setMaxSpeed(uint8_t spd)
     {
         _maxSpeed = spd;
-        LOG(INFO, "Max speed set at : %i",spd);
+        LOG(INFO, "Max speed set at : %i", spd);
     }
-    
-private:
 
+private:
     void writeMicroseconds(float microseconds_)
     {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, _channel, TalonSrxConstant::MS_TO_DUTY(_freqSignal, microseconds_));
@@ -119,7 +134,7 @@ private:
         writeMicroseconds(TalonSrxConstant::SIGNAL_FULL_STOP_MS);
     }
 
-    uint8_t _maxSpeed = 50;
+    uint8_t _maxSpeed = 64;
     gpio_num_t _pinPWM;
     ledc_timer_t _timer;
     ledc_channel_t _channel;
