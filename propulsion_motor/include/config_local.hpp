@@ -15,7 +15,7 @@ constexpr gpio_num_t BTN_3 = GPIO_NUM_36;
 constexpr gpio_num_t LED_1 = GPIO_NUM_32;
 constexpr gpio_num_t LED_2 = GPIO_NUM_33;
 constexpr gpio_num_t LED_3 = GPIO_NUM_25;
-constexpr gpio_num_t CAN_RX = GPIO_NUM_16;
-constexpr gpio_num_t CAN_TX = GPIO_NUM_17;
+constexpr gpio_num_t CAN_RX = GPIO_NUM_17;
+constexpr gpio_num_t CAN_TX = GPIO_NUM_16;
 
 #endif // __CONFIG_LOCAL_HPP__

@@ -37,7 +37,7 @@ void setup()
 
         if (canBus.isOk() && msgPropCmd.data.enable)
         {
-            talonDrive.setSpeed(msgPropCmd.data.targetSpeed);
+            talonDrive.setSpeed(msgPropCmd.data.targetSpeed * 100.0f);
         }
         else
         {
