@@ -9,7 +9,7 @@
 #include <std_msgs/msg/empty.h>
 
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
-#include "helpers/helpers.hpp"
+#include "rover_helpers/helpers.hpp"
 
 #include <semaphore>
 
@@ -68,8 +68,8 @@ void cbSubHeartbeat(const void *msg_);
 // Global objects
 RoverMicroRosLib::Subscriber subGoal = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(rover_msgs, msg, AntennaCmd), "/base/antenna/cmd/out/goal", cbGoal);
 RoverMicroRosLib::Subscriber subHeartbeat = RoverMicroRosLib::Subscriber(ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Empty), "/base/base_heartbeat", cbSubHeartbeat);
-Timer<unsigned long, micros> timer(200ul);
-Timer<unsigned long, millis> timer_heartbeat(500);
+RoverHelpers::Timer<unsigned long, micros> timer(200ul);
+RoverHelpers::Timer<unsigned long, millis> timer_heartbeat(500);
 bool root_heartbeat_state = false;
 bool state_heartbeat = false;
 bool motor_status = false;
@@ -123,22 +123,14 @@ void microRosLoop(void *pvParameters)
 {
     set_microros_serial_transports(Serial);
 
-    // Create the microROS node. Template parameters are:
-    // <Number of publisher, Number of timers, Number of subscriber>.
     RoverMicroRosLib::Node<0, 1u, 2u> node(NAME_NS, NAME_NODE);
-    // Necessary
     node.init();
 
-    // Link global publisher, timer and subscriber with the node, this will
-    // later allow the node to call subscriber and timer callback when those are
-    // ready (on new data for example).
     node.addSubscriber(&subHeartbeat);
     node.addSubscriber(&subGoal);
 
     for (EVER)
     {
-        // This handle the connection with the ROS network and calls ready
-        // callbacks.
         node.spinSome(RCL_MS_TO_NS(0UL));
     }
 }
