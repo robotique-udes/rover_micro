@@ -372,7 +372,6 @@ namespace RoverCanLib
             if (msg.identifier == 0x00) // No more msgs
             {
                 break;
-                
             }
             else if (msg.identifier == (uint8_t)Constant::eDeviceId::MASTER_COMPUTER_UNIT) // Global msg coming from Master
             {
@@ -408,7 +407,13 @@ namespace RoverCanLib
                 }
             }
             else // Msgs for this node with custom execution
-            {
+            {   
+                if (msg.data_length_code < (uint8_t)RoverCanLib::Constant::eDataIndex::START_OF_DATA + 1u)
+                {
+                    LOG(WARN, "Ill formed msg, dropping...");
+                    this->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
+                    return;
+                }
                 _canMsgCallbackFunc(this, &msg);
             }
         }

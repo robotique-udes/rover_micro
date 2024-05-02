@@ -52,7 +52,8 @@ namespace RoverCanLib::Constant
         PROPULSION_MOTOR_CMD = 0x11,
         PROPULSION_MOTOR_STATUS = 0x12,
         CAM_CONTROL = 0x13,
-        CAM_CONTROL_A2 = 0x14
+        CAM_CONTROL_A2 = 0x14,
+        LIGHT_CONTROL = 0x15
     };
 
     enum class eDataIndex : uint8_t

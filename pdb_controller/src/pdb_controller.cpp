@@ -7,6 +7,7 @@
 
 #include "rover_can_lib/msgs/cam_control.hpp"
 #include "rover_can_lib/msgs/cam_control_a2.hpp"
+#include "rover_can_lib/msgs/light_control.hpp"
 
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
@@ -24,23 +25,17 @@ void setup()
     pinMode(CAM_ENABLE_R1M_1, OUTPUT);
     pinMode(CAM_ENABLE_R1M_2, OUTPUT);
     pinMode(CAM_ENABLE_R1M_3, OUTPUT);
+    pinMode(LIGHT_ENABLE, OUTPUT);
 
-    digitalWrite(CAM_ENABLE_A2, LOW);
-    digitalWrite(CAM_ENABLE_R1M_1, LOW);
-    digitalWrite(CAM_ENABLE_R1M_2, LOW);
-    digitalWrite(CAM_ENABLE_R1M_3, LOW);
+    digitalWrite(CAM_ENABLE_A2, HIGH);
+    digitalWrite(CAM_ENABLE_R1M_1, HIGH);
+    digitalWrite(CAM_ENABLE_R1M_2, HIGH);
+    digitalWrite(CAM_ENABLE_R1M_3, HIGH);
+    digitalWrite(LIGHT_ENABLE, LOW);
 
     for (;;)
     {
         canBus.update();
-
-        if (!canBus.isOk())
-        {
-            digitalWrite(CAM_ENABLE_A2, LOW);
-            digitalWrite(CAM_ENABLE_R1M_1, LOW);
-            digitalWrite(CAM_ENABLE_R1M_2, LOW);
-            digitalWrite(CAM_ENABLE_R1M_3, LOW);
-        }
     }
 }
 
@@ -51,46 +46,44 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
     switch ((RoverCanLib::Constant::eDeviceId)msg_->identifier)
     {
     case (RoverCanLib::Constant::eDeviceId::LIGHTS):
-#warning TODO
-        break;
+    {
+        RoverCanLib::Msgs::lightControl lightControlMsg;
+        canBusManager_->sendErrorCode(lightControlMsg.parseMsg(msg_));
 
-    case (RoverCanLib::Constant::eDeviceId::CAMERA_A2):
-        if (msg_->data_length_code < 3)
+        if (lightControlMsg.data.enable)
         {
-            LOG(WARN, "Ill formed msg, dropping");
-            canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
-            return;
+            digitalWrite(LIGHT_ENABLE, HIGH);
         }
         else
         {
-            RoverCanLib::Msgs::camControlA2 camMsg;
-            RoverCanLib::Constant::eInternalErrorCode errorCode = camMsg.parseMsg(msg_);
-            if (errorCode != RoverCanLib::Constant::eInternalErrorCode::OK)
-            {
-                canBusManager_->sendErrorCode(errorCode);
-                LOG(WARN, "Error copying message, dropping...");
-                return;
-            }
-
-            if (camMsg.data.enable)
-            {
-                digitalWrite(CAM_ENABLE_A2, HIGH);
-            }
-            else
-            {
-                digitalWrite(CAM_ENABLE_A2, LOW);
-            }
-
-            if (camMsg.data.posTilt != 0.0f && camMsg.data.posYaw != 0.0f)
-            {
-                canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
-                LOG(WARN, "Tilt and yaw not implemented yet")
-            }
+            digitalWrite(LIGHT_ENABLE, LOW);
         }
+    }
         break;
 
+    case (RoverCanLib::Constant::eDeviceId::CAMERA_A2):
+    {
+        RoverCanLib::Msgs::camControlA2 camMsg;
+        canBusManager_->sendErrorCode(camMsg.parseMsg(msg_));
+
+        if (camMsg.data.enable)
+        {
+            digitalWrite(CAM_ENABLE_A2, HIGH);
+        }
+        else
+        {
+            digitalWrite(CAM_ENABLE_A2, LOW);
+        }
+
+        if (camMsg.data.posTilt != 0.0f && camMsg.data.posYaw != 0.0f)
+        {
+            canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
+            LOG(WARN, "Tilt and yaw not implemented yet")
+        }
+        break;
+    }
+
     case (RoverCanLib::Constant::eDeviceId::CAMERA_R1M_1):
-        LOG(INFO, "Here");
         controlCamera(canBusManager_, msg_, CAM_ENABLE_R1M_1);
         break;
 
@@ -109,34 +102,15 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
 
 void controlCamera(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_, gpio_num_t camGPIO_)
 {
-    if (msg_->data_length_code < 3)
+    RoverCanLib::Msgs::camControl camMsg;
+    canBusManager_->sendErrorCode(camMsg.parseMsg(msg_));
+
+    if (camMsg.data.enable)
     {
-        LOG(WARN, "Ill formed msg, dropping");
-        canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
-        return;
+        digitalWrite(camGPIO_, HIGH);
     }
     else
     {
-        RoverCanLib::Msgs::camControl camMsg;
-        RoverCanLib::Constant::eInternalErrorCode errorCode;
-        errorCode = camMsg.parseMsg(msg_);
-
-        if (errorCode != RoverCanLib::Constant::eInternalErrorCode::OK)
-        {
-            canBusManager_->sendErrorCode(errorCode);
-            LOG(WARN, "Error while parsing msg, dropping...");
-            return;
-        }
-
-        if (camMsg.data.enable)
-        {
-            LOG(INFO, "High!");
-            digitalWrite(camGPIO_, HIGH);
-        }
-        else
-        {
-            LOG(INFO, "Low!");
-            digitalWrite(camGPIO_, LOW);
-        }
+        digitalWrite(camGPIO_, LOW);
     }
 }
