@@ -28,7 +28,7 @@ void setup()
     RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, canCB, true, (gpio_num_t)LED_BUILTIN);
     canBus.init();
 
-    LOG(INFO, "Init done, starting Loop!\n");
+    LOG(INFO, "Init done, starting Loop!");
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
 
     for (;;)

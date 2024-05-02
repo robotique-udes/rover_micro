@@ -129,7 +129,7 @@ public:
     // Set max dutycycle from 0-100% to limit the output power.
     void setMaxVoltage(float alimVoltage, float maxVoltage, bool removeOvervoltageSecurity = false)
     {
-        if (alimVoltage < 0.0f || maxVoltage < 0)
+        if (alimVoltage < 0.0f || maxVoltage < 0.0f)
         {
             LOG(WARN, "Wrong input parameters: can't have negative voltages. New value won't be applied...");
             return;
@@ -152,6 +152,7 @@ public:
             newMax = constrain(maxVoltage, 0.0f, PROTECTION_MAX_VOLTAGE);
         }
 
+        LOG(WARN, "newMax: %f | alimVoltage: %f", newMax, alimVoltage);
         _protectionSpeed = MAP(newMax, 0.0f, alimVoltage, 0.0f, 100.0f);
         LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMax);
     }
@@ -168,7 +169,7 @@ private:
         writeMicroseconds(SIGNAL_FULL_STOP_MS);
     }
 
-    uint8_t _protectionSpeed = 0u;
+    float _protectionSpeed = 0.0f;
     gpio_num_t _pinPWM;
     ledc_timer_t _timer;
     ledc_channel_t _channel;
