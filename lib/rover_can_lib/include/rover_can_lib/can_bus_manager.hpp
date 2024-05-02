@@ -99,9 +99,6 @@ namespace RoverCanLib
         /// this will allow us to see which node is having problems
         void sendErrorCode(RoverCanLib::Constant::eInternalErrorCode errCode);
 
-        /// @brief Return if the internal watchdog is alive
-        bool isWatchdogAlive(void);
-
     private:
         void updateLedStatus(void);
         void updateHeartbeat(void);
@@ -412,7 +409,7 @@ namespace RoverCanLib
                 {
                     LOG(WARN, "Ill formed msg, dropping...");
                     this->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
-                    return;
+                    continue;
                 }
                 _canMsgCallbackFunc(this, &msg);
             }
