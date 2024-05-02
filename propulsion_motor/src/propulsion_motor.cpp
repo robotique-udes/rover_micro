@@ -19,8 +19,6 @@
 #define LED_2 GPIO_NUM_33
 #define LED_3 GPIO_NUM_25
 
-
-
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 
@@ -30,20 +28,21 @@ RoverCanLib::Msgs::PropulsionMotorStatus msgPropStatus;
 void setup()
 {
     Serial.begin(115200);
-    pinMode(PMW_MOT,OUTPUT);
-    pinMode(BTN_1,INPUT);
-    pinMode(BTN_2,INPUT);
-    pinMode(BTN_3,INPUT);
-    pinMode(LED_1,OUTPUT);
-    pinMode(LED_2,OUTPUT);
-    pinMode(LED_3,OUTPUT);
-    // RoverCanLib::CanBusManager canBus(DEVICE_ID, GPIO_NUM_4, GPIO_NUM_18, canCB, true, (gpio_num_t)LED_BUILTIN);
-    // canBus.init();
 
-    
+    pinMode(PMW_MOT, OUTPUT);
+    pinMode(BTN_1, INPUT);
+    pinMode(BTN_2, INPUT);
+    pinMode(BTN_3, INPUT);
+    pinMode(LED_1, OUTPUT);
+    pinMode(LED_2, OUTPUT);
+    pinMode(LED_3, OUTPUT);
+
     TalonSrx talonDrive(PMW_MOT, LEDC_TIMER_0, LEDC_CHANNEL_0);
     talonDrive.init(1500.0f);
-    
+
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, GPIO_NUM_4, GPIO_NUM_18, canCB, true, (gpio_num_t)LED_BUILTIN);
+    canBus.init();
+
     Serial.printf("Init done, starting Loop!\n");
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
     RoverHelpers::Timer<unsigned long, millis> timer500(100);
@@ -52,10 +51,10 @@ void setup()
 
     for (;;)
     {
-        if(timer500.isDone())
+        if (timer500.isDone())
         {
-            digitalWrite(LED_1,!digitalRead(LED_1));
-            talonDrive.setSpd(64);
+            digitalWrite(LED_1, !digitalRead(LED_1));
+            talonDrive.setSpd(30);
         }
 
         // talonDrive.writeMicroseconds(MAP(testSpeed, -100.0f, 100.0f, 1000.0f, 2000.0f));
@@ -63,7 +62,7 @@ void setup()
 
         // if (canBus.isOk() && msgPropCmd.data.enable)
         // {
-            // talonDrive.writeMicroseconds(MAP(msgPropCmd.data.targetSpeed, -100.0f, 100.0f, 1000.0f, 2000.0f));
+        // talonDrive.writeMicroseconds(MAP(msgPropCmd.data.targetSpeed, -100.0f, 100.0f, 1000.0f, 2000.0f));
         // }
         // else
         // {
@@ -80,7 +79,7 @@ void setup()
         //     {
         //         LOG(ERROR, "Close loop not implemented yet");
         //         canBus.sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::ERROR);
-        //         msgPropStatus.data.currentSpeed = -69.0f; 
+        //         msgPropStatus.data.currentSpeed = -69.0f;
         //     }
 
         //     canBus.sendMsg(&msgPropStatus);

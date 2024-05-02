@@ -134,7 +134,7 @@ private:
         writeMicroseconds(TalonSrxConstant::SIGNAL_FULL_STOP_MS);
     }
 
-    uint8_t _maxSpeed = 64;
+    uint8_t _maxSpeed = 30u;
     gpio_num_t _pinPWM;
     ledc_timer_t _timer;
     ledc_channel_t _channel;
