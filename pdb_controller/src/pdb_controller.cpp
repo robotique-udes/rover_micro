@@ -58,8 +58,9 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
         {
             digitalWrite(LIGHT_ENABLE, LOW);
         }
-    }
+
         break;
+    }
 
     case (RoverCanLib::Constant::eDeviceId::CAMERA_A2):
     {
@@ -80,6 +81,7 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
             canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
             LOG(WARN, "Tilt and yaw not implemented yet")
         }
+        
         break;
     }
 
