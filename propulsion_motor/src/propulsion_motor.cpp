@@ -20,9 +20,9 @@ void setup()
 {
     Serial.begin(115200);
 
-    pinMode(PMW_MOT, OUTPUT);
+    pinMode(PWM_MOT, OUTPUT);
 
-    TalonSrx talonDrive(PMW_MOT, LEDC_TIMER_0, LEDC_CHANNEL_0);
+    TalonSrx talonDrive(PWM_MOT, LEDC_TIMER_0, LEDC_CHANNEL_0);
     talonDrive.init();
 
     RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, canCB, true, (gpio_num_t)LED_BUILTIN);

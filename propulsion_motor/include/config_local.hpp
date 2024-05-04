@@ -9,7 +9,7 @@
 
 constexpr uint16_t DEVICE_ID = (uint16_t)RoverCanLib::Constant::eDeviceId::REARRIGHT_MOTOR;
 
-constexpr gpio_num_t PMW_MOT = GPIO_NUM_26;
+constexpr gpio_num_t PWM_MOT = GPIO_NUM_26;
 constexpr gpio_num_t BTN_1 = GPIO_NUM_34;
 constexpr gpio_num_t BTN_2 = GPIO_NUM_39;
 constexpr gpio_num_t BTN_3 = GPIO_NUM_36;
