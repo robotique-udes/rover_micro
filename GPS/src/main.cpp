@@ -2,11 +2,11 @@
 #include "math.h"
 
 #include "rover_can_lib/can_bus_manager.hpp"
-// #include "rover_can_lib/msgs/"
+#include "rover_can_lib/msgs/gps.hpp"
 
 #include "rover_helpers/helpers.hpp"
 
-#define DEVICE_ID (uint16_t)RoverCanLib::Constant::eDeviceId::FRONTLEFT_MOTOR
+#define DEVICE_ID (uint16_t) RoverCanLib::Constant::eDeviceId::GPS
 #define CAN_TX GPIO_NUM_47
 #define CAN_RX GPIO_NUM_48
 
@@ -20,7 +20,7 @@
 float getLatitude(char latData_[SIZE_ELEMENTS], char latSign_[SIZE_ELEMENTS]);
 void splitData(const char gpsData_[BUFFER_SIZE]);
 float getLongitude(char longData_[SIZE_ELEMENTS], char longSign_[SIZE_ELEMENTS]);
-void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
+void noActions(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 
 float g_latitude;
 float g_longitude;
@@ -31,11 +31,16 @@ void setup()
     Serial.begin(115200);
     Serial1.begin(9600, SERIAL_8N1, RX1PIN, TX1PIN);
 
-    RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, canCB, true, (gpio_num_t)LED_BUILTIN);
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, noActions, false, (gpio_num_t)LED_BUILTIN);
     canBus.init();
+
+    RoverCanLib::Msgs::GPS gpsMsg;
+    RoverHelpers::Timer<unsigned long, millis> timerFeedback(1000);
 
     for (EVER)
     {
+        canBus.update();
+
         char bufferGpsReceive[BUFFER_SIZE] = {0};
         uint8_t dataSize = Serial1.readBytesUntil('\n', bufferGpsReceive, BUFFER_SIZE);
 
@@ -50,6 +55,15 @@ void setup()
             // const char *pGpsDataTest = gpsDataTest;
 
             splitData(pGpsData);
+        }
+
+        if (timerFeedback.isDone())
+        {
+            gpsMsg.data.fix = g_fixType;
+            gpsMsg.data.latitude = g_latitude;
+            gpsMsg.data.longitude = g_longitude;
+
+            canBus.sendMsg(&gpsMsg);
         }
     }
 }
@@ -198,28 +212,14 @@ float getLongitude(char longData[SIZE_ELEMENTS], char longSign[SIZE_ELEMENTS])
     {
         longitude -= 360.0f;
     }
+
     return longitude;
 }
 
-void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_)
+void noActions(RoverCanLib::CanBusManager *dontUse0_, const twai_message_t *dontUse1_)
 {
-    switch (msg_->identifier)
-    {
-    case (DEVICE_ID):
-        // if (msg_->data_length_code < 3)
-        // {
-        //     LOG(WARN, "Ill formed msg, dropping");
-        //     canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
-        //     return;
-        // }
-        // else
-        // {
-        //     canBusManager_->resetWatchDog();
-        //     canBusManager_->sendErrorCode(msgPropCmd.parseMsg(msg_));
-        // }
-        break;
+    REMOVE_UNUSED(&dontUse0_);
+    REMOVE_UNUSED(dontUse1_);
 
-    default:
-        break;
-    }
+    return;
 }
