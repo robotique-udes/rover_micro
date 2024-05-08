@@ -37,6 +37,8 @@ void setup()
     RoverCanLib::Msgs::GPS gpsMsg;
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(1000);
 
+    LOG(INFO, "Init done, starting loop!");
+
     for (EVER)
     {
         canBus.update();
