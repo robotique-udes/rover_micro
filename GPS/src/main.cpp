@@ -28,10 +28,12 @@ uint8_t g_fixType;
 
 void setup()
 {
+    delay(2500);
     Serial.begin(115200);
     Serial1.begin(9600, SERIAL_8N1, RX1PIN, TX1PIN);
 
-    RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, noActions, false, (gpio_num_t)LED_BUILTIN);
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, noActions, false);
+    
     canBus.init();
 
     RoverCanLib::Msgs::GPS gpsMsg;
