@@ -20,9 +20,9 @@ void setup()
 {
     Serial.begin(115200);
 
-    pinMode(PMW_MOT, OUTPUT);
+    pinMode(PWM_MOT, OUTPUT);
 
-    TalonSrx talonDrive(PMW_MOT, LEDC_TIMER_0, LEDC_CHANNEL_0);
+    TalonSrx talonDrive(PWM_MOT, LEDC_TIMER_0, LEDC_CHANNEL_0);
     talonDrive.init();
 
     RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, canCB, true, (gpio_num_t)LED_BUILTIN);
@@ -30,18 +30,34 @@ void setup()
 
     LOG(INFO, "Init done, starting Loop!");
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
+    RoverHelpers::Timer<unsigned long, millis> timerSetCmd(10);
 
+    RoverHelpers::MovingAverage<float, 35u> cmdAverage(0.0f);
+
+    float speedCmd = 0.0f;
     for (;;)
     {
         canBus.update();
 
-        if (canBus.isOk() && msgPropCmd.data.enable)
+        if (timerSetCmd.isDone())
         {
-            talonDrive.setSpeed(msgPropCmd.data.targetSpeed);
-        }
-        else
-        {
-            talonDrive.disable();
+            if (canBus.isOk() && msgPropCmd.data.enable)
+            {
+                if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::REARRIGHT_MOTOR || DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::FRONTRIGHT_MOTOR)
+                {
+                    speedCmd = cmdAverage.addValue(msgPropCmd.data.targetSpeed * -100.0f);
+                }
+                else
+                {
+                    speedCmd = cmdAverage.addValue(msgPropCmd.data.targetSpeed * 100.0f);
+                }
+            }
+            else
+            {
+                speedCmd = cmdAverage.addValue(0.0f);
+            }
+
+            talonDrive.setSpeed(speedCmd);
         }
 
         if (timerFeedback.isDone())

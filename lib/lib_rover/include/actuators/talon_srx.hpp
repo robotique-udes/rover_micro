@@ -8,7 +8,7 @@
 #include "Arduino.h"
 #include "driver/ledc.h"
 #include "actuators/motor_driver.hpp"
-#include "rover_helpers/log.hpp"
+#include "rover_helpers/helpers.hpp"
 
 class TalonSrx : public MotorDriver
 {
@@ -84,7 +84,7 @@ public:
             _speed = speed_;
         }
 
-        if (_speed == 0.0f)
+        if (IN_ERROR(_speed, 0.01f, 0.0f))
         {
             this->stop();
         }

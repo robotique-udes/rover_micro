@@ -99,3 +99,5 @@
 #define MAP(x, in_min, in_max, out_min, out_max) \
     (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) + (float)(out_min))
 #endif // __MACROS_HPP__
+
+#define IN_ERROR(VAR, ERROR, GOAL) ((abs(VAR) < (abs(GOAL) + ERROR) && abs(VAR) > (abs(GOAL) - ERROR)))
