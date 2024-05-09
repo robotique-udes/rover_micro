@@ -100,5 +100,7 @@
     (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) + (float)(out_min))
 #endif // __MACROS_HPP__
 
+#define IN_ERROR(VAR, ERROR, GOAL) ((abs(VAR) < (abs(GOAL) + ERROR) && abs(VAR) > (abs(GOAL) - ERROR)))
+
 // Removes unused argument warning 
 #define REMOVE_UNUSED(x) (void)(x)
