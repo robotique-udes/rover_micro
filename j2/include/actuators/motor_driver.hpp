@@ -1,0 +1,43 @@
+#ifndef __MOTOR_DRIVER_HPP__
+#define __MOTOR_DRIVER_HPP__
+
+#if !defined(ESP32)
+#error CPU is not supported
+#else
+
+#include <Arduino.h>
+#include "rover_helpers/macros.hpp"
+
+class MotorDriver
+{
+public:
+    enum class eDriverType : uint8_t
+    {
+        TALON_SRX,
+        IFX007T,
+        NONE
+    };
+
+    enum class eBrakeMode : uint8_t
+    {
+        BRAKE,
+        COAST,
+        NONE
+    };
+
+    MotorDriver(){};
+    virtual ~MotorDriver(){};
+
+    // Init ins't required but should be implemented and call prior to using the
+    // parent specific pointer
+
+    // -100.0 to 100.0 for speed
+    virtual void setSpeed(float spd) = 0;
+    virtual void enable(void) = 0;
+    virtual void disable(void) = 0;
+    virtual void reset(void) = 0;
+    virtual bool isMoving(void) = 0;
+};
+
+#endif // !defined(ESP32)
+#endif // __MOTOR_DRIVER_HPP__
