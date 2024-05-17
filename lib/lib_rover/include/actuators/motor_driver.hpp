@@ -20,7 +20,7 @@ public:
     MotorDriver(){};
     virtual ~MotorDriver(){};
 
-    // Init ins't required but should be implemented and call prior to using the
+    // Init ins't required but should be implemented and called prior to using the
     // parent specific pointer
     virtual void setSpeed(float spd) = 0;
     virtual void enable(void) = 0;
