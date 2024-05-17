@@ -10,10 +10,7 @@
 #include "rover_helpers/macros.hpp"
 #include "actuators/motor_driver.hpp"
 #include "rover_helpers/assert.hpp"
-#include "rover_helpers/led_blinker.hpp"
-
-// PWM frequency should be 10 times rise-time as per datasheet
-// Rise time with SR = 0: 0.25us
+#include "rover_helpers/soft_led_blinker.hpp"
 
 class IFX007T : protected MotorDriver
 {
@@ -81,6 +78,7 @@ public:
         ledc_channel_1.gpio_num = _in_1;
         ledc_channel_1.duty = PERCENT_TO_DUTY(0.0f);
         ledc_channel_1.hpoint = 0;
+        ledc_channel_1.flags.output_invert = false;
         ledc_channel_config(&ledc_channel_1);
 
         // Channel for 2nd bridge (on same timer as 1st)
@@ -92,6 +90,7 @@ public:
         ledc_channel_2.gpio_num = _in_2;
         ledc_channel_2.duty = PERCENT_TO_DUTY(0.0f);
         ledc_channel_2.hpoint = 0;
+        ledc_channel_2.flags.output_invert = false;
         ledc_channel_config(&ledc_channel_2);
 
         ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_motorTimer, _freqPWM);
@@ -103,7 +102,7 @@ public:
         delayMicroseconds(10);
 
         this->enable();
-        this->setSpeed(100.0f);
+        this->setSpeed(0.0f);
     }
 
     void setSpeed(float spd_)
@@ -159,7 +158,6 @@ public:
             digitalWrite(_en_2, HIGH);
             if (!_reversed)
             {
-                LOG(INFO, "Here");
                 ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
                 ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(spd_));
             }
@@ -176,7 +174,6 @@ public:
 
         ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1);
         ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2);
-        this->updateLed();
     }
 
     void enable(void)
@@ -228,74 +225,18 @@ public:
         }
     }
 
-    void attachRGBLed(gpio_num_t ledR_,
-                      gpio_num_t ledG_,
-                      gpio_num_t ledB_,
-                      ledc_channel_t ledcChannelR_ = LEDC_CHANNEL_4,
-                      ledc_channel_t ledcChannelG_ = LEDC_CHANNEL_5,
-                      ledc_channel_t ledcChannelB_ = LEDC_CHANNEL_6,
-                      ledc_timer_t ledTimer_ = LEDC_TIMER_3)
+    void attachRGBLed(gpio_num_t ledR_, gpio_num_t ledG_, gpio_num_t ledB_)
     {
-        _ledR = ledR_;
-        _ledG = ledG_;
-        _ledB = ledB_;
+        _withLed = true;
 
-        _ledc_ledTimer = ledTimer_;
-        _ledc_ledChannelR = ledcChannelR_;
-        _ledc_ledChannelG = ledcChannelG_;
-        _ledc_ledChannelB = ledcChannelB_;
+        _ledR.init(ledR_, 0.0f, 0u);
+        _ledG.init(ledG_, 0.0f, 0u);
+        _ledB.init(ledB_, 0.0f, 0u);
+    }
 
-        if (_ledR != GPIO_NUM_NC &&
-            _ledG != GPIO_NUM_NC &&
-            _ledB != GPIO_NUM_NC)
-        {
-            _withLed = true;
-        }
-
-        if (!_withLed)
-        {
-            return;
-        }
-
-        pinMode(_ledR, OUTPUT);
-        pinMode(_ledG, OUTPUT);
-        pinMode(_ledB, OUTPUT);
-
-        ledc_timer_config_t ledc_timer;
-        ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;
-        ledc_timer.timer_num = _ledc_ledTimer;
-        ledc_timer.duty_resolution = LEDC_TIMER_RESOLUTION;
-        ledc_timer.freq_hz = 1000;
-        ledc_timer.clk_cfg = LEDC_AUTO_CLK;
-        ledc_timer_config(&ledc_timer);
-
-        ledc_channel_config_t ledc_channelR;
-        ledc_channelR.speed_mode = LEDC_LOW_SPEED_MODE;
-        ledc_channelR.channel = _ledc_ledChannelR;
-        ledc_channelR.timer_sel = _ledc_ledTimer;
-        ledc_channelR.intr_type = LEDC_INTR_DISABLE;
-        ledc_channelR.gpio_num = _ledR;
-        ledc_channelR.duty = PERCENT_TO_DUTY(10.0f);
-        ledc_channelR.hpoint = 0;
-        ledc_channel_config(&ledc_channelR);
-
-        ledc_channel_config_t ledc_channelG;
-        ledc_channelG.speed_mode = LEDC_LOW_SPEED_MODE;
-        ledc_channelG.channel = _ledc_ledChannelG;
-        ledc_channelG.timer_sel = _ledc_ledTimer;
-        ledc_channelG.intr_type = LEDC_INTR_DISABLE;
-
-        if (_brakeMode == MotorDriver::eBrakeMode::BRAKE)
-        {
-            ledc_channelG.gpio_num = _ledG;
-        }
-        else
-        {
-            ledc_channelG.gpio_num = _ledB;
-        }
-        ledc_channelG.duty = PERCENT_TO_DUTY(2.0f);
-        ledc_channelG.hpoint = 0;
-        ledc_channel_config(&ledc_channelG);
+    void update(void)
+    {
+        this->updateLed();
     }
 
 private:
@@ -303,10 +244,6 @@ private:
     gpio_num_t _en_2 = GPIO_NUM_NC;
     gpio_num_t _in_1 = GPIO_NUM_NC;
     gpio_num_t _in_2 = GPIO_NUM_NC;
-
-    gpio_num_t _ledR = GPIO_NUM_NC;
-    gpio_num_t _ledG = GPIO_NUM_NC;
-    gpio_num_t _ledB = GPIO_NUM_NC;
 
     uint32_t _freqPWM;
     bool _reversed = false;
@@ -316,97 +253,88 @@ private:
     ledc_channel_t _ledc_motorChannel_1;
     ledc_channel_t _ledc_motorChannel_2;
 
-    ledc_timer_t _ledc_ledTimer;
-    ledc_channel_t _ledc_ledChannelR;
-    ledc_channel_t _ledc_ledChannelG;
-    ledc_channel_t _ledc_ledChannelB;
-
     MotorDriver::eBrakeMode _brakeMode;
     bool _enabled = false;
     float _currentSpd = 0.0f;
 
+    RoverHelpers::SoftLedBlinker _ledR;
+    RoverHelpers::SoftLedBlinker _ledG;
+    RoverHelpers::SoftLedBlinker _ledB;
+
     void updateLed()
     {
+        if (!_withLed)
+        {
+            return;
+        }
+
+        if (_currentSpd > 0.0f)
+        {
+            _ledR.setBrightness(15.0f);
+            _ledR.setBlink((uint8_t)(10.0f * _currentSpd / 100.0f));
+            _ledG.setBrightness(0.0f);
+            _ledG.setBlink(0u);
+            _ledB.setBrightness(0.0f);
+            _ledB.setBlink(0u);
+        }
+
         if (_currentSpd > 99.9f)
         {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 100);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(5.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
+            _ledR.setBrightness(15.0f);
+            _ledR.setBlink(0u);
+            _ledG.setBrightness(0.0f);
+            _ledG.setBlink(0u);
+            _ledB.setBrightness(0.0f);
+            _ledB.setBlink(0u);
         }
-        else if (_currentSpd > 75.0f)
+
+        if (_currentSpd < 0.0f)
         {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 16);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
+            _ledR.setBrightness(0.0f);
+            _ledR.setBlink(0u);
+            _ledG.setBrightness(8.0f);
+            _ledG.setBlink((uint8_t)(10.0f * abs(_currentSpd) / 100.0f));
+            _ledB.setBrightness(0.0f);
+            _ledB.setBlink(0u);
         }
-        else if (_currentSpd > 50.0f)
+
+        if (_currentSpd < -99.9f)
         {
-            LOG(INFO, "%i", ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 8));
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
+            _ledR.setBrightness(0.0f);
+            _ledR.setBlink(0u);
+            _ledG.setBrightness(8.0f);
+            _ledG.setBlink(0u);
+            _ledB.setBrightness(0.0f);
+            _ledB.setBlink(0u);
         }
-        else if (_currentSpd > 25.0f)
+
+        if (IN_ERROR(_currentSpd, 0.001f, 0.0f))
         {
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(50.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
-            LOG(WARN, "%i", ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 1));
+            if (_brakeMode == eBrakeMode::COAST)
+            {
+                _ledR.setBrightness(0.0f);
+                _ledR.setBlink(0u);
+                _ledG.setBrightness(0.0f);
+                _ledG.setBlink(0u);
+                _ledB.setBrightness(1.0f);
+                _ledB.setBlink(0u);
+            }
+            else if (_brakeMode == eBrakeMode::BRAKE)
+            {
+                _ledR.setBrightness(0.0f);
+                _ledR.setBlink(0u);
+                _ledG.setBrightness(0.0f);
+                _ledG.setBlink(0u);
+                _ledB.setBrightness(1.0f);
+                _ledB.setBlink(1u);
+            }
+
+#warning TODO Brake Stop Color
         }
-        else if (_currentSpd > 0.01f)
-        {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 1);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
-        }
-        else if (_currentSpd > -0.01f)
-        {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 1000);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(2.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
-        }
-        else if (_currentSpd > -25.0f)
-        {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 1);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
-        }
-        else if (_currentSpd > -50.0f)
-        {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 2);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
-        }
-        else if (_currentSpd > -75.0f)
-        {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 4);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
-        }
-        else if (_currentSpd > -100.0f)
-        {
-            ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_ledTimer, 8);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR, PERCENT_TO_DUTY(0.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelR);
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG, PERCENT_TO_DUTY(3.0f));
-            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_ledChannelG);
-        }
+
+        _ledR.update();
+        _ledG.update();
+        _ledB.update();
     }
 };
 
