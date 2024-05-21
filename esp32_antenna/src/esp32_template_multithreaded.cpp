@@ -11,7 +11,7 @@
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
 #include "rover_helpers/helpers.hpp"
 #include "rover_msgs/msg/gps.h"
-#include "bn880.h"
+// #include "bn880.h"
 
 #include <semaphore>
 
@@ -92,7 +92,7 @@ bool root_heartbeat_state = false;
 bool state_heartbeat = false;
 bool motor_status = false;
 bool stepper_direction;
-bn880 gps880(Serial2);
+// bn880 gps880(Serial2);
 
 // Creating mutex
 SemaphoreHandle_t xSemaphore = NULL;
