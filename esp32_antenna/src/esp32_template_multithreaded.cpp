@@ -11,9 +11,10 @@
 #include "rover_micro_ros_lib/rover_micro_ros_lib.hpp"
 #include "rover_helpers/helpers.hpp"
 #include "rover_msgs/msg/gps.h"
-// #include "bn880.h"
 
 #include <semaphore>
+
+#include <WiFi.h>
 
 #define NAME_NS "/template_ESP32"
 #define NAME_NODE "simple_example"
@@ -41,6 +42,10 @@ float getLongitude(char longData[SIZE_ELEMENTS], char longSign[SIZE_ELEMENTS]);
 float latitude;
 float longitude;
 uint8_t fixType;
+
+// Wifi
+const char* ssid     = "roverAntenna";
+const char* password = "roverAntenna";
 
 // 800 micro-step/tour * ratio de la gearbox
 
@@ -92,7 +97,6 @@ bool root_heartbeat_state = false;
 bool state_heartbeat = false;
 bool motor_status = false;
 bool stepper_direction;
-// bn880 gps880(Serial2);
 
 // Creating mutex
 SemaphoreHandle_t xSemaphore = NULL;
@@ -115,6 +119,12 @@ void setup()
   digitalWrite(EN, LOW);
   digitalWrite(DIR, HIGH);
 
+  Serial.println("\n[*] Creating AP");
+  // WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid, password);
+  Serial.print("[+] AP Created with IP Gateway ");
+  Serial.println(WiFi.softAPIP());
+
   // gps880.start();
 
   for (EVER)
@@ -130,9 +140,9 @@ void setup()
             state_heartbeat = false;
         }
 
-        if (timer_heartbeat.isDone())
+        if (timerHeartbeat.isDone())
         {
-            if (timer.isDone() && motor_status)
+            if (timerStepper.isDone() && motor_status)
             {
                 motorStep = motorStep == HIGH ? LOW : HIGH;
                 digitalWrite(DIR, stepper_direction);
