@@ -9,7 +9,7 @@
 
 // =============================================================================
 // Temp
-
+#warning TODO: Migrate
 #define PIN_SPI_SCK GPIO_NUM_11
 #define PIN_SPI_MOSI GPIO_NUM_12
 #define PIN_SPI_MISO GPIO_NUM_13
@@ -17,6 +17,8 @@
 
 // =============================================================================
 
+#warning TODO: Migrate
+#warning TODO: Make parent object
 class CUI_AMT222
 {
 public:
@@ -44,9 +46,19 @@ public:
         _inited = true;
     }
 
-    float getPosition()
+    float getPosition(void)
     {
         return this->readPosition();
+    }
+
+    void setZero(void)
+    {
+        this->sendCmd(REG_SET_ZERO);
+    }
+
+    void reset(void)
+    {
+        this->sendCmd(REG_RESET);
     }
 
 private:
@@ -58,7 +70,6 @@ private:
     {
         return _inited;
     }
-
     float readPosition()
     {
         ASSERT(!this->isInited());
@@ -71,12 +82,25 @@ private:
 
         uint16_t positionRaw = positionByte0 << 8 | positionByte1;
         positionRaw &= 0x3FFF;
-        positionRaw = positionRaw >> 2;
+        positionRaw = positionRaw >> 1;
 
         digitalWrite(PIN_SPI_CS_EN_SHAFT, HIGH);
         SPI.endTransaction();
 
-        return MAP(positionRaw, 0, 2 << 11, 0.0f, 360.0f);
+        return MAP(positionRaw, 0, 2 << 12, 0.0f, 360.0f);
+    }
+    void sendCmd(uint8_t cmdRegister)
+    {
+        ASSERT(!this->isInited());
+
+        SPI.beginTransaction(SPISettings(2'000'000u, MSBFIRST, SPI_MODE0));
+        digitalWrite(PIN_SPI_CS_EN_SHAFT, LOW);
+
+        SPI.transfer(REG_START);
+        SPI.transfer(cmdRegister);
+
+        digitalWrite(PIN_SPI_CS_EN_SHAFT, HIGH);
+        SPI.endTransaction();
     }
 };
 
@@ -97,6 +121,9 @@ void setup()
     switchFWD.init(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_FWD);
     LimitSwitch switchREV;
     switchREV.init(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_REV);
+
+    LimitSwitch switchCalib;
+    switchCalib.init(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_CALIB);
 
     SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI, GPIO_NUM_NC);
     CUI_AMT222 shaftEncoder(&SPI, PIN_SPI_CS_EN_SHAFT);
@@ -120,6 +147,11 @@ void setup()
             motorDriver.setSpeed(0.0f);
         }
         motorDriver.update();
+
+        if (switchCalib.isClicked())
+        {
+            shaftEncoder.setZero();
+        }
 
         if (timerShaftEncoderRead.isDone())
         {

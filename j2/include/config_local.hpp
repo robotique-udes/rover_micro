@@ -18,6 +18,7 @@ constexpr gpio_num_t PIN_J2_IN_2 = GPIO_NUM_38;
 
 constexpr gpio_num_t PIN_PB_FWD = GPIO_NUM_5;
 constexpr gpio_num_t PIN_PB_REV = GPIO_NUM_1;
+constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_4;
 
 constexpr gpio_num_t PIN_LED_R = GPIO_NUM_3;
 constexpr gpio_num_t PIN_LED_G = GPIO_NUM_9;
