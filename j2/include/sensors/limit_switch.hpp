@@ -32,32 +32,30 @@ private:
     uint8_t _pin;
 
 public:
-    LimitSwitch();
+    LimitSwitch(sSwitchParams);
+    LimitSwitch(eLimitSwitchMode mode, gpio_num_t pinCom);
     ~LimitSwitch();
 
-    void init(sSwitchParams);
-    void init(eLimitSwitchMode mode, gpio_num_t pinCom);
+    void init();
     bool isClicked();
 };
 
-LimitSwitch::LimitSwitch()
+LimitSwitch::LimitSwitch(sSwitchParams switchParams) : LimitSwitch::LimitSwitch(switchParams.MODE, switchParams.PIN)
 {
+}
+
+LimitSwitch::LimitSwitch(eLimitSwitchMode mode, gpio_num_t pinCom)
+{
+    _mode = mode;
+    _pin = pinCom;
 }
 
 LimitSwitch::~LimitSwitch()
 {
 }
 
-void LimitSwitch::init(sSwitchParams switchParams)
+void LimitSwitch::init()
 {
-    this->init(switchParams.MODE, switchParams.PIN);
-}
-
-void LimitSwitch::init(eLimitSwitchMode mode, gpio_num_t pinCom)
-{
-    _mode = mode;
-    _pin = pinCom;
-
     if (_mode == eLimitSwitchMode::PullUpInternal)
     {
         pinMode(_pin, INPUT_PULLUP);

@@ -25,24 +25,24 @@ public:
     /// @brief Constructor
     /// @param spiBus_ Must call SPI*.begin() before passing to encoder
     /// @param pinCs_ Chip select low pin
-    CUI_AMT222(){}
-
-    void init()
-    {
-        ASSERT(true, "CUI_AMT222 can't be initialized without arguments");
-    }
-
-    void init(SPIClass *spiBus_, gpio_num_t pinCs_)
+    CUI_AMT222(SPIClass *spiBus_, gpio_num_t pinCs_)
     {
         ASSERT(spiBus_ == NULL);
         _pSpiBus = spiBus_;
         _pinCs = pinCs_;
+    }
 
+    ~CUI_AMT222(){};
+
+    void init()
+    {
         pinMode(_pinCs, OUTPUT);
         digitalWrite(_pinCs, HIGH);
 
-        _inited = true;
+        this->initDone();
     }
+
+    void update() {}
 
     float getPosition(void)
     {
@@ -54,9 +54,12 @@ public:
         ASSERT(true, "Method not implemented yet");
     }
 
-    void setZero(void)
+    void calib(float zeroPosition = 0.0f)
     {
         this->sendCmd(REG_SET_ZERO);
+        
+        ASSERT(zeroPosition >= 360.0f && zeroPosition < 0.0f);
+        _positionCalibOffset = zeroPosition;
     }
 
     void reset(void)
@@ -67,15 +70,11 @@ public:
 private:
     SPIClass *_pSpiBus = NULL;
     gpio_num_t _pinCs = GPIO_NUM_NC;
-    bool _inited;
+    float _positionCalibOffset = 0.0f;
 
-    bool isInited(void)
-    {
-        return _inited;
-    }
     float readPosition()
     {
-        ASSERT(!this->isInited());
+        this->checkInit();
 
         SPI.beginTransaction(SPISettings(2'000'000u, MSBFIRST, SPI_MODE0));
         digitalWrite(_pinCs, LOW);
@@ -90,11 +89,11 @@ private:
         digitalWrite(_pinCs, HIGH);
         SPI.endTransaction();
 
-        return MAP(positionRaw, 0, 2 << 12, 0.0f, 360.0f);
+        return MAP(positionRaw, 0, 2 << 12, 0.0f, TWO_PI);
     }
     void sendCmd(uint8_t cmdRegister)
     {
-        ASSERT(!this->isInited());
+        this->checkInit();
 
         SPI.beginTransaction(SPISettings(2'000'000u, MSBFIRST, SPI_MODE0));
         digitalWrite(_pinCs, LOW);

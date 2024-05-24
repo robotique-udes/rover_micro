@@ -25,23 +25,23 @@ void setup()
 
     LOG(WARN, "Init done starting!");
 
-    IFX007T motorDriver;
-    motorDriver.init(PIN_J2_EN_1, PIN_J2_EN_2, PIN_J2_IN_1, PIN_J2_IN_2, MotorDriver::eBrakeMode::BRAKE, false);
+    IFX007T motorDriver(PIN_J2_EN_1, PIN_J2_EN_2, PIN_J2_IN_1, PIN_J2_IN_2, MotorDriver::eBrakeMode::BRAKE, false);
+    motorDriver.init();
     motorDriver.attachRGBLed(PIN_LED_R, PIN_LED_G, PIN_LED_B);
     motorDriver.enable();
-    motorDriver.setSpeed(0.0f);
+    motorDriver.setCmd(0.0f);
 
-    LimitSwitch switchFWD;
-    switchFWD.init(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_FWD);
-    LimitSwitch switchREV;
-    switchREV.init(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_REV);
+    LimitSwitch switchFWD(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_FWD);
+    switchFWD.init();
+    LimitSwitch switchREV(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_REV);
+    switchREV.init();
 
-    LimitSwitch switchCalib;
-    switchCalib.init(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_CALIB);
+    LimitSwitch switchCalib(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_CALIB);
+    switchCalib.init();
 
     SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI, GPIO_NUM_NC);
-    CUI_AMT222 shaftEncoder;
-    shaftEncoder.init(&SPI, PIN_SPI_CS_EN_SHAFT);
+    CUI_AMT222 shaftEncoder(&SPI, PIN_SPI_CS_EN_SHAFT);
+    shaftEncoder.init();
 
     RoverHelpers::Timer<unsigned long, millis> timerShaftEncoderRead(20);
     RoverHelpers::Timer<unsigned long, millis> timer(500);
@@ -50,21 +50,21 @@ void setup()
     {
         if (switchFWD.isClicked())
         {
-            motorDriver.setSpeed(100.0f);
+            motorDriver.setCmd(100.0f);
         }
         else if (switchREV.isClicked())
         {
-            motorDriver.setSpeed(-100.0f);
+            motorDriver.setCmd(-100.0f);
         }
         else
         {
-            motorDriver.setSpeed(0.0f);
+            motorDriver.setCmd(0.0f);
         }
         motorDriver.update();
 
         if (switchCalib.isClicked())
         {
-            shaftEncoder.setZero();
+            shaftEncoder.calib();
         }
 
         if (timerShaftEncoderRead.isDone())

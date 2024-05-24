@@ -23,18 +23,15 @@ public:
         return (uint32_t)round(abs(percent_) / 100.0f * (float)(1u << LEDC_TIMER_RESOLUTION) - 1.0f);
     }
 
-    IFX007T(){};
-    virtual ~IFX007T(){};
-
-    void init(gpio_num_t en_1_,
-              gpio_num_t en_2_,
-              gpio_num_t in_1_,
-              gpio_num_t in_2_,
-              MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::COAST,
-              bool reversed_ = false,
-              ledc_timer_t timerNumber_ = LEDC_TIMER_0,
-              ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
-              ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
+    IFX007T(gpio_num_t en_1_,
+            gpio_num_t en_2_,
+            gpio_num_t in_1_,
+            gpio_num_t in_2_,
+            MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::COAST,
+            bool reversed_ = false,
+            ledc_timer_t timerNumber_ = LEDC_TIMER_0,
+            ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
+            ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
     {
         ASSERT(en_1_ == GPIO_NUM_NC);
         ASSERT(en_2_ == GPIO_NUM_NC);
@@ -44,20 +41,24 @@ public:
         _en_2 = en_2_;
         _in_1 = in_1_;
         _in_2 = in_2_;
+
+        _brakeMode = brakeMode_;
+        _reversed = reversed_;
+
+        _ledc_motorTimer = timerNumber_;
+        ASSERT(channelNumber1_ == channelNumber2_, "Using the same channel for both half-bridge will result in constant braking of the motor")
+        _ledc_motorChannel_1 = channelNumber1_;
+        _ledc_motorChannel_2 = channelNumber2_;
+    };
+
+    virtual ~IFX007T(){};
+
+    void init()
+    {
         pinMode(_en_1, OUTPUT);
         pinMode(_en_2, OUTPUT);
         pinMode(_in_1, OUTPUT);
         pinMode(_in_2, OUTPUT);
-
-        _brakeMode = brakeMode_;
-
-        _reversed = reversed_;
-
-        _ledc_motorTimer = timerNumber_;
-
-        ASSERT(channelNumber1_ == channelNumber2_, "Using the same channel for both half-bridge will result in constant braking of the motor")
-        _ledc_motorChannel_1 = channelNumber1_;
-        _ledc_motorChannel_2 = channelNumber2_;
 
         // Timer for PWM
         _freqPWM = PWM_FREQUENCY;
@@ -101,12 +102,16 @@ public:
         digitalWrite(_en_2, LOW);
         delayMicroseconds(10);
 
+        this->initDone();
+
         this->enable();
-        this->setSpeed(0.0f);
+        this->setCmd(0.0f);
     }
 
-    void setSpeed(float spd_)
+    void setCmd(float spd_)
     {
+        this->checkInit();
+
         if (!_enabled)
         {
             LOG(WARN, "Motor is disabled, can't set speed");
@@ -178,6 +183,8 @@ public:
 
     void enable(void)
     {
+        this->checkInit();
+
         if (_enabled)
         {
             return;
@@ -194,12 +201,14 @@ public:
 
     void disable(void)
     {
+        this->checkInit();
+
         if (!_enabled)
         {
             return;
         }
 
-        this->setSpeed(0.0f);
+        this->setCmd(0.0f);
 
         digitalWrite(_en_1, LOW);
         digitalWrite(_en_2, LOW);
@@ -209,12 +218,16 @@ public:
 
     void reset(void)
     {
+        this->checkInit();
+
         this->disable();
         this->enable();
     }
 
     bool isMoving(void)
     {
+        this->checkInit();
+
         if (_enabled && IN_ERROR(_currentSpd, 0.01f, 0.0f))
         {
             return true;
@@ -227,6 +240,8 @@ public:
 
     void attachRGBLed(gpio_num_t ledR_, gpio_num_t ledG_, gpio_num_t ledB_)
     {
+        this->checkInit();
+
         _withLed = true;
 
         _ledR.init(ledR_, 0.0f, 0u);
@@ -236,6 +251,8 @@ public:
 
     void update(void)
     {
+        this->checkInit();
+
         this->updateLed();
     }
 

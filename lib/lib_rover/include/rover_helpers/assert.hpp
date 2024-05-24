@@ -32,6 +32,7 @@
 
 #if defined(VERBOSE)
 #include "rover_helpers/log.hpp"
+#include "driver/ledc.h"
 
 // Stoping every pwm output to stop everything before aborting
 #define ABORT()                                                                            \

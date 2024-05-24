@@ -57,7 +57,7 @@ void setup()
                 speedCmd = cmdAverage.addValue(0.0f);
             }
 
-            talonDrive.setSpeed(speedCmd);
+            talonDrive.setCmd(speedCmd);
         }
 
         if (timerFeedback.isDone())

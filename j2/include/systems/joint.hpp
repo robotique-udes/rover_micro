@@ -1,26 +1,34 @@
-#ifndef __ENCODER_HPP__
-#define __ENCODER_HPP__
+#ifndef __JOINT_HPP__
+#define __JOINT_HPP__
 
 #if !defined(ESP32)
 #error CPU is not supported
 #else
 
 #include <Arduino.h>
-#include "rover_helpers/macros.hpp"
+#include "rover_helpers/assert.hpp"
 
-class Encoder
+class Joint
 {
 public:
-    Encoder(){};
-    virtual ~Encoder(){};
+    enum class eControlMode: uint8_t
+    {
+        POSITION,
+        SPEED
+    };
+
+    Joint(){};
+    virtual ~Joint(){};
 
     virtual void init(void) = 0;
     virtual void update(void) = 0;
     // Ranges should be [0.0f; TWO_PI[
+    virtual void setPosition(float goalPosition) = 0;
     virtual float getPosition(void) = 0;
+    // rad/s
+    virtual void setSpeed(float goalSpeed) = 0;
     virtual float getSpeed(void) = 0;
-    virtual void calib(float zeroPosition) = 0;
-    virtual void reset(void) = 0;
+    virtual void calib(float calibPosition) = 0;
 
 protected:
     bool _inited = false;
@@ -44,4 +52,4 @@ protected:
 };
 
 #endif // !defined(ESP32)
-#endif // __ENCODER_HPP__
+#endif // __JOINT_HPP__

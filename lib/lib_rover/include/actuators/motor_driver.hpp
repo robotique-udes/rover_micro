@@ -22,7 +22,7 @@ public:
 
     // Init ins't required but should be implemented and called prior to using the
     // parent specific pointer
-    virtual void setSpeed(float spd) = 0;
+    virtual void setCmd(float spd) = 0;
     virtual void enable(void) = 0;
     virtual void disable(void) = 0;
     virtual void reset(void) = 0;

@@ -72,7 +72,7 @@ public:
     }
 
     // -100.0 to 100.0 for speed
-    void setSpeed(float speed_)
+    void setCmd(float speed_)
     {
         if (speed_ < -_protectionSpeed || speed_ > _protectionSpeed)
         {
