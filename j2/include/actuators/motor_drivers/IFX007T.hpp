@@ -8,7 +8,7 @@
 #include "Arduino.h"
 #include "driver/ledc.h"
 #include "rover_helpers/macros.hpp"
-#include "actuators/motor_driver.hpp"
+#include "actuators/motor_drivers/motor_driver.hpp"
 #include "rover_helpers/assert.hpp"
 #include "rover_helpers/soft_led_blinker.hpp"
 
@@ -328,8 +328,6 @@ private:
                 _ledB.setBrightness(1.0f);
                 _ledB.setBlink(1u);
             }
-
-#warning TODO Brake Stop Color
         }
 
         _ledR.update();
