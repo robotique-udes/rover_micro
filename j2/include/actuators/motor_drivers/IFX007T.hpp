@@ -12,7 +12,7 @@
 #include "rover_helpers/assert.hpp"
 #include "rover_helpers/soft_led_blinker.hpp"
 
-class IFX007T : protected MotorDriver
+class IFX007T : public MotorDriver
 {
 public:
     static constexpr uint32_t PWM_FREQUENCY = 1'000;
@@ -254,6 +254,11 @@ public:
         this->checkInit();
 
         this->updateLed();
+    }
+
+    float getCmd(void)
+    {
+        return _currentSpd;
     }
 
 private:

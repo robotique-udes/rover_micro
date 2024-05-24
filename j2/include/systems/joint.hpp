@@ -23,12 +23,12 @@ public:
     virtual void init(void) = 0;
     virtual void update(void) = 0;
     // Ranges should be [0.0f; TWO_PI[
-    virtual void setPosition(float goalPosition) = 0;
+    virtual void setPosition(float goalPosition_) = 0;
     virtual float getPosition(void) = 0;
     // rad/s
-    virtual void setSpeed(float goalSpeed) = 0;
+    virtual void setSpeed(float goalSpeed_) = 0;
     virtual float getSpeed(void) = 0;
-    virtual void calib(float calibPosition) = 0;
+    virtual void calib(float calibPosition_) = 0;
 
 protected:
     bool _inited = false;

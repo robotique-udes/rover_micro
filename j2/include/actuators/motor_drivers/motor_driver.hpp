@@ -37,6 +37,7 @@ public:
     virtual void disable(void) = 0;
     virtual void reset(void) = 0;
     virtual bool isMoving(void) = 0;
+    virtual float getCmd(void) = 0;
 
 protected:
     bool _inited = false;

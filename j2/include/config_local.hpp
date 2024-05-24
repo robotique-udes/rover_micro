@@ -24,4 +24,9 @@ constexpr gpio_num_t PIN_LED_R = GPIO_NUM_3;
 constexpr gpio_num_t PIN_LED_G = GPIO_NUM_9;
 constexpr gpio_num_t PIN_LED_B = GPIO_NUM_10;
 
+constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_11;
+constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_12;
+constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_13;
+constexpr gpio_num_t PIN_SPI_CS_EN_SHAFT = GPIO_NUM_14;
+
 #endif // __CONFIG_LOCAL_HPP__
