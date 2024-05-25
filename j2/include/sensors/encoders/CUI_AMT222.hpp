@@ -13,6 +13,8 @@
 #error CPU is not supported
 #else
 
+#warning TODO Find why sometimes I get some 2.36 readings
+
 class CUI_AMT222 : public Encoder
 {
 public:

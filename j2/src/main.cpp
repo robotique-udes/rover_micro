@@ -27,7 +27,7 @@ void setup()
     CUI_AMT222 encoder(&SPI, PIN_SPI_CS_EN_SHAFT);
     encoder.init();
 
-    PID pid(0.0f, 10.0f, 0.0f, 100.0f);
+    PID pid(10'000.0f, 0.0f, 10.0f, 10.0f);
     SimpleDcRevoluteJoint j2(&motor, &encoder, Joint::eControlMode::POSITION, &pid);
 
     LimitSwitch switchFWD(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_FWD);
@@ -38,8 +38,7 @@ void setup()
     LimitSwitch switchCalib(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_CALIB);
     switchCalib.init();
 
-
-    RoverHelpers::Timer<unsigned long, millis> timerFeedback(250);
+    RoverHelpers::Timer<unsigned long, millis> timerFeedback(10);
     RoverHelpers::Timer<unsigned long, millis> timer(500);
     int16_t i = 0;
     for (;;)
@@ -66,7 +65,7 @@ void setup()
 
         if (timerFeedback.isDone())
         {
-            LOG(INFO, "Current speed: %f | Current position: %f | Goal position: %f", motor.getCmd(), encoder.getPosition(), DEG_TO_RAD*140.0f);
+            // LOG(INFO, "Current speed: %f | Current position: %f | Goal position: %f", motor.getCmd(), encoder.getPosition(), DEG_TO_RAD*140.0f);
         }
     }
 }

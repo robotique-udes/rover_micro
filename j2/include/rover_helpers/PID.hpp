@@ -19,7 +19,7 @@ private:
     float ki = 0.0f;
     float kd = 0.0f;
 
-    float _integralError = 0.0f;
+    float _cmdI = 0.0f;
     float _integralLimit = 0.0f;
     float _previousError = 0.0f;
     float _lastMeasureTime = 0.0f;
@@ -29,6 +29,7 @@ PID::PID(float kp_, float ki_, float kd_, float intergalLimit_)
 {
     this->setGains(kp_, ki_, kd_);
     this->setIntLimit(intergalLimit_);
+    this->reset();
     _lastMeasureTime = micros();
 }
 
@@ -41,7 +42,8 @@ void PID::setGains(float kp_, float ki_, float kd_)
 
 void PID::setIntLimit(float limit_)
 {
-    _integralLimit = limit_;
+    LOG(ERROR, "Integral limit should always be positive, abs value will be used");
+    _integralLimit = abs(limit_);
 }
 
 float PID::computeCommand(float error)
@@ -58,21 +60,19 @@ float PID::computeCommand(float error)
     float currentTime = micros();
     float dt = currentTime - _lastMeasureTime;
 
-    _integralError += error;
-    _integralError = constrain(_integralError, -_integralLimit, _integralLimit);
+    _cmdI += ki*error;
 
     float cmdP = kp * error;
-    float cmdI = ki * _integralError;
-    cmdI = constrain(cmdI, -_integralLimit, _integralLimit);
+    _cmdI = constrain(_cmdI, -_integralLimit, _integralLimit);
     float cmdD = kd * (error - _previousError) / (dt / 1'000'000.0f);
 
     if (isnan(cmdP))
     {
         cmdP = 0.0f;
     }
-    if (isnan(cmdI))
+    if (isnan(_cmdI))
     {
-        cmdI = 0.0f;
+        _cmdI = 0.0f;
     }
     if (isnan(cmdD))
     {
@@ -82,13 +82,16 @@ float PID::computeCommand(float error)
     _previousError = error;
     _lastMeasureTime = currentTime;
 
-    return cmdP + cmdI + cmdD;
+    // LOG(INFO, "cmdP: %.3f + cmdI: %.3f + cmdD: %.3f = %.3f", cmdP, _cmdI, cmdD, cmdP + _cmdI + cmdD);
+    LOG(INFO, "Error: %.3f", error);
+
+    return cmdP + _cmdI + cmdD;
 }
 
 void PID::reset()
 {
-    _integralError = 0;
-    _previousError = 0;
+    _cmdI = 0.0f;
+    _previousError = 0.0f;
 }
 
 #endif // __PID_HPP__
