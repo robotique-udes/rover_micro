@@ -19,7 +19,7 @@ class SimpleDcRevoluteJoint : protected Joint
 public:
     static constexpr unsigned long PID_LOOP_FREQ = 1'000ul;
 
-    SimpleDcRevoluteJoint(MotorDriver *DCMotor_, Encoder *encoder_, eControlMode controlMode_, PID *pid_)
+    SimpleDcRevoluteJoint(MotorDriver *DCMotor_, Encoder *encoder_, eControlMode controlMode_, PID *pidPosition_ = NULL, PID *pidSpeed_ = NULL)
     {
         ASSERT(DCMotor_ == NULL);
         _DCMotor = DCMotor_;
@@ -29,9 +29,22 @@ public:
         ASSERT(controlMode_ == eControlMode::SPEED, "Not implemented yet");
         _controlMode = controlMode_;
 
-        ASSERT(pid_ == NULL);
-        _pid = pid_;
-        _pid->reset();
+        if (_controlMode == eControlMode::POSITION)
+        {
+            ASSERT(pidPosition_ == NULL);
+            _pidPosition = pidPosition_;
+            _pidPosition->reset();
+
+            if (pidSpeed_ == NULL)
+            {
+                _dualPID = false;
+            }
+            else
+            {
+                _dualPID = true;
+            }
+            _pidSpeed = pidSpeed_;
+        }
     }
 
     virtual ~SimpleDcRevoluteJoint() {}
@@ -56,9 +69,8 @@ public:
             {
             case eControlMode::POSITION:
             {
-                float cmd = _pid->computeCommand(_goalPosition - this->getPosition());
+                float cmd = _pidPosition->computeCommand(_goalPosition - this->getPosition());
                 _DCMotor->setCmd(cmd);
-                // LOG(INFO, "Cmd is: %f", cmd);
                 break;
             }
 
@@ -92,10 +104,25 @@ public:
         return _encoder->getPosition();
     }
 
+#warning TODO
+    /// @brief In POSITION control mode, this will limit the joint maximum speed
+    /// @param goalSpeed_ // target speed in rad/s
     void setSpeed(float goalSpeed_)
     {
-#warning TODO
-        ASSERT(true, "Not implemented yet")
+        switch (_controlMode)
+        {
+        case (eControlMode::POSITION):
+        {
+
+            break;
+        }
+
+        default:
+        {
+            ASSERT(true, "Not implemented yet")
+            break;
+        }
+        }
     }
     float getSpeed(void)
     {
@@ -113,10 +140,13 @@ private:
     MotorDriver *_DCMotor = NULL;
     Encoder *_encoder = NULL;
     eControlMode _controlMode;
-    PID *_pid = NULL;
+    PID *_pidPosition = NULL;
     RoverHelpers::Timer<unsigned long, micros> _timerPidLoop = RoverHelpers::Timer<unsigned long, micros>(1'000'000.0f / (float)PID_LOOP_FREQ);
-
     float _goalPosition = 0.0f;
+
+    bool _dualPID;
+    PID *_pidSpeed = NULL;
+    float _goalSpeed = 0.0f;
 };
 
 #endif // !defined(ESP32)

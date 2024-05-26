@@ -83,7 +83,7 @@ float PID::computeCommand(float error)
     _lastMeasureTime = currentTime;
 
     // LOG(INFO, "cmdP: %.3f + cmdI: %.3f + cmdD: %.3f = %.3f", cmdP, _cmdI, cmdD, cmdP + _cmdI + cmdD);
-    LOG(INFO, "Error: %.3f", error);
+    // LOG(INFO, "Error: %.3f", error);
 
     return cmdP + _cmdI + cmdD;
 }

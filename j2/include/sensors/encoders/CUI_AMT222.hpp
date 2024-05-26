@@ -6,14 +6,13 @@
 
 #include "rover_helpers/assert.hpp"
 #include "rover_helpers/macros.hpp"
+#include "rover_helpers/moving_average.hpp"
 
 #include "sensors/encoders/encoder.hpp"
 
 #if !defined(ESP32)
 #error CPU is not supported
 #else
-
-#warning TODO Find why sometimes I get some 2.36 readings
 
 class CUI_AMT222 : public Encoder
 {
@@ -23,6 +22,8 @@ public:
     static constexpr uint8_t REG_READ = 0x00;
     static constexpr uint8_t REG_RESET = 0x60;
     static constexpr uint8_t REG_SET_ZERO = 0x70;
+    // Will report errors if there's more than x% of error in msgs 
+    static constexpr float ERROR_THRESHOLD = 0.10f;
 
     /// @brief Constructor
     /// @param spiBus_ Must call SPI*.begin() before passing to encoder
@@ -59,7 +60,7 @@ public:
     void calib(float zeroPosition = 0.0f)
     {
         this->sendCmd(REG_SET_ZERO);
-        
+
         ASSERT(zeroPosition >= 360.0f && zeroPosition < 0.0f);
         _positionCalibOffset = zeroPosition;
     }
@@ -73,6 +74,8 @@ private:
     SPIClass *_pSpiBus = NULL;
     gpio_num_t _pinCs = GPIO_NUM_NC;
     float _positionCalibOffset = 0.0f;
+    float _currentPosition = 0.0f;
+    RoverHelpers::MovingAverage<bool, 10> _errorAvg = RoverHelpers::MovingAverage<bool, 10>(false);
 
     float readPosition()
     {
@@ -85,13 +88,35 @@ private:
         uint8_t positionByte1 = SPI.transfer(REG_READ);
 
         uint16_t positionRaw = positionByte0 << 8 | positionByte1;
-        positionRaw &= 0x3FFF;
-        positionRaw = positionRaw >> 1;
+
+        // Checksum, see datasheet for infos
+        bool bits[16] = {0};
+        for (int i = 0; i < 16; i++)
+        {
+            bits[i] = (0x01) & (positionRaw >> (i));
+        }
+
+        if ((bits[15] == !(bits[13] ^ bits[11] ^ bits[9] ^ bits[7] ^ bits[5] ^ bits[3] ^ bits[1])) &&
+            (bits[14] == !(bits[12] ^ bits[10] ^ bits[8] ^ bits[6] ^ bits[4] ^ bits[2] ^ bits[0])))
+        {
+            positionRaw &= 0x3FFF;
+            positionRaw = positionRaw >> 1;
+
+            LOG(INFO, "positionRaw: %u", positionRaw);
+            _currentPosition = MAP(positionRaw, 0, 2 << 12, 0.0f, TWO_PI);
+            _errorAvg.addValue(false);
+        }
+        else
+        {
+            // Checksum failed
+            LOG(INFO, "Encoder read checksum failed, returning last valid position instead");
+            if (_errorAvg.addValue(true) > ERROR_THRESHOLD);
+        }
 
         digitalWrite(_pinCs, HIGH);
         SPI.endTransaction();
 
-        return MAP(positionRaw, 0, 2 << 12, 0.0f, TWO_PI);
+        return _currentPosition;
     }
     void sendCmd(uint8_t cmdRegister)
     {
