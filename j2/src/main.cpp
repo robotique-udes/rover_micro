@@ -59,13 +59,12 @@ void setup()
 
         if (switchCalib.isClicked())
         {
-            #warning TODO: Pass by joint object
-            encoder.calib();
+            j2.calib(0.0f);
         }
 
         if (timerFeedback.isDone())
         {
-            // LOG(INFO, "Current speed: %f | Current position: %f | Goal position: %f", motor.getCmd(), encoder.getPosition(), DEG_TO_RAD*140.0f);
+            LOG(INFO, "Current speed: %f | Current position: %f | Goal position: %f", motor.getCmd(), encoder.getPosition(), DEG_TO_RAD*140.0f);
         }
     }
 }

@@ -9,6 +9,7 @@ class PID
 public:
     PID(float kp_, float ki_, float kd_, float intergalLimit_);
     ~PID() {}
+    void init(void);
     void setGains(float kp_, float ki_, float kd_);
     void setIntLimit(float limit_);
     float computeCommand(float error);
@@ -31,6 +32,11 @@ PID::PID(float kp_, float ki_, float kd_, float intergalLimit_)
     this->setIntLimit(intergalLimit_);
     this->reset();
     _lastMeasureTime = micros();
+}
+
+void PID::init(void)
+{
+    this->reset();
 }
 
 void PID::setGains(float kp_, float ki_, float kd_)

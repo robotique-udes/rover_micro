@@ -33,7 +33,7 @@ public:
         {
             ASSERT(pidPosition_ == NULL);
             _pidPosition = pidPosition_;
-            _pidPosition->reset();
+            _pidPosition->init();
 
             if (pidSpeed_ == NULL)
             {
@@ -44,6 +44,7 @@ public:
                 _dualPID = true;
             }
             _pidSpeed = pidSpeed_;
+            _pidSpeed->init();
         }
     }
 
@@ -70,6 +71,13 @@ public:
             case eControlMode::POSITION:
             {
                 float cmd = _pidPosition->computeCommand(_goalPosition - this->getPosition());
+
+                if (_dualPID)
+                {
+                    float cmdSpeed = _pidSpeed->computeCommand(_goalSpeed - this->getSpeed());
+                    cmd = constrain(cmd, -abs(cmdSpeed), abs(cmdSpeed));
+                }
+
                 _DCMotor->setCmd(cmd);
                 break;
             }
@@ -104,8 +112,7 @@ public:
         return _encoder->getPosition();
     }
 
-#warning TODO
-    /// @brief In POSITION control mode, this will limit the joint maximum speed
+    /// @brief In POSITION control mode, this will limit the joint maximum speed (but not command)
     /// @param goalSpeed_ // target speed in rad/s
     void setSpeed(float goalSpeed_)
     {
@@ -113,7 +120,7 @@ public:
         {
         case (eControlMode::POSITION):
         {
-
+            _goalSpeed = goalSpeed_;
             break;
         }
 
@@ -126,14 +133,12 @@ public:
     }
     float getSpeed(void)
     {
-#warning TODO
-        ASSERT(true, "Not implemented yet")
+        return _encoder->getSpeed();
     }
 
-    void calib(float calibPosition_)
+    void calib(float calibPosition_ = 0.0f)
     {
-#warning TODO
-        ASSERT(true, "Not implemented yet")
+        _encoder->calib(calibPosition_);
     }
 
 private:

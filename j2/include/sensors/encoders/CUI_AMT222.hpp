@@ -7,6 +7,7 @@
 #include "rover_helpers/assert.hpp"
 #include "rover_helpers/macros.hpp"
 #include "rover_helpers/moving_average.hpp"
+#include "rover_helpers/chrono.hpp"
 
 #include "sensors/encoders/encoder.hpp"
 
@@ -22,8 +23,10 @@ public:
     static constexpr uint8_t REG_READ = 0x00;
     static constexpr uint8_t REG_RESET = 0x60;
     static constexpr uint8_t REG_SET_ZERO = 0x70;
-    // Will report errors if there's more than x% of error in msgs 
+    // Will report errors if there's more than x% of error in msgs
     static constexpr float ERROR_THRESHOLD = 0.10f;
+    static constexpr unsigned long TIME_BETWEEN_READ = 50ul; // 40us minimum as per datasheet
+    static constexpr unsigned long TIME_SPEED_CALC = 1000ul; // 1 Hz should be fast enough
 
     /// @brief Constructor
     /// @param spiBus_ Must call SPI*.begin() before passing to encoder
@@ -45,16 +48,29 @@ public:
         this->initDone();
     }
 
-    void update() {}
+    void update()
+    {
+        _currentPosition = this->readPosition();
+
+        if (_timerSpeedCalc.isDone())
+        {
+            _currentSpeed = (_lastPosition - _currentPosition) / ((float)_chronoSpeedCalc.getTime());
+            // LOG(INFO, "_lastPosition: %.2f, _currentPosition: %.2f, getTime: %.2f", _lastPosition, _currentPosition, (float)_chronoSpeedCalc.getTime())
+            _chronoSpeedCalc.restart();
+            _lastPosition = _currentPosition;
+        }
+        
+        // LOG(INFO, "Current speed: %.2f", _currentSpeed);
+    }
 
     float getPosition(void)
     {
-        return this->readPosition();
+        return _currentPosition;
     }
 
     float getSpeed(void)
     {
-        ASSERT(true, "Method not implemented yet");
+        return _currentSpeed;
     }
 
     void calib(float zeroPosition = 0.0f)
@@ -75,48 +91,65 @@ private:
     gpio_num_t _pinCs = GPIO_NUM_NC;
     float _positionCalibOffset = 0.0f;
     float _currentPosition = 0.0f;
+    float _lastPosition = 0.0f;
+    float _currentSpeed = 0.0f;
+    RoverHelpers::MovingAverage<float, 10> _positionAvg = RoverHelpers::MovingAverage<float, 10>(0.0f);
+
+    RoverHelpers::Chrono<unsigned long, micros> _chronoSpeedCalc;
     RoverHelpers::MovingAverage<bool, 10> _errorAvg = RoverHelpers::MovingAverage<bool, 10>(false);
+    RoverHelpers::Timer<unsigned long, micros> _timerRead = RoverHelpers::Timer<unsigned long, micros>(TIME_BETWEEN_READ);
+    RoverHelpers::Timer<unsigned long, micros> _timerSpeedCalc = RoverHelpers::Timer<unsigned long, micros>(TIME_SPEED_CALC);
 
     float readPosition()
     {
         this->checkInit();
 
-        SPI.beginTransaction(SPISettings(2'000'000u, MSBFIRST, SPI_MODE0));
-        digitalWrite(_pinCs, LOW);
-
-        uint8_t positionByte0 = SPI.transfer(REG_START);
-        uint8_t positionByte1 = SPI.transfer(REG_READ);
-
-        uint16_t positionRaw = positionByte0 << 8 | positionByte1;
-
-        // Checksum, see datasheet for infos
-        bool bits[16] = {0};
-        for (int i = 0; i < 16; i++)
+        if (_timerRead.isDone())
         {
-            bits[i] = (0x01) & (positionRaw >> (i));
-        }
+            SPI.beginTransaction(SPISettings(2'000'000u, MSBFIRST, SPI_MODE0));
+            digitalWrite(_pinCs, LOW);
 
-        if ((bits[15] == !(bits[13] ^ bits[11] ^ bits[9] ^ bits[7] ^ bits[5] ^ bits[3] ^ bits[1])) &&
-            (bits[14] == !(bits[12] ^ bits[10] ^ bits[8] ^ bits[6] ^ bits[4] ^ bits[2] ^ bits[0])))
-        {
-            positionRaw &= 0x3FFF;
-            positionRaw = positionRaw >> 1;
+            uint8_t positionByte0 = SPI.transfer(REG_START);
+            uint8_t positionByte1 = SPI.transfer(REG_READ);
 
-            LOG(INFO, "positionRaw: %u", positionRaw);
-            _currentPosition = MAP(positionRaw, 0, 2 << 12, 0.0f, TWO_PI);
-            _errorAvg.addValue(false);
+            uint16_t positionRaw = positionByte0 << 8 | positionByte1;
+
+            float position = 0.0f;
+            // Checksum, see datasheet for infos
+            bool bits[16] = {0};
+            for (int i = 0; i < 16; i++)
+            {
+                bits[i] = (0x01) & (positionRaw >> (i));
+            }
+
+            if ((bits[15] == !(bits[13] ^ bits[11] ^ bits[9] ^ bits[7] ^ bits[5] ^ bits[3] ^ bits[1])) &&
+                (bits[14] == !(bits[12] ^ bits[10] ^ bits[8] ^ bits[6] ^ bits[4] ^ bits[2] ^ bits[0])))
+            {
+                positionRaw &= 0x3FFF;
+                positionRaw = positionRaw >> 1;
+
+                position = MAP(positionRaw, 0, 2 << 12, 0.0f, TWO_PI);
+                _errorAvg.addValue(false);
+            }
+            else
+            {
+                // Checksum failed
+                if (_errorAvg.addValue(true) > ERROR_THRESHOLD)
+                {
+                    LOG(WARN, "Encoder read checksum failed, returning last valid values instead");
+                }
+                position = _currentPosition;
+            }
+
+            digitalWrite(_pinCs, HIGH);
+            SPI.endTransaction();
+
+            return position;
         }
         else
         {
-            // Checksum failed
-            LOG(INFO, "Encoder read checksum failed, returning last valid position instead");
-            if (_errorAvg.addValue(true) > ERROR_THRESHOLD);
+            return _currentPosition;
         }
-
-        digitalWrite(_pinCs, HIGH);
-        SPI.endTransaction();
-
-        return _currentPosition;
     }
     void sendCmd(uint8_t cmdRegister)
     {
