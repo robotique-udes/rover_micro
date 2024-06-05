@@ -44,8 +44,8 @@ float longitude;
 uint8_t fixType;
 
 // Wifi
-const char* ssid     = "roverAntenna";
-const char* password = "roverAntenna";
+// const char* ssid     = "roverAntenna";
+// const char* password = "roverAntenna";
 
 // 800 micro-step/tour * ratio de la gearbox
 
@@ -104,6 +104,7 @@ SemaphoreHandle_t xSemaphore = NULL;
 void setup()
 {
   Serial.begin(115200);
+  LOG(ERROR, "After begin");
   pinMode(PUL, OUTPUT);
   pinMode(EN, OUTPUT);
   pinMode(DIR, OUTPUT);
@@ -119,13 +120,16 @@ void setup()
   digitalWrite(EN, LOW);
   digitalWrite(DIR, HIGH);
 
-  Serial.println("\n[*] Creating AP");
-  // WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid, password);
-  Serial.print("[+] AP Created with IP Gateway ");
-  Serial.println(WiFi.softAPIP());
+  // Serial.println("\n[*] Creating AP");
+  // WiFi.softAP(ssid, password);
+  // Serial.print("[+] AP Created with IP Gateway ");
+  // Serial.println(WiFi.softAPIP());
 
-  // gps880.start();
+  // while (WiFi.status() != WL_CONNECTED) {
+  //   delay(500);
+  //   Serial.print(".");
+  // }
+  // Serial.println("WiFi connected");
 
   for (EVER)
   {
@@ -156,7 +160,18 @@ void setup()
 
 void microRosLoop(void *pvParameters)
 {
-  set_microros_serial_transports(Serial);
+  // set_microros_serial_transports(Serial);
+
+  // Wifi
+  IPAddress agent_ip(172, 20, 10, 11);
+  uint16_t agent_port = 8888;
+
+  char ssid[] = "iPhone de Aude";
+  char psk[]= "rover2024";
+
+  set_microros_wifi_transports(ssid, psk, agent_ip, agent_port);
+
+
 
   RoverMicroRosLib::Node<1u, 2u, 3u> node(NAME_NS, NAME_NODE);
   node.init();
@@ -167,6 +182,7 @@ void microRosLoop(void *pvParameters)
 
   for (EVER)
   {
+    LOG(ERROR, "BOO");
     node.spinSome(RCL_MS_TO_NS(0UL));
 
     if (timerGps.isDone())
@@ -181,7 +197,7 @@ void microRosLoop(void *pvParameters)
         rover_msgs__msg__Gps msg;
         msg.latitude = latitude;
         msg.longitude = longitude;
-        pubGps.publish(&msg);
+        // pubGps.publish(&msg);
       }
     }
   }
