@@ -197,7 +197,7 @@ void microRosLoop(void *pvParameters)
         rover_msgs__msg__Gps msg;
         msg.latitude = latitude;
         msg.longitude = longitude;
-        // pubGps.publish(&msg);
+        pubGps.publish(&msg);
       }
     }
   }
