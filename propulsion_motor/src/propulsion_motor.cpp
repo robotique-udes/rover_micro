@@ -7,8 +7,8 @@
 #include "rover_can_lib/msgs/propulsion_motor_cmd.hpp"
 #include "rover_can_lib/msgs/propulsion_motor_status.hpp"
 
-#include "actuators/talon_srx.hpp"
-#include "actuators/motor_driver.hpp"
+#include "actuators/motor_drivers/IFX007T.hpp"
+#include "actuators/motor_drivers/motor_driver.hpp"
 
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
@@ -20,12 +20,12 @@ void setup()
 {
     Serial.begin(115200);
 
-    pinMode(PWM_MOT, OUTPUT);
+    IFX007T motor(PIN_EN_1, PIN_EN_2, PIN_IN_1, PIN_IN_2, MotorDriver::eBrakeMode::COAST, false);
+    motor.init();
+    motor.attachRGBLed(PIN_LED_R, PIN_LED_G, PIN_LED_B);
+    motor.enable();
 
-    TalonSrx talonDrive(PWM_MOT, LEDC_TIMER_0, LEDC_CHANNEL_0);
-    talonDrive.init();
-
-    RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, canCB, true, (gpio_num_t)LED_BUILTIN);
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_CAN_TX, PIN_CAN_RX, canCB, true, PIN_LED_CAN);
     canBus.init();
 
     LOG(INFO, "Init done, starting Loop!");
@@ -38,6 +38,9 @@ void setup()
     for (;;)
     {
         canBus.update();
+        motor.update();
+
+        // motor.setCmd(20.0f);
 
         if (timerSetCmd.isDone())
         {
@@ -57,7 +60,7 @@ void setup()
                 speedCmd = cmdAverage.addValue(0.0f);
             }
 
-            talonDrive.setCmd(speedCmd);
+            motor.setCmd(speedCmd);
         }
 
         if (timerFeedback.isDone())
