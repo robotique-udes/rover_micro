@@ -1,20 +1,19 @@
 #ifndef __TALONSRX_DRIVE_HPP__
 #define __TALONSRX_DRIVE_HPP__
 
-#if !defined(ESP32)
+#if !defined(ARDUINO_ESP32S2_DEV) && !defined(ARDUINO_ESP32S3_DEV)
 #error CPU is not supported
 #else
 
 #include "Arduino.h"
 #include "driver/ledc.h"
-#include "actuators/motor_driver.hpp"
+#include "actuators/motor_drivers/motor_driver.hpp"
 #include "rover_helpers/helpers.hpp"
 
 class TalonSrx : public MotorDriver
 {
 private:
-    static constexpr float PROTECTION_MAX_VOLTAGE = 12.0f; // In volts
-    static constexpr float SIGNAL_FULL_STOP_MS = 1500.0f;  // Middle of deadband
+    static constexpr float SIGNAL_FULL_STOP_MS = 1500.0f; // Middle of deadband
     static constexpr float SIGNAL_FULL_REVERSE_MS = 1000.0f;
     static constexpr float SIGNAL_MIN_REVERSE_MS = 1480.0f;
     static constexpr float SIGNAL_FULL_FORWARD_MS = 2000.0f;
@@ -28,11 +27,19 @@ private:
 
 public:
     // Try using the same timer for all same frequency signal. Don't use the same channel
-    TalonSrx(gpio_num_t pinPWM_, ledc_timer_t timerNumber_ = LEDC_TIMER_0, ledc_channel_t channelNumber_ = LEDC_CHANNEL_0)
+    TalonSrx(gpio_num_t pinPWM_,
+             ledc_timer_t timerNumber_ = LEDC_TIMER_0,
+             ledc_channel_t channelNumber_ = LEDC_CHANNEL_0,
+             float signalFrequencyHz_ = 50.0f)
+        : MotorDriver(eBrakeMode::NONE)
     {
+#error The TalonSRX class has been updated and cleaned blindly (no available working board to test on): please take the time to test it before using
+
         _pinPWM = pinPWM_;
         _timer = timerNumber_;
         _channel = channelNumber_;
+
+        _freqSignal = (uint32_t)round(signalFrequencyHz_);
     }
 
     ~TalonSrx()
@@ -40,15 +47,18 @@ public:
         ledc_stop(LEDC_LOW_SPEED_MODE, _channel, 0u);
     }
 
-    void init(float signalFrequencyHz_ = 50.0f)
+    void init(void)
     {
         pinMode(_pinPWM, OUTPUT);
 
-        _freqSignal = (uint32_t)round(signalFrequencyHz_);
         ledc_timer_config_t ledc_timer;
         ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;
         ledc_timer.timer_num = _timer;
+#if defined(ARDUINO_ESP32S2_DEV)
         ledc_timer.duty_resolution = LEDC_TIMER_20_BIT;
+#elif defined(ARDUINO_ESP32S3_DEV)
+        ledc_timer.duty_resolution = LEDC_TIMER_14_BIT;
+#endif // defined(ARDUINO_ESP32S2_DEV)
         ledc_timer.freq_hz = _freqSignal;
         ledc_timer.clk_cfg = LEDC_AUTO_CLK;
         ledc_timer_config(&ledc_timer);
@@ -65,24 +75,21 @@ public:
 
         ASSERT(_freqSignal < 10u || _freqSignal > 200u, "Invalid signal frequency for TalonSrx")
 
-        this->setMaxVoltage(25.2f, PROTECTION_MAX_VOLTAGE);
+        this->initDone();
 
         ledc_set_freq(LEDC_LOW_SPEED_MODE, _timer, _freqSignal);
         this->writeMicroseconds(SIGNAL_FULL_STOP_MS);
     }
 
-    // -100.0 to 100.0 for speed
-    void setCmd(float speed_)
+    void updateInternal(void)
     {
-        if (speed_ < -_protectionSpeed || speed_ > _protectionSpeed)
-        {
-            LOG(WARN, "Speed value exceed max power: %f", speed_);
-            _speed = (speed_ < -_protectionSpeed) ? -_protectionSpeed : _protectionSpeed;
-        }
-        else
-        {
-            _speed = speed_;
-        }
+        // No update needed but should be called
+    }
+
+    // -100.0 to 100.0 for speed
+    void setCmdInternal(float cmd_)
+    {
+        _speed = cmd_;
 
         if (IN_ERROR(_speed, 0.01f, 0.0f))
         {
@@ -96,6 +103,11 @@ public:
         {
             writeMicroseconds(MAP(_speed, 0.0f, 100.0f, SIGNAL_MIN_FORWARD_MS, SIGNAL_FULL_FORWARD_MS));
         }
+    }
+
+    float getCmd()
+    {
+        return _speed;
     }
 
     void enable(void)
@@ -116,7 +128,7 @@ public:
     // Return true if the motor is moving.
     bool isMoving(void)
     {
-        if (_speed != 0)
+        if (_speed != 0.0f)
         {
             return true;
         }
@@ -126,35 +138,9 @@ public:
         }
     }
 
-    // Set max dutycycle from 0-100% to limit the output power.
-    void setMaxVoltage(float alimVoltage, float maxVoltage, bool removeOvervoltageSecurity = false)
+    void setBrakeMode(eBrakeMode brakeMode_)
     {
-        if (alimVoltage < 0.0f || maxVoltage < 0.0f)
-        {
-            LOG(WARN, "Wrong input parameters: can't have negative voltages. New value won't be applied...");
-            return;
-        }
-
-        if (maxVoltage > alimVoltage)
-        {
-            LOG(WARN, "Wrong input parameters: can't set higher max voltage than alim voltage. New value won't be applied...");
-            return;
-        }
-
-        float newMax = 0.0f;
-        if (removeOvervoltageSecurity)
-        {
-            LOG(WARN, "Removing the overvoltage security will permanently damage the motor if you don't know what you're doing");
-            newMax = maxVoltage;
-        }
-        else
-        {
-            newMax = constrain(maxVoltage, 0.0f, PROTECTION_MAX_VOLTAGE);
-        }
-
-        LOG(WARN, "newMax: %f | alimVoltage: %f", newMax, alimVoltage);
-        _protectionSpeed = MAP(newMax, 0.0f, alimVoltage, 0.0f, 100.0f);
-        LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMax);
+        LOG(WARN, "TalonSRX brake mode can only be changed with the hardware button, refer to the TalonSRX's documentation")
     }
 
 private:
@@ -177,5 +163,5 @@ private:
     float _speed;
 };
 
-#endif // !defined(ESP32)
+#endif // !defined(ARDUINO_ESP32S2_DEV) && !defined(ARDUINO_ESP32S3_DEV)
 #endif // __DC_MOTOR_HPP__

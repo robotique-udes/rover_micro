@@ -8,7 +8,6 @@
 #include "rover_can_lib/msgs/propulsion_motor_status.hpp"
 
 #include "actuators/motor_drivers/IFX007T.hpp"
-#include "actuators/motor_drivers/motor_driver.hpp"
 
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
@@ -39,8 +38,6 @@ void setup()
     {
         canBus.update();
         motor.update();
-
-        // motor.setCmd(20.0f);
 
         if (timerSetCmd.isDone())
         {

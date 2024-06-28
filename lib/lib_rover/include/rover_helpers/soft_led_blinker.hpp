@@ -12,6 +12,21 @@
 
 namespace RoverHelpers
 {
+
+    /// @brief Helper wrapper class to make it easier to blink led (software based)
+    /// @example The follwing code will blink the onboard led at 1Hz with a
+    /// duty_cycle of 50% and 20% brightness
+    ///
+    ///     int main(void)
+    ///     {
+    ///         RoverHelpers::SoftLedBlinker ledBuildIn;
+    ///         ledBuildIn.init(GPIO_NUM_2, 20.0f, 1);
+    ///
+    ///         for (;;)
+    ///         {
+    ///             ledBuildIn.update();
+    ///         }
+    ///     }
     class SoftLedBlinker
     {
     public:

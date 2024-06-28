@@ -10,7 +10,6 @@
 #include "rover_helpers/macros.hpp"
 #include "actuators/motor_drivers/motor_driver.hpp"
 #include "rover_helpers/assert.hpp"
-#include "rover_helpers/soft_led_blinker.hpp"
 
 class IFX007T : public MotorDriver
 {
@@ -32,7 +31,12 @@ public:
             ledc_timer_t timerNumber_ = LEDC_TIMER_0,
             ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
             ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
+        : MotorDriver(eBrakeMode::NONE)
     {
+        ASSERT(brakeMode_ != eBrakeMode::COAST && brakeMode_ != eBrakeMode::BRAKE,
+               "IFX007T doesn't support specified brake mode");
+        this->setBrakeMode(brakeMode_);
+
         ASSERT(en_1_ == GPIO_NUM_NC);
         ASSERT(en_2_ == GPIO_NUM_NC);
         ASSERT(in_1_ == GPIO_NUM_NC);
@@ -42,16 +46,20 @@ public:
         _in_1 = in_1_;
         _in_2 = in_2_;
 
-        _brakeMode = brakeMode_;
         _reversed = reversed_;
 
         _ledc_motorTimer = timerNumber_;
-        ASSERT(channelNumber1_ == channelNumber2_, "Using the same channel for both half-bridge will result in constant braking of the motor")
+        ASSERT(channelNumber1_ == channelNumber2_,
+         "Using the same channel for both half-bridge will result in constant braking of the motor")
         _ledc_motorChannel_1 = channelNumber1_;
         _ledc_motorChannel_2 = channelNumber2_;
     };
 
-    virtual ~IFX007T(){};
+    virtual ~IFX007T()
+    {
+        ledc_stop(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, 0u);
+        ledc_stop(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, 0u);
+    };
 
     void init()
     {
@@ -108,7 +116,7 @@ public:
         this->setCmd(0.0f);
     }
 
-    void setCmd(float spd_)
+    void setCmdInternal(float spd_)
     {
         this->checkInit();
 
@@ -238,27 +246,26 @@ public:
         }
     }
 
-    void attachRGBLed(gpio_num_t ledR_, gpio_num_t ledG_, gpio_num_t ledB_)
+    void updateInternal(void)
     {
-        this->checkInit();
-
-        _withLed = true;
-
-        _ledR.init(ledR_, 0.0f, 0u);
-        _ledG.init(ledG_, 0.0f, 0u);
-        _ledB.init(ledB_, 0.0f, 0u);
-    }
-
-    void update(void)
-    {
-        this->checkInit();
-
-        this->updateLed();
+        // Not needed for IFX007T*
     }
 
     float getCmd(void)
     {
         return _currentSpd;
+    }
+
+    void setBrakeMode(eBrakeMode brakeMode_)
+    {
+        if (brakeMode_ == eBrakeMode::BRAKE || brakeMode_ == eBrakeMode::COAST)
+        {
+            _brakeMode = brakeMode_;
+        }
+        else
+        {
+            LOG(WARN, "Wrong brake parameters for motor driver IFX007T");
+        }
     }
 
 private:
@@ -269,93 +276,13 @@ private:
 
     uint32_t _freqPWM;
     bool _reversed = false;
-    bool _withLed = false;
 
     ledc_timer_t _ledc_motorTimer;
     ledc_channel_t _ledc_motorChannel_1;
     ledc_channel_t _ledc_motorChannel_2;
 
-    MotorDriver::eBrakeMode _brakeMode;
     bool _enabled = false;
     float _currentSpd = 0.0f;
-
-    RoverHelpers::SoftLedBlinker _ledR;
-    RoverHelpers::SoftLedBlinker _ledG;
-    RoverHelpers::SoftLedBlinker _ledB;
-
-    void updateLed()
-    {
-        if (!_withLed)
-        {
-            return;
-        }
-
-        if (_currentSpd > 0.0f)
-        {
-            _ledR.setBrightness(15.0f);
-            _ledR.setBlink((uint8_t)(10.0f * _currentSpd / 100.0f));
-            _ledG.setBrightness(0.0f);
-            _ledG.setBlink(0u);
-            _ledB.setBrightness(0.0f);
-            _ledB.setBlink(0u);
-        }
-
-        if (_currentSpd > 99.9f)
-        {
-            _ledR.setBrightness(15.0f);
-            _ledR.setBlink(0u);
-            _ledG.setBrightness(0.0f);
-            _ledG.setBlink(0u);
-            _ledB.setBrightness(0.0f);
-            _ledB.setBlink(0u);
-        }
-
-        if (_currentSpd < 0.0f)
-        {
-            _ledR.setBrightness(0.0f);
-            _ledR.setBlink(0u);
-            _ledG.setBrightness(8.0f);
-            _ledG.setBlink((uint8_t)(10.0f * abs(_currentSpd) / 100.0f));
-            _ledB.setBrightness(0.0f);
-            _ledB.setBlink(0u);
-        }
-
-        if (_currentSpd < -99.9f)
-        {
-            _ledR.setBrightness(0.0f);
-            _ledR.setBlink(0u);
-            _ledG.setBrightness(8.0f);
-            _ledG.setBlink(0u);
-            _ledB.setBrightness(0.0f);
-            _ledB.setBlink(0u);
-        }
-
-        if (IN_ERROR(_currentSpd, 0.001f, 0.0f))
-        {
-            if (_brakeMode == eBrakeMode::COAST)
-            {
-                _ledR.setBrightness(0.0f);
-                _ledR.setBlink(0u);
-                _ledG.setBrightness(0.0f);
-                _ledG.setBlink(0u);
-                _ledB.setBrightness(1.0f);
-                _ledB.setBlink(0u);
-            }
-            else if (_brakeMode == eBrakeMode::BRAKE)
-            {
-                _ledR.setBrightness(0.0f);
-                _ledR.setBlink(0u);
-                _ledG.setBrightness(0.0f);
-                _ledG.setBlink(0u);
-                _ledB.setBrightness(1.0f);
-                _ledB.setBlink(1u);
-            }
-        }
-
-        _ledR.update();
-        _ledG.update();
-        _ledB.update();
-    }
 };
 
 #endif // !defined(ESP32)

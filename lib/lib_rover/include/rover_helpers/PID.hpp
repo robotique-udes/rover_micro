@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "rover_helpers/macros.hpp"
+#include "rover_helpers/log.hpp"
 
 class PID
 {
