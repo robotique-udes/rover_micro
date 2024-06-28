@@ -9,17 +9,17 @@ class PID
 {
 public:
     PID(float kp_, float ki_, float kd_, float intergalLimit_);
-    ~PID() {}
+    ~PID(void) {}
     void init(void);
     void setGains(float kp_, float ki_, float kd_);
     void setIntLimit(float limit_);
     float computeCommand(float error);
-    void reset();
+    void reset(void);
 
 private:
-    float kp = 0.0f;
-    float ki = 0.0f;
-    float kd = 0.0f;
+    float _kp = 0.0f;
+    float _ki = 0.0f;
+    float _kd = 0.0f;
 
     float _cmdI = 0.0f;
     float _integralLimit = 0.0f;
@@ -42,36 +42,40 @@ void PID::init(void)
 
 void PID::setGains(float kp_, float ki_, float kd_)
 {
-    kp = kp_;
-    ki = ki_;
-    kd = kd_;
+    _kp = kp_;
+    _ki = ki_;
+    _kd = kd_;
 }
 
 void PID::setIntLimit(float limit_)
 {
-    LOG(ERROR, "Integral limit should always be positive, abs value will be used");
+    if (limit_ < 0.0f)
+    {
+        LOG(ERROR, "Integral limit should always be positive, abs value will be used");
+    }
+
     _integralLimit = abs(limit_);
 }
 
-float PID::computeCommand(float error)
+float PID::computeCommand(float error_)
 {
-    if (isnan(error))
+    if (isnan(error_))
     {
-        error = 0.0f;
+        error_ = 0.0f;
     }
-    if (isinf(error))
+    if (isinf(error_))
     {
-        error = 0.0f;
+        error_ = 0.0f;
     }
 
     float currentTime = micros();
     float dt = currentTime - _lastMeasureTime;
 
-    _cmdI += ki*error;
+    _cmdI += _ki*error_;
 
-    float cmdP = kp * error;
+    float cmdP = _kp * error_;
     _cmdI = constrain(_cmdI, -_integralLimit, _integralLimit);
-    float cmdD = kd * (error - _previousError) / (dt / 1'000'000.0f);
+    float cmdD = _kd * (error_ - _previousError) / (dt / 1'000'000.0f);
 
     if (isnan(cmdP))
     {
@@ -86,7 +90,7 @@ float PID::computeCommand(float error)
         cmdD = 0.0f;
     }
 
-    _previousError = error;
+    _previousError = error_;
     _lastMeasureTime = currentTime;
 
     // LOG(INFO, "cmdP: %.3f + cmdI: %.3f + cmdD: %.3f = %.3f", cmdP, _cmdI, cmdD, cmdP + _cmdI + cmdD);
@@ -95,7 +99,7 @@ float PID::computeCommand(float error)
     return cmdP + _cmdI + cmdD;
 }
 
-void PID::reset()
+void PID::reset(void)
 {
     _cmdI = 0.0f;
     _previousError = 0.0f;

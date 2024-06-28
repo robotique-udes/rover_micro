@@ -9,7 +9,6 @@
 #include "driver/ledc.h"
 #include "rover_helpers/macros.hpp"
 #include "actuators/motor_drivers/motor_driver.hpp"
-#include "rover_helpers/assert.hpp"
 
 class IFX007T : public MotorDriver
 {
@@ -50,18 +49,18 @@ public:
 
         _ledc_motorTimer = timerNumber_;
         ASSERT(channelNumber1_ == channelNumber2_,
-         "Using the same channel for both half-bridge will result in constant braking of the motor")
+         "Using the same channel for both half-bridge will result in constant braking of the motor");
         _ledc_motorChannel_1 = channelNumber1_;
         _ledc_motorChannel_2 = channelNumber2_;
     };
 
-    virtual ~IFX007T()
+    virtual ~IFX007T(void)
     {
         ledc_stop(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, 0u);
         ledc_stop(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, 0u);
     };
 
-    void init()
+    void init(void)
     {
         pinMode(_en_1, OUTPUT);
         pinMode(_en_2, OUTPUT);
@@ -118,36 +117,25 @@ public:
 
     void setCmdInternal(float spd_)
     {
-        this->checkInit();
-
         if (!_enabled)
         {
             LOG(WARN, "Motor is disabled, can't set speed");
             return;
         }
 
-        spd_ = constrain(spd_, -100.0f, 100.0f);
         _currentSpd = spd_;
-
         if (IN_ERROR(spd_, 0.001f, 0.0f))
         {
             _currentSpd = 0.0f;
-            // Brake
-            if (_brakeMode == MotorDriver::eBrakeMode::BRAKE)
-            {
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
-            }
-            else if (_brakeMode == MotorDriver::eBrakeMode::COAST)
+            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
+            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+            
+            if (_brakeMode == MotorDriver::eBrakeMode::COAST)
             {
                 digitalWrite(_en_1, LOW);
                 digitalWrite(_en_2, LOW);
                 ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
                 ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
-            }
-            else
-            {
-                ASSERT(true, "Shouldn't ever fall ever, implementation error... aborting");
             }
         }
         else if (spd_ > 0.0f)
@@ -236,7 +224,7 @@ public:
     {
         this->checkInit();
 
-        if (_enabled && IN_ERROR(_currentSpd, 0.01f, 0.0f))
+        if (_enabled && !IN_ERROR(_currentSpd, 0.01f, 0.0f))
         {
             return true;
         }

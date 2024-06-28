@@ -30,8 +30,8 @@ namespace RoverHelpers
     class SoftLedBlinker
     {
     public:
-        SoftLedBlinker() {}
-        ~SoftLedBlinker() {}
+        SoftLedBlinker(void) {}
+        ~SoftLedBlinker(void) {}
 
         /// @brief Needs to be called for led to work
         /// @param ledPin_ GPIO attached to LED
@@ -48,7 +48,7 @@ namespace RoverHelpers
         void setBrightness(float brightness_);
 
         // Need to be called as often as possible
-        void update();
+        void update(void);
 
     private:
         gpio_num_t _ledPin = GPIO_NUM_NC;
@@ -90,7 +90,7 @@ namespace RoverHelpers
         }
     }
 
-    void SoftLedBlinker::update()
+    void SoftLedBlinker::update(void)
     {
         if (_brightness == 0.0f)
         {

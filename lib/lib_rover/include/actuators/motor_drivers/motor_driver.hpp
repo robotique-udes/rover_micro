@@ -49,7 +49,7 @@ protected:
     };
 
 public:
-    virtual ~MotorDriver(){};
+    virtual ~MotorDriver(void){};
 
     virtual void init(void) = 0;
     virtual void enable(void) = 0;
@@ -61,10 +61,13 @@ public:
     eBrakeMode getBrakeMode(void) {return _brakeMode;}
 
     // -100.0 to 100.0 for cmd
-    void setCmd(float cmd)
+    void setCmd(float cmd_)
     {
-        cmd = constrain(cmd, -_protectionSpeed, _protectionSpeed);
-        this->setCmdInternal(cmd);
+        this->checkInit();
+
+        cmd_ = constrain(cmd_, -100, 100);
+        cmd_ = constrain(cmd_, -_protectionSpeed, _protectionSpeed);
+        this->setCmdInternal(cmd_);
     }
 
     void update(void)
@@ -95,9 +98,8 @@ protected:
     RoverHelpers::SoftLedBlinker _ledG;
     RoverHelpers::SoftLedBlinker _ledB;
 
-    // This is where the implementation is located
     virtual void setCmdInternal(float cmd) = 0;
-    virtual void updateInternal() = 0;
+    virtual void updateInternal(void) = 0;
 
     void initDone(void)
     {
@@ -110,8 +112,8 @@ protected:
     }
 
     // Assert if object isn't inited, calling this before every function is a
-    // good way to make sure everything is inited cleanely before using
-    // but induce a lost in  performance, still we'll prefer the added security
+    // good way to make sure everything is inited cleanely before using but
+    // induce a lost in  performance, still we'll prefer the added security
     // over the very small performance lost
     void checkInit(void)
     {
@@ -119,39 +121,39 @@ protected:
     }
 
     // Cap the maximum voltage sent to the motor to a specified value
-    void setMaxVoltage(float alimVoltage, float maxVoltage, bool removeOvervoltageSecurity = false)
+    void setMaxVoltage(float alimVoltage_, float maxVoltage_, bool removeOverVoltageSecurity_ = false)
     {
-        if (alimVoltage < 0.0f || maxVoltage < 0.0f)
+        if (alimVoltage_ < 0.0f || maxVoltage_ < 0.0f)
         {
             LOG(WARN, "Wrong input parameters: can't have negative voltages. New value won't be applied...");
             return;
         }
 
-        if (maxVoltage > alimVoltage)
+        if (maxVoltage_ > alimVoltage_)
         {
             LOG(WARN, "Wrong input parameters: can't set higher max voltage than alim voltage. New value won't be applied...");
             return;
         }
 
         float newMax = 0.0f;
-        if (removeOvervoltageSecurity)
+        if (removeOverVoltageSecurity_)
         {
             LOG(WARN, "Removing the overvoltage security will permanently damage the motor if you don't know what you're doing");
-            newMax = maxVoltage;
+            newMax = maxVoltage_;
         }
         else
         {
-            newMax = constrain(maxVoltage, 0.0f, PROTECTION_MAX_VOLTAGE);
+            newMax = constrain(maxVoltage_, 0.0f, MotorDriver::PROTECTION_MAX_VOLTAGE);
         }
 
-        LOG(WARN, "newMax: %f | alimVoltage: %f", newMax, alimVoltage);
-        _protectionSpeed = MAP(newMax, 0.0f, alimVoltage, 0.0f, 100.0f);
+        LOG(WARN, "newMax: %f | alimVoltage: %f", newMax, alimVoltage_);
+        _protectionSpeed = MAP(newMax, 0.0f, alimVoltage_, 0.0f, 100.0f);
         LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMax);
     }
 
 private:
     // Does the job for now, but would be cleaner with hardware led instead
-    void updateLed()
+    void updateLed(void)
     {
         if (!_withLed)
         {

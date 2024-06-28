@@ -22,7 +22,11 @@ private:
     static constexpr uint32_t MS_TO_DUTY(uint32_t freq_, float microSeconds_)
     {
         float period = 1.0f / static_cast<float>(freq_);
-        return static_cast<uint32_t>(round(((microSeconds_ / 1'000'000.f) / period) * 1048576.0f));
+#if defined(ARDUINO_ESP32S2_DEV)
+        return static_cast<uint32_t>(round(((microSeconds_ / 1'000'000.f) / period) * ((float)(1u << 20)));
+#elif defined(ARDUINO_ESP32S3_DEV)
+        return static_cast<uint32_t>(round(((microSeconds_ / 1'000'000.f) / period) * ((float)(1u << 14))));
+#endif
     }
 
 public:
@@ -42,7 +46,7 @@ public:
         _freqSignal = (uint32_t)round(signalFrequencyHz_);
     }
 
-    ~TalonSrx()
+    ~TalonSrx(void)
     {
         ledc_stop(LEDC_LOW_SPEED_MODE, _channel, 0u);
     }
@@ -105,7 +109,7 @@ public:
         }
     }
 
-    float getCmd()
+    float getCmd(void)
     {
         return _speed;
     }
