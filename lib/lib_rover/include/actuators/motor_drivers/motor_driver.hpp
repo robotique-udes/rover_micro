@@ -65,7 +65,6 @@ public:
     {
         this->checkInit();
 
-        cmd_ = constrain(cmd_, -100, 100);
         cmd_ = constrain(cmd_, -_protectionSpeed, _protectionSpeed);
         this->setCmdInternal(cmd_);
     }
@@ -135,20 +134,20 @@ protected:
             return;
         }
 
-        float newMax = 0.0f;
+        float newMaxVoltage = 0.0f;
         if (removeOverVoltageSecurity_)
         {
             LOG(WARN, "Removing the overvoltage security will permanently damage the motor if you don't know what you're doing");
-            newMax = maxVoltage_;
+            newMaxVoltage = maxVoltage_;
         }
         else
         {
-            newMax = constrain(maxVoltage_, 0.0f, MotorDriver::PROTECTION_MAX_VOLTAGE);
+            newMaxVoltage = constrain(maxVoltage_, 0.0f, MotorDriver::PROTECTION_MAX_VOLTAGE);
         }
 
-        LOG(WARN, "newMax: %f | alimVoltage: %f", newMax, alimVoltage_);
-        _protectionSpeed = MAP(newMax, 0.0f, alimVoltage_, 0.0f, 100.0f);
-        LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMax);
+        LOG(WARN, "newMax: %f | alimVoltage: %f", newMaxVoltage, alimVoltage_);
+        _protectionSpeed = MAP(newMaxVoltage, 0.0f, alimVoltage_, 0.0f, 100.0f);
+        LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMaxVoltage);
     }
 
 private:
@@ -162,7 +161,7 @@ private:
 
         float currentCmd = this->getCmd();
 
-        if (currentCmd > 0.0f)
+        if (currentCmd > 0.0f && currentCmd < 99.9f)
         {
             _ledR.setBrightness(15.0f);
             _ledR.setBlink((uint8_t)(10.0f * currentCmd / 100.0f));
@@ -171,8 +170,7 @@ private:
             _ledB.setBrightness(0.0f);
             _ledB.setBlink(0u);
         }
-
-        if (currentCmd > 99.9f)
+        else if (currentCmd > 99.9f)
         {
             _ledR.setBrightness(15.0f);
             _ledR.setBlink(0u);
@@ -181,8 +179,7 @@ private:
             _ledB.setBrightness(0.0f);
             _ledB.setBlink(0u);
         }
-
-        if (currentCmd < 0.0f)
+        else if (currentCmd < 0.0f && currentCmd > -99.9f)
         {
             _ledR.setBrightness(0.0f);
             _ledR.setBlink(0u);
@@ -191,8 +188,7 @@ private:
             _ledB.setBrightness(0.0f);
             _ledB.setBlink(0u);
         }
-
-        if (currentCmd < -99.9f)
+        else if (currentCmd < -99.9f)
         {
             _ledR.setBrightness(0.0f);
             _ledR.setBlink(0u);

@@ -48,19 +48,19 @@
     }
 
 #define GET_MACRO_ASSERT(_0, _1, _2, ASSERT, ...) ASSERT
-#define ASSERT(...) GET_MACRO_ASSERT(_0, ##__VA_ARGS__, ASSERT2, ASSERT1, ASSERT0)(__VA_ARGS__)
+#define ASSERT(...) GET_MACRO_ASSERT(_0, ##__VA_ARGS__, ASSERT_CONDITION_MESSAGE, ASSERT_CONDITION, ASSERT_ONLY)(__VA_ARGS__)
 
-#define ASSERT2(condition, ...)      \
-    {                                \
-        if (condition)               \
-        {                            \
-            LOG(FATAL, __VA_ARGS__); \
-            Serial.flush();          \
-            ABORT();                 \
-        }                            \
+#define ASSERT_CONDITION_MESSAGE(condition, ...) \
+    {                                            \
+        if (condition)                           \
+        {                                        \
+            LOG(FATAL, __VA_ARGS__);             \
+            Serial.flush();                      \
+            ABORT();                             \
+        }                                        \
     }
 
-#define ASSERT1(condition)                \
+#define ASSERT_CONDITION(condition)       \
     {                                     \
         if (condition)                    \
         {                                 \
@@ -70,13 +70,13 @@
         }                                 \
     }
 
-#define ASSERT0() \
+#define ASSERT_ONLY() \
     {             \
         ABORT();  \
     }
 
 #else // defined(VERBOSE)
-#define ASSERT(condition) ? abort() : (void)0;
+#define ASSERT(condition, ...) condition ? abort() : (void)0;
 #endif // defined(VERBOSE)
 
 #endif // __ASSERT_HPP__
