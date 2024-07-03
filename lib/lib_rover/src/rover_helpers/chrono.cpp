@@ -30,7 +30,7 @@ namespace RoverHelpers
     }
 
     template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    TYPE Chrono<TYPE, CLOCK_FUNC>::
+    void Chrono<TYPE, CLOCK_FUNC>::
         pause(void)
     {
         if (!_paused)

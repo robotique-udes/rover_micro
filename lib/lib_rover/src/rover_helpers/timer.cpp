@@ -61,6 +61,13 @@ namespace RoverHelpers
     }
 
     template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    TYPE Timer<TYPE, CLOCK_FUNC>::
+        getInterval(void)
+    {
+        return _interval;
+    }
+
+    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
     void Timer<TYPE, CLOCK_FUNC>::
         reset(void)
     {

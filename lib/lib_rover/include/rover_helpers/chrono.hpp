@@ -30,11 +30,13 @@ namespace RoverHelpers
         Chrono(void);
         ~Chrono(void);
         void init(void);
-        TYPE pause(void);
+        void pause(void);
         void resume(void);
         TYPE getTime(void);
         void restart(void);
     };
 }
+
+#include "rover_helpers/chrono.cpp"
 
 #endif // __CHRONO_HPP__

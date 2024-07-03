@@ -13,7 +13,7 @@ namespace RoverHelpers
     /// void setup()
     /// {
     ///     RoverHelpers::Timer<unsigned long, millis> timer(1000);
-    ///     
+    ///
     ///     for (EVER)
     ///     {
     ///         if (timer.isDone())
@@ -38,6 +38,7 @@ namespace RoverHelpers
         void init(T interval_);
         bool isDone(bool reset_ = 1);
         void updateInterval(T newInterval_);
+        T getInterval(void);
         void reset(void);
     };
 }
