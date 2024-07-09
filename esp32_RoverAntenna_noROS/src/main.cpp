@@ -8,6 +8,7 @@ const char* password = "roverAntenna";
 IPAddress local_ip(192, 168, 144, 100);
 IPAddress gateway(192, 168, 144, 1);
 IPAddress subnet(255, 255, 255, 0);
+IPAddress host_ip(192, 168, 144, 50);
 
 WiFiUDP udp;
 unsigned int localUdpPort = 1234;  // local port to listen on
@@ -39,11 +40,15 @@ void setup() {
 }
 
 void loop() {
-    int packetSize = udp.parsePacket();
-    Serial.printf("packetSize : %d\n", packetSize);
+    // int packetSize = udp.parsePacket();
 
-    if (packetSize) {
-        recvAbtr();
+    // if (packetSize) {
+    //     Serial.printf("Packet received, size: %d\n", packetSize);
+    //     recvAbtr();
+    // }
+    // else {
+    //     Serial.println("No packet received");
+    // }
 //   if (packetSize) {
 //     // Receive incoming UDP packets
 //     int len = udp.read(incomingPacket, 255);
@@ -52,28 +57,27 @@ void loop() {
 //     }
 //     Serial.printf("Received %d bytes: %s\n", len, incomingPacket);
 
-//     // Send a reply to the IP address and port that sent the incoming packet
-//     udp.beginPacket(udp.remoteIP(), udp.remotePort());
-//     udp.write((const uint8_t*)replyPacket, strlen(replyPacket));
-//     udp.endPacket();
-//     Serial.printf("Sent %s to %s:%d\n", replyPacket, udp.remoteIP().toString().c_str(), udp.remotePort());
-  }
+    // Send a reply to the IP address and port that sent the incoming packet
+    udp.beginPacket(host_ip, localUdpPort);
+    udp.write((const uint8_t*)replyPacket, strlen(replyPacket));
+    udp.endPacket();
+    Serial.printf("Sent %s to %s:%d\n", replyPacket, udp.remoteIP().toString().c_str(), udp.remotePort());
+    delay(500);
 }
 
 void recvAbtr()
 {
-    // int packetSize = udp.parsePacket();
-    // if (packetSize) {
+
         int len = udp.read(incomingPacket, 255);
         if (len > 0) {
             incomingPacket[len] = 0;  // Null-terminate the string
         }
         Serial.printf("Received %d bytes: %s\n", len, incomingPacket);
-        led_blink = led_blink == HIGH ? LOW : HIGH;
+        led_blink = !led_blink;
         digitalWrite(LED_BUILTIN, led_blink);
         // if (incomingPacket == "0.00")
         // {
-        //     led_blink = led_blink == HIGH ? LOW : HIGH;
+        //     led_blink = !led_blink;
         //     digitalWrite(LED_BUILTIN, led_blink);
         // }
     // }
