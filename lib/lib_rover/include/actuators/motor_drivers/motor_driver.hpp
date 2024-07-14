@@ -41,6 +41,7 @@ public:
 
 protected:
     static constexpr float PROTECTION_MAX_VOLTAGE = 12.0f;
+    static constexpr float MAX_SPEED = 100.0f;
 
     MotorDriver(MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::NONE)
     {
@@ -66,6 +67,8 @@ public:
         this->checkInit();
 
         cmd_ = constrain(cmd_, -_protectionSpeed, _protectionSpeed);
+        cmd_ = MAP(cmd_, -MAX_SPEED, MAX_SPEED, -_protectionSpeed, _protectionSpeed);
+        
         this->setCmdInternal(cmd_);
     }
 
