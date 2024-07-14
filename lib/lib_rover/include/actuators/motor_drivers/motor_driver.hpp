@@ -149,7 +149,7 @@ protected:
         }
 
         LOG(WARN, "newMax: %f | alimVoltage: %f", newMaxVoltage, alimVoltage_);
-        _protectionSpeed = MAP(newMaxVoltage, 0.0f, alimVoltage_, 0.0f, 100.0f);
+        _protectionSpeed = MAP(newMaxVoltage, 0.0f, alimVoltage_, 0.0f, MAX_SPEED);
         LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMaxVoltage);
     }
 
