@@ -34,6 +34,7 @@ namespace RoverCanLib::Constant
         GPS = 0x401,
         LIGHTS = 0x402,
         INFRARED_LIGHTS = 0x402,
+        COMPASS = 0x404,
         CAMERA_A2 = 0x411,
         CAMERA_R1M_1 = 0x412,
         CAMERA_R1M_2 = 0x413,
@@ -53,7 +54,8 @@ namespace RoverCanLib::Constant
         PROPULSION_MOTOR_STATUS = 0x12,
         CAM_CONTROL = 0x13,
         CAM_CONTROL_A2 = 0x14,
-        LIGHT_CONTROL = 0x15
+        LIGHT_CONTROL = 0x15,
+        COMPASS = 0x16
     };
 
     enum class eDataIndex : uint8_t
