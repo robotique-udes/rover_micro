@@ -18,13 +18,15 @@
 //      - In not supported method it's your choice to either print some info
 //        like "not supported for driver X" or not
 //
-//  2. At the end of your "void init();" implementation, make sure to call: 
+//  2. At the end of your "void init();" implementation, make sure to call:
 //      this->initDone();
 // =============================================================================
 
 class MotorDriver
 {
 public:
+    static constexpr float MAX_SPEED = 100.0f;
+
     enum class eDriverType : uint8_t
     {
         TALON_SRX,
@@ -59,7 +61,7 @@ public:
     virtual bool isMoving(void) = 0;
     virtual float getCmd(void) = 0;
     virtual void setBrakeMode(eBrakeMode brakeMode_) = 0;
-    eBrakeMode getBrakeMode(void) {return _brakeMode;}
+    eBrakeMode getBrakeMode(void) { return _brakeMode; }
 
     // -100.0 to 100.0 for cmd
     void setCmd(float cmd_)
@@ -88,6 +90,37 @@ public:
         _ledR.init(ledR_, 0.0f, 0u);
         _ledG.init(ledG_, 0.0f, 0u);
         _ledB.init(ledB_, 0.0f, 0u);
+    }
+
+    // Cap the maximum voltage sent to the motor to a specified value
+    void setMaxVoltage(float alimVoltage_, float maxVoltage_, bool removeOverVoltageSecurity_ = false)
+    {
+        if (alimVoltage_ < 0.0f || maxVoltage_ < 0.0f)
+        {
+            LOG(WARN, "Wrong input parameters: can't have negative voltages. New value won't be applied...");
+            return;
+        }
+
+        if (maxVoltage_ > alimVoltage_)
+        {
+            LOG(WARN, "Wrong input parameters: can't set higher max voltage than alim voltage. New value won't be applied...");
+            return;
+        }
+
+        float newMaxVoltage = 0.0f;
+        if (removeOverVoltageSecurity_)
+        {
+            LOG(WARN, "Removing the overvoltage security will permanently damage the motor if you don't know what you're doing");
+            newMaxVoltage = maxVoltage_;
+        }
+        else
+        {
+            newMaxVoltage = constrain(maxVoltage_, 0.0f, MotorDriver::PROTECTION_MAX_VOLTAGE);
+        }
+
+        LOG(WARN, "newMax: %f | alimVoltage: %f", newMaxVoltage, alimVoltage_);
+        _protectionSpeed = MAP(newMaxVoltage, 0.0f, alimVoltage_, 0.0f, 100.0f);
+        LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMaxVoltage);
     }
 
 protected:
