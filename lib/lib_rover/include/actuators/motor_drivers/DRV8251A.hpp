@@ -7,10 +7,10 @@
 
 #include "Arduino.h"
 #include "driver/ledc.h"
-#include "rover_helpers/macros.hpp"
+
 #include "actuators/motor_drivers/motor_driver.hpp"
+#include "rover_helpers/macros.hpp"
 #include "rover_helpers/assert.hpp"
-#include "rover_helpers/soft_led_blinker.hpp"
 
 class DRV8251A : public MotorDriver
 {
@@ -31,6 +31,10 @@ public:
             ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
             ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
     {
+        ASSERT(brakeMode_ != eBrakeMode::NONE,
+               "DRV8251A cannot have NONE brake mode");
+        this->setBrakeMode(brakeMode_);
+
         ASSERT(in_1_ == GPIO_NUM_NC);
         ASSERT(in_2_ == GPIO_NUM_NC);
         _in_1 = in_1_;
@@ -142,10 +146,6 @@ public:
                 ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
             }
         }
-        else
-        {
-            ASSERT(true, "Shouldn't ever fall ever, implementation error... aborting");
-        }
 
         ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1);
         ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2);
@@ -159,7 +159,6 @@ public:
         {
             return;
         }
-        _enabled = true;
     }
 
     void disable(void)
@@ -171,9 +170,8 @@ public:
             return;
         }
 
+        LOG(INFO, "DRV8251A cannot be disabled; braking at speed=0 instead")
         this->setCmd(0.0f);
-
-        _enabled = false;
     }
 
     void reset(void)
@@ -216,7 +214,7 @@ public:
         }
         else
         {
-            LOG(WARN, "Wrong brake parameters for motor driver IFX007T");
+            LOG(WARN, "Wrong brake parameters for motor driver DRV8251A");
         }
     }
 
@@ -231,9 +229,8 @@ private:
     ledc_channel_t _ledc_motorChannel_1;
     ledc_channel_t _ledc_motorChannel_2;
 
-    bool _enabled = false;
     float _currentSpd = 0.0f;
 };
 
 #endif // !defined(ESP32)
-#endif // __IFX007T_HPP__
+#endif // __DRV8251A_HPP__

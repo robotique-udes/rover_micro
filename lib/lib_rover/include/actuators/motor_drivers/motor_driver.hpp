@@ -66,8 +66,8 @@ public:
     {
         this->checkInit();
 
-        cmd_ = constrain(cmd_, -_protectionSpeed, _protectionSpeed);
         cmd_ = MAP(cmd_, -MAX_SPEED, MAX_SPEED, -_protectionSpeed, _protectionSpeed);
+        cmd_ = constrain(cmd_, -_protectionSpeed, _protectionSpeed);
         
         this->setCmdInternal(cmd_);
     }
