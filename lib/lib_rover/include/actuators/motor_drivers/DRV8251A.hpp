@@ -117,8 +117,16 @@ public:
         if (IN_ERROR(spd_, 0.001f, 0.0f))
         {
             _currentSpd = 0.0f;
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
-            ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+            if(_brakeMode == MotorDriver::eBrakeMode::BRAKE)
+            {
+                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(100.0f));
+                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(100.0f));
+            }
+            else
+            {
+                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
+                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+            }
         }
         else if (spd_ > 0.0f)
         {
@@ -229,6 +237,7 @@ private:
     ledc_channel_t _ledc_motorChannel_1;
     ledc_channel_t _ledc_motorChannel_2;
 
+    bool _enabled = false;
     float _currentSpd = 0.0f;
 };
 
