@@ -29,6 +29,7 @@ namespace RoverCanLib::Constant
         J6_CONTROLLER = 0x216,
 
         // Science
+        SCIENCE = 0x301,
 
         // Accessory
         GPS = 0x401,
@@ -41,7 +42,7 @@ namespace RoverCanLib::Constant
         CAMERA_R1M_3 = 0x414,
         SPEAKERS = 0x421,
 
-        // Free Space
+        // Free Spaces
     };
 
     enum class eMsgId : uint8_t
@@ -55,6 +56,7 @@ namespace RoverCanLib::Constant
         CAM_CONTROL = 0x13,
         CAM_CONTROL_A2 = 0x14,
         LIGHT_CONTROL = 0x15,
+        SCIENCE = 0x16,
         COMPASS = 0x16
     };
 
