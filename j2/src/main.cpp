@@ -10,7 +10,7 @@
 #include "sensors/limit_switch.hpp"
 #include "SPI.h"
 
-#warning TODO: Joint limits, PID "zero holding torque range", Faire PID dual band (peut-être modèle dynamique?)
+#warning TODO: Faire PID dual band, ajouter overwrite cmd (jog), disable joint limits
 
 void setup()
 {
@@ -23,16 +23,20 @@ void setup()
     motor.init();
     motor.enable();
     motor.setCmd(0.0f);
-    motor.setMaxVoltage(24.0f, 12.0f, false);
+    motor.setMaxVoltage(25.2f, 25.2f, true);
 
     SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI, GPIO_NUM_NC);
     CUI_AMT222 encoder(&SPI, PIN_SPI_CS_EN_SHAFT);
     encoder.init();
 #warning TODO, Should be #define
-    PID pid(850.0f, 2000.0f, 0.0f, 10.0f);
-    DcRevoluteJoint j2(&motor, &encoder, Joint::eControlMode::POSITION, &pid);
+    PID pid(600.0f, 20.0f, 100.0f, 80.0f);
+    DcRevoluteJoint j2(&motor,
+                       Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN,
+                       &encoder,
+                       Joint::eControlMode::POSITION,
+                       &pid);
 #warning TODO, Should be #define
-    j2.setJointLimits(DEG_TO_RAD*-10.0f, DEG_TO_RAD*10.0f);
+    j2.setJointLimits(DEG_TO_RAD * -10.0f, DEG_TO_RAD * 10.0f);
     j2.init();
 
     LimitSwitch switchFWD(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_FWD);
@@ -46,31 +50,53 @@ void setup()
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(50);
     RoverHelpers::Timer<unsigned long, millis> timer(500);
     int16_t i = 0;
+
+    RoverHelpers::MovingAverage<float, 100> goalAvg(0.0f);
+    char cmd = 0;
     for (;;)
     {
-        if (switchFWD.isClicked())
+
+        if (Serial.available() >= 1)
         {
-            motor.setCmd(100.0f);
-            continue;
+            Serial.readBytes(&cmd, sizeof(cmd));
+
+            if (cmd == '3')
+            {
+                goalAvg.addValue(PI);
+            }
+            else if (cmd == '1')
+            {
+                goalAvg.addValue(-PI);
+            }
+        }
+
+        j2.setPosition(goalAvg.getAverage());
+
+        if (switchFWD.isClicked() && switchREV.isClicked())
+        {
+            motor.setCmd(0.0f);
+        }
+        else if (switchFWD.isClicked())
+        {
+            motor.setCmd(50.0f);
         }
         else if (switchREV.isClicked())
         {
-            motor.setCmd(-100.0f);
-            continue;
+            motor.setCmd(-50.0f);
         }
-
-        j2.setPosition(DEG_TO_RAD*5.0f);
-        j2.update();
-
-        if (switchCalib.isClicked())
+        else if (switchCalib.isClicked())
         {
             j2.calib(0.0f);
         }
-
-        if (timerFeedback.isDone())
+        else
         {
-            j2.printDebugInfo();
+            j2.update();
         }
+
+        // if (timerFeedback.isDone())
+        // {
+        j2.printDebugInfo();
+        // }
     }
 }
 

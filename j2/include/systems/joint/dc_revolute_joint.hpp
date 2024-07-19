@@ -9,22 +9,43 @@
 
 #include "rover_helpers/assert.hpp"
 #include "rover_helpers/timer.hpp"
+#include "rover_helpers/moving_average.hpp"
 
 #if !defined(ESP32)
 #error CPU is not supported
 #else
 
+#warning TODO: Fix 0 to 360 --> CMD = 100.0f
+
 class DcRevoluteJoint : public Joint
 {
 public:
     static constexpr unsigned long PID_LOOP_FREQ_US = 1'000ul;
+#warning TODO: Should be parameter
+    static constexpr float PID_DEADBAND_RAD = 1.5f * DEG_TO_RAD;
+    static constexpr uint16_t CMD_AVG_COEFF = 10ul;
 
-    DcRevoluteJoint(MotorDriver *DCMotor_, Encoder *encoder_, eControlMode controlMode_, PID *pidPosition_ = NULL, PID *pidSpeed_ = NULL)
+    DcRevoluteJoint(MotorDriver *DCMotor_,
+                    Encoder::eEncoderType encoderType_,
+                    Encoder *encoder_,
+                    eControlMode controlMode_,
+                    PID *pidPosition_ = NULL,
+                    PID *pidSpeed_ = NULL)
     {
         ASSERT(DCMotor_ == NULL);
         _DCMotor = DCMotor_;
         ASSERT(encoder_ == NULL);
         _encoder = encoder_;
+
+        if (encoderType_ == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN)
+        {
+            _encoderType = encoderType_;
+        }
+        else
+        {
+            LOG(ERROR, "Encoder type: %u", encoderType_);
+            ASSERT(true, "Encoder type not implemented/supported yet");
+        }
 
         ASSERT(controlMode_ == eControlMode::SPEED, "Not implemented yet");
         _controlMode = controlMode_;
@@ -70,7 +91,37 @@ public:
             {
             case eControlMode::POSITION:
             {
-                float cmd = _pidPosition->computeCommand(_goalPosition - this->getPosition());
+                float currentPosition = this->getPosition();
+
+                float error = 0.0f;
+                if (_encoderType == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN)
+                {
+                    error = _goalPosition - currentPosition;
+
+                    if (error >= PI)
+                    {
+                        error -= TWO_PI;
+                    }
+                    else if (error <= -PI)
+                    {
+                        error += TWO_PI;
+                    }
+                }
+                else
+                {
+                    ASSERT("Shouldn't fall here, implementation error");
+                }
+
+                float cmd = _pidPosition->computeCommand(error);
+
+                if (IN_ERROR(error, PID_DEADBAND_RAD, 0.0f))
+                {
+                    cmd = 0.0f;
+                }
+                else
+                {
+                    float cmd = _pidPosition->computeCommand(error);
+                }
 
                 if (_dualPID)
                 {
@@ -78,16 +129,20 @@ public:
                     cmd = constrain(cmd, -abs(cmdSpeed), abs(cmdSpeed));
                 }
 
-                // if (this->getPosition() < _jointLimitMin)
-                // {
-                //     cmd = constrain(cmd, 0, MotorDriver::MAX_SPEED);
-                // }
-                // else if (this->getPosition() > _jointLimitMax)
-                // {
-                //     cmd = constrain(cmd, -MotorDriver::MAX_SPEED, 0);
-                // }
+                if (currentPosition > _jointLimitMax && currentPosition < _jointLimitMin)
+                {
+                    if (abs(_jointLimitMin - currentPosition) < abs(_jointLimitMax - currentPosition))
+                    {
+                        cmd = constrain(cmd, 0.0f, MotorDriver::MAX_SPEED);
+                    }
+                    else
+                    {
+                        cmd = constrain(cmd, -MotorDriver::MAX_SPEED, 0.0f);
+                    }
+                }
+                cmd = _cmdAvg.addValue(cmd);
 
-                _DCMotor->setCmd(cmd);
+                _DCMotor->setCmd(_cmdAvg.addValue(cmd));
                 _currentMotorCmd = cmd;
                 break;
             }
@@ -109,7 +164,14 @@ public:
             return;
         }
 
-        _goalPosition = goalPosition_;
+        if (_encoderType == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN)
+        {
+            _goalPosition = CONSTRAIN_ANGLE(goalPosition_);
+        }
+        else
+        {
+            ASSERT("Shouldn't fall here, implementation error");
+        }
     }
 
     float getPosition(void)
@@ -155,8 +217,16 @@ public:
     void setJointLimits(float min_, float max_)
     {
         ASSERT(min_ > max_, "Max joint limit can't be lower than min joint limit");
-        _jointLimitMin = min_;
-        _jointLimitMin = max_;
+
+        if (_encoderType == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN)
+        {
+            _jointLimitMin = CONSTRAIN_ANGLE(min_);
+            _jointLimitMax = CONSTRAIN_ANGLE(max_);
+        }
+        else
+        {
+            ASSERT("Shouldn't fall here, implementation error");
+        }
 
         LOG(INFO, "New joint limit applied to position range: [%.2f ; %.2f]", _jointLimitMin, _jointLimitMax);
     }
@@ -169,6 +239,7 @@ public:
 private:
     MotorDriver *_DCMotor = NULL;
     Encoder *_encoder = NULL;
+    Encoder::eEncoderType _encoderType;
     eControlMode _controlMode;
     PID *_pidPosition = NULL;
     RoverHelpers::Timer<unsigned long, micros> _timerPidLoop =
@@ -180,6 +251,7 @@ private:
     float _currentMotorCmd = 0.0f;
     PID *_pidSpeed = NULL;
     float _goalSpeed = 0.0f;
+    RoverHelpers::MovingAverage<float, CMD_AVG_COEFF> _cmdAvg = RoverHelpers::MovingAverage<float, CMD_AVG_COEFF>(0.0f);
 };
 
 #endif // !defined(ESP32)
