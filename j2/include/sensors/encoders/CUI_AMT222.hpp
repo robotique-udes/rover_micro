@@ -98,6 +98,9 @@ private:
     RoverHelpers::MovingAverage<bool, 10> _errorAvg = RoverHelpers::MovingAverage<bool, 10>(false);
     RoverHelpers::Timer<unsigned long, micros> _timerRead = RoverHelpers::Timer<unsigned long, micros>(TIME_BETWEEN_READ);
     RoverHelpers::Timer<unsigned long, micros> _timerSpeedCalc = RoverHelpers::Timer<unsigned long, micros>(TIME_SPEED_CALC);
+    uint8_t _lastQuadrant = 0;
+    uint8_t currentQuadrant = 0;
+    int16_t _turnCounter = 0;
 
     float readPosition()
     {

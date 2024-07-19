@@ -123,6 +123,11 @@ public:
         LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMaxVoltage);
     }
 
+    float getProtectionSpeed()
+    {
+        return _protectionSpeed;
+    }
+
 protected:
     bool _inited = false;
     float _protectionSpeed = 0.0f;
