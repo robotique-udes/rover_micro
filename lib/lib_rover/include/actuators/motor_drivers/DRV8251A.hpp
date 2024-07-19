@@ -31,7 +31,7 @@ public:
             ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
             ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
     {
-        ASSERT(brakeMode_ != eBrakeMode::NONE,
+        ASSERT(brakeMode_ == eBrakeMode::NONE,
                "DRV8251A cannot have NONE brake mode");
         this->setBrakeMode(brakeMode_);
 
@@ -40,7 +40,6 @@ public:
         _in_1 = in_1_;
         _in_2 = in_2_;
 
-        _brakeMode = brakeMode_;
         _reversed = reversed_;
 
         _ledc_motorTimer = timerNumber_;
@@ -59,6 +58,8 @@ public:
     {
         pinMode(_in_1, OUTPUT);
         pinMode(_in_2, OUTPUT);
+
+        uint32_t _freqPWM;
 
         // Timer for PWM
         _freqPWM = PWM_FREQUENCY;
@@ -178,7 +179,7 @@ public:
             return;
         }
 
-        LOG(INFO, "DRV8251A cannot be disabled; braking at speed=0 instead")
+        LOG(ERROR, "DRV8251A cannot be disabled; braking at speed=0 instead")
         this->setCmd(0.0f);
     }
 
@@ -186,8 +187,7 @@ public:
     {
         this->checkInit();
 
-        this->disable();
-        this->enable();
+        LOG(ERROR, "DRV8251A cannot reset");
     }
 
     bool isMoving(void)
@@ -230,7 +230,6 @@ private:
     gpio_num_t _in_1 = GPIO_NUM_NC;
     gpio_num_t _in_2 = GPIO_NUM_NC;
 
-    uint32_t _freqPWM;
     bool _reversed = false;
 
     ledc_timer_t _ledc_motorTimer;
