@@ -1,5 +1,5 @@
-#ifndef __CUI_AMT222_HPP__
-#define __CUI_AMT222_HPP__
+#ifndef __CUI_AMT222A_V_HPP__
+#define __CUI_AMT222A_V_HPP__
 
 #include "Arduino.h"
 #include "SPI.h"
@@ -15,7 +15,7 @@
 #error CPU is not supported
 #else
 
-class CUI_AMT222 : public Encoder
+class CUI_AMT222A_V : public Encoder
 {
 public:
     static constexpr uint16_t INVALID_POSITION = 0xFFFF;
@@ -28,19 +28,19 @@ public:
     // 40us minimum as per datasheet
     static constexpr unsigned long TIME_BETWEEN_READ = 50ul;
     // 1 Hz should be fast enough
-    static constexpr unsigned long TIME_SPEED_CALC = 1000ul;
+    static constexpr unsigned long TIME_SPEED_CALC = 10'000ul;
 
     /// @brief Constructor
     /// @param spiBus_ Must call SPI*.begin() before passing to encoder
     /// @param pinCs_ Chip select low pin
-    CUI_AMT222(SPIClass *spiBus_, gpio_num_t pinCs_, bool reverse = false) : Encoder(false)
+    CUI_AMT222A_V(SPIClass *spiBus_, gpio_num_t pinCs_, bool reverse = false) : Encoder(false)
     {
         ASSERT(spiBus_ == NULL);
         _pSpiBus = spiBus_;
         _pinCs = pinCs_;
     }
 
-    ~CUI_AMT222(){};
+    ~CUI_AMT222A_V(){};
 
     void init()
     {
@@ -56,7 +56,7 @@ public:
 
         if (_timerSpeedCalc.isDone())
         {
-            _currentSpeed = (_lastPosition - _currentPosition) / ((float)_chronoSpeedCalc.getTime() / 1'000'000.0f);
+            _currentSpeed = _speedAvg.addValue((_lastPosition - _currentPosition) / ((float)_chronoSpeedCalc.getTime() / 1'000'000.0f));
             _chronoSpeedCalc.restart();
             _lastPosition = _currentPosition;
         }
@@ -93,6 +93,7 @@ private:
     float _lastPosition = 0.0f;
     float _currentSpeed = 0.0f;
     RoverHelpers::MovingAverage<float, 10> _positionAvg = RoverHelpers::MovingAverage<float, 10>(0.0f);
+    RoverHelpers::MovingAverage<float, 10> _speedAvg = RoverHelpers::MovingAverage<float, 10>(0.0f);
 
     RoverHelpers::Chrono<unsigned long, micros> _chronoSpeedCalc;
     RoverHelpers::MovingAverage<bool, 10> _errorAvg = RoverHelpers::MovingAverage<bool, 10>(false);
@@ -169,4 +170,4 @@ private:
 };
 
 #endif // !defined(ESP32)
-#endif // __CUI_AMT222_HPP__
+#endif // __CUI_AMT222A_V_HPP__
