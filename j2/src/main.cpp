@@ -5,12 +5,10 @@
 #include "rover_helpers/helpers.hpp"
 #include "systems/joint/dc_revolute_joint.hpp"
 #include "actuators/motor_drivers/IFX007T.hpp"
-#include "sensors/encoders/CUI_AMT222.hpp"
+#include "sensors/encoders/CUI_AMT222A_V.hpp"
 #include "rover_helpers/PID.hpp"
 #include "sensors/limit_switch.hpp"
 #include "SPI.h"
-
-#warning TODO: Faire PID dual band, ajouter overwrite cmd (jog), disable joint limits
 
 void setup()
 {
@@ -26,17 +24,21 @@ void setup()
     motor.setMaxVoltage(25.2f, 25.2f, true);
 
     SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI, GPIO_NUM_NC);
-    CUI_AMT222 encoder(&SPI, PIN_SPI_CS_EN_SHAFT);
+    CUI_AMT222A_V encoder(&SPI, PIN_SPI_CS_EN_SHAFT);
     encoder.init();
-#warning TODO, Should be #define
-    PID pid(600.0f, 20.0f, 100.0f, 80.0f);
+
+#warning TODO: Tuning
+    PID pidPos(600.0f, 20.0f, 100.0f, 80.0f); 
+    PID pidSpeed(20.0f, 2.0f, 0.0f, 50.0f);
+
     DcRevoluteJoint j2(&motor,
                        Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN,
                        &encoder,
-                       Joint::eControlMode::POSITION,
-                       &pid);
-#warning TODO, Should be #define
-    j2.setJointLimits(DEG_TO_RAD * -10.0f, DEG_TO_RAD * 10.0f);
+                       Joint::eControlMode::SPEED,
+                       false,
+                       &pidPos,
+                       &pidSpeed);
+    j2.setJointLimits(DEG_TO_RAD * -40.0f, DEG_TO_RAD * 40.0f);
     j2.init();
 
     LimitSwitch switchFWD(LimitSwitch::eLimitSwitchMode::PullUp, PIN_PB_FWD);
@@ -49,54 +51,41 @@ void setup()
 
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(50);
     RoverHelpers::Timer<unsigned long, millis> timer(500);
-    int16_t i = 0;
 
-    RoverHelpers::MovingAverage<float, 100> goalAvg(0.0f);
+    float goal = 0.0f;
     char cmd = 0;
     for (;;)
     {
-
-        if (Serial.available() >= 1)
-        {
-            Serial.readBytes(&cmd, sizeof(cmd));
-
-            if (cmd == '3')
-            {
-                goalAvg.addValue(PI);
-            }
-            else if (cmd == '1')
-            {
-                goalAvg.addValue(-PI);
-            }
-        }
-
-        j2.setPosition(goalAvg.getAverage());
-
-        if (switchFWD.isClicked() && switchREV.isClicked())
-        {
-            motor.setCmd(0.0f);
-        }
-        else if (switchFWD.isClicked())
-        {
-            motor.setCmd(50.0f);
-        }
-        else if (switchREV.isClicked())
-        {
-            motor.setCmd(-50.0f);
-        }
-        else if (switchCalib.isClicked())
+        if (switchCalib.isClicked())
         {
             j2.calib(0.0f);
         }
         else
         {
-            j2.update();
+            if (Serial.available() >= 1)
+            {
+                Serial.readBytes(&cmd, sizeof(cmd));
+
+                if (cmd == '3')
+                {
+                    goal += 0.01;
+                }
+                else if (cmd == '1')
+                {
+                    goal -= 0.01;
+                }
+                else
+                {
+                    goal += goal > 0 ? -1.0f : 1.0f;
+                }
+            }
+
+            j2.setSpeed(0.5f);
+            j2.setPosition(goal);
         }
 
-        // if (timerFeedback.isDone())
-        // {
+        j2.update();
         j2.printDebugInfo();
-        // }
     }
 }
 
