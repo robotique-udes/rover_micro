@@ -24,7 +24,7 @@ void setup()
     canBus.init();
 
     RoverCanLib::Msgs::Compass compassMsg;
-    RoverHelpers::Timer<unsigned long, millis> timerFeedback(1000);
+    RoverHelpers::Timer<unsigned long, millis> timerFeedback(500);
 
     LOG(INFO, "Init done, starting loop!");
 
