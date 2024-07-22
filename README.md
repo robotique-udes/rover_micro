@@ -90,6 +90,9 @@ lib_deps =
     lib_rover=symlink://../lib/lib_rover
 
 build_flags = 
+  -Wall
+  -Wextra
+
   ; Logging
   '-D VERBOSE=0'
   '-D LOGGER_LOWEST_LEVEL=0'
@@ -117,6 +120,9 @@ build_unflags =
     -std=gnu++11
 
 build_flags =
+    -Wall
+    -Wextra
+
     ; Make sure to use the internal USB driver on the ESP32-S3 instead of a
     ; standart UART interface 
     '-D ARDUINO_USB_CDC_ON_BOOT=1'
