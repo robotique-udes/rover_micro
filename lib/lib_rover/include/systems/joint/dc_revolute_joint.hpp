@@ -3,11 +3,8 @@
 
 #include "Arduino.h"
 #include "actuators/motor_drivers/motor_driver.hpp"
-#include "sensors/encoders/encoder.hpp"
-#include "sensors/limit_switch.hpp"
 #include "systems/joint/joint.hpp"
 
-#include "rover_helpers/assert.hpp"
 #include "rover_helpers/timer.hpp"
 #include "rover_helpers/moving_average.hpp"
 

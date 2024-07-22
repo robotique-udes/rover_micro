@@ -43,7 +43,6 @@ public:
 
 protected:
     static constexpr float PROTECTION_MAX_VOLTAGE = 12.0f;
-    static constexpr float MAX_SPEED = 100.0f;
 
     MotorDriver(MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::NONE)
     {
@@ -158,37 +157,6 @@ protected:
     void checkInit(void)
     {
         ASSERT(!this->isInited());
-    }
-
-    // Cap the maximum voltage sent to the motor to a specified value
-    void setMaxVoltage(float alimVoltage_, float maxVoltage_, bool removeOverVoltageSecurity_ = false)
-    {
-        if (alimVoltage_ < 0.0f || maxVoltage_ < 0.0f)
-        {
-            LOG(WARN, "Wrong input parameters: can't have negative voltages. New value won't be applied...");
-            return;
-        }
-
-        if (maxVoltage_ > alimVoltage_)
-        {
-            LOG(WARN, "Wrong input parameters: can't set higher max voltage than alim voltage. New value won't be applied...");
-            return;
-        }
-
-        float newMaxVoltage = 0.0f;
-        if (removeOverVoltageSecurity_)
-        {
-            LOG(WARN, "Removing the overvoltage security will permanently damage the motor if you don't know what you're doing");
-            newMaxVoltage = maxVoltage_;
-        }
-        else
-        {
-            newMaxVoltage = constrain(maxVoltage_, 0.0f, MotorDriver::PROTECTION_MAX_VOLTAGE);
-        }
-
-        LOG(WARN, "newMax: %f | alimVoltage: %f", newMaxVoltage, alimVoltage_);
-        _protectionSpeed = MAP(newMaxVoltage, 0.0f, alimVoltage_, 0.0f, MAX_SPEED);
-        LOG(INFO, "New max speed set at : %f which should correspond to approx %f V", _protectionSpeed, newMaxVoltage);
     }
 
 private:
