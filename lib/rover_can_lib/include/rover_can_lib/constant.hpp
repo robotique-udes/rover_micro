@@ -57,7 +57,7 @@ namespace RoverCanLib::Constant
         CAM_CONTROL_A2 = 0x14,
         LIGHT_CONTROL = 0x15,
         SCIENCE = 0x16,
-        COMPASS = 0x16
+        COMPASS = 0x17
     };
 
     enum class eDataIndex : uint8_t
