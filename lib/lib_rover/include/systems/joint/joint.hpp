@@ -9,6 +9,9 @@
 #include "rover_helpers/assert.hpp"
 #include "rover_helpers/PID.hpp"
 
+#include "sensors/encoders/encoder.hpp"
+#include "sensors/limit_switch.hpp"
+
 class Joint
 {
 public:
@@ -23,7 +26,8 @@ public:
 
 protected:
     /// @brief Parent constructor
-    /// @param encoderType_ eEncoderType::ABSOLUTE_SINGLE_TURN or eEncoderType::ABSOLUTE_MULTI_TURN
+    /// @param encoderType_ eEncoderType::ABSOLUTE_SINGLE_TURN or 
+    /// eEncoderType::ABSOLUTE_MULTI_TURN
     /// @param controlMode_ eControlMode::POSITION or eControlMode::SPEED
     /// @param dualPID_ In position control mode, the speed goal will be used as
     /// a speed limiter for the joint
@@ -64,8 +68,8 @@ public:
     /// Sets the joint position limits and enables them
     void setJointLimits(float min_, float max_);
     /// Only use if disableJointLimits() was called after setJointLimits()
-    void enableJointLimits();
-    void disableJointLimits();
+    void enableJointLimits(void);
+    void disableJointLimits(void);
 
 protected:
     bool _inited = false;
@@ -228,12 +232,12 @@ void Joint::setJointLimits(float min_, float max_)
     LOG(INFO, "New joint limit applied to position range: [%.2f ; %.2f]", _jointLimitMin, _jointLimitMax);
 }
 
-void Joint::disableJointLimits()
+void Joint::disableJointLimits(void)
 {
     _withJointLimits = false;
 }
 
-void Joint::enableJointLimits()
+void Joint::enableJointLimits(void)
 {
     _withJointLimits = true;
 }

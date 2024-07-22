@@ -3,17 +3,23 @@
 
 #include <Arduino.h>
 #include "rover_helpers/macros.hpp"
-#include "rover_helpers/log.hpp"
+#include "rover_helpers/timer.hpp"
 
 class PID
 {
 public:
+    static constexpr unsigned long PERIOD_SPEED_CALC_US = 10'000ul;
+
     PID(float kp_, float ki_, float kd_, float intergalLimit_);
-    ~PID(void) {}
+    ~PID() {}
     void init(void);
     void setGains(float kp_, float ki_, float kd_);
     void setIntLimit(float limit_);
-    float computeCommand(float error);
+    /// @brief
+    /// @param error_ Error between goal and actual position
+    /// @return New command 
+    float computeCommand(float error_);
+    /// @brief Resets integral counter and derivative last value to zero
     void reset(void);
 
 private:
@@ -22,6 +28,7 @@ private:
     float _kd = 0.0f;
 
     float _cmdI = 0.0f;
+    float _lastcmdD = 0.0f;
     float _integralLimit = 0.0f;
     float _previousError = 0.0f;
     float _lastMeasureTime = 0.0f;
@@ -68,14 +75,25 @@ float PID::computeCommand(float error_)
         error_ = 0.0f;
     }
 
-    float currentTime = micros();
-    float dt = currentTime - _lastMeasureTime;
-
-    _cmdI += _ki*error_;
+    _cmdI += _ki * error_;
 
     float cmdP = _kp * error_;
     _cmdI = constrain(_cmdI, -_integralLimit, _integralLimit);
-    float cmdD = _kd * (error_ - _previousError) / (dt / 1'000'000.0f);
+
+    float cmdD = 0.0f;
+    float currentTime = micros();
+    if (currentTime - _lastMeasureTime > PERIOD_SPEED_CALC_US)
+    {
+        float dt = currentTime - _lastMeasureTime;
+        _lastMeasureTime = currentTime;
+
+        cmdD = _kd * (error_ - _previousError) / (dt / 1'000'000.0f);
+        _lastcmdD = cmdD;
+    }
+    else
+    {
+        cmdD = _lastcmdD;
+    }
 
     if (isnan(cmdP))
     {
@@ -91,10 +109,6 @@ float PID::computeCommand(float error_)
     }
 
     _previousError = error_;
-    _lastMeasureTime = currentTime;
-
-    // LOG(INFO, "cmdP: %.3f + cmdI: %.3f + cmdD: %.3f = %.3f", cmdP, _cmdI, cmdD, cmdP + _cmdI + cmdD);
-    // LOG(INFO, "Error: %.3f", error);
 
     return cmdP + _cmdI + cmdD;
 }
