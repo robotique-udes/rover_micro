@@ -37,13 +37,7 @@ private:
             _yaw = fmod(_yaw + 360.0, 360.0);
             
             // FOR PYTHON VISUALIZATION SCRIPT
-            
-            Serial.print(_pitch);
-            Serial.print(", ");
-            Serial.print(_roll);
-            Serial.print(", ");
-            Serial.println(_yaw);
-            
+            // Serial.printf("%.2f, %.2f, %.2f\n", _pitch, _roll, _yaw);
             
         } else {
             LOG(ERROR, "Checksum error in angle packet");

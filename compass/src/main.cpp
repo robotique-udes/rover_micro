@@ -6,7 +6,7 @@
 #include "config_local.hpp"
 #include "rover_helpers/helpers.hpp"
 #include "rover_helpers/log.hpp"
-#include "WT901.hpp"
+#include "sensors/WT901.hpp"
 
 void noActions(RoverCanLib::CanBusManager *dontUse0_, const twai_message_t *dontUse1_);
 void parseAnglePacket();
@@ -35,9 +35,8 @@ void setup()
         
         if (timerFeedback.isDone())
         {
-            compassMsg.data.roll = compass.getRoll();
+            compassMsg.data.heading = compass.getYaw();
             compassMsg.data.pitch = compass.getPitch();
-            compassMsg.data.yaw = compass.getYaw();
 
             canBus.sendMsg(&compassMsg);
         }
