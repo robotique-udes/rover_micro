@@ -22,12 +22,13 @@ void goal();
 void motorLoop(void *pvParameters);
 void recvAbtr();
 
-bool motor_status = false;
+bool motorEnable = false;
 bool stepper_direction;
 uint8_t motorStep = HIGH;
 
 // Creating mutex
-SemaphoreHandle_t xSemaphore = NULL;
+SemaphoreHandle_t enableSemaphore = NULL;
+SemaphoreHandle_t timerSemaphore = NULL;
 
 // Set up the Wi-Fi network credentials for the ESP32 AP
 const char *ssid = "roverAntenna";
@@ -56,7 +57,7 @@ struct MsgGPS
     float longitude;
 };
 
-MsgAbtrCmd *receivedData;
+MsgAbtrCmd abtrData;
 
 float led_blink = false;
 
@@ -74,7 +75,8 @@ void setup()
 
     // Serial1.begin(9600, SERIAL_8N1, RX1PIN, TX1PIN);
 
-    xSemaphore = xSemaphoreCreateMutex();
+    enableSemaphore = xSemaphoreCreateMutex();
+    timerSemaphore = xSemaphoreCreateMutex();
 
     digitalWrite(EN, LOW);
     digitalWrite(DIR, HIGH);
@@ -113,28 +115,19 @@ void loop()
 void motorLoop(void *pvParameters)
 {
     for (;;)
-    {   
+    {
         Serial.printf("Before mutex\n");
 
-
-        if (xSemaphoreTake(xSemaphore, (TickType_t)0))
-        {
-            
-
-            // if (motor_status)
-            // {
-                // const TickType_t cMotorFreq = motorFreq;
-
-                Serial.printf("MotorStep : %d\n", motorStep);
-                motorStep = motorStep == HIGH ? LOW : HIGH;
-                digitalWrite(DIR, stepper_direction);
-                digitalWrite(PUL, motorStep);
-                led_blink = !led_blink;
-                digitalWrite(LED_BUILTIN, led_blink);
-                // xTaskDelayUntil(&lastTimeStep, pdMS_TO_TICKS(10));
-            // }
-            xSemaphoreGive(xSemaphore);
-        }
+        // if (xSemaphoreTake(xSemaphore, (TickType_t)0))
+        // {
+        //     motorStep = !motorStep;
+        //     digitalWrite(PUL, motorStep);
+        //     led_blink = !led_blink;
+        //     digitalWrite(LED_BUILTIN, led_blink);
+        //     // xTaskDelayUntil(&lastTimeStep, pdMS_TO_TICKS(10));
+        //     // }
+        //     xSemaphoreGive(xSemaphore);
+        // }
     }
 }
 
@@ -146,14 +139,10 @@ void recvAbtr()
 
     if (packetSize > 0)
     {
-        // Serial.printf("Packet received, size: %d\n", packetSize);
         udp.read(buffer, sizeof(buffer));
-        receivedData = ((MsgAbtrCmd *)buffer)->enable;
-        // Serial.printf("Received bytes: %f\n", receivedData->speed);
-    }
-    else
-    {
-        // Serial.println("No packet received");
+        abtrData.enable = ((MsgAbtrCmd *)buffer)->enable;
+        abtrData.speed = ((MsgAbtrCmd *)buffer)->speed;
+        Serial.printf("Received bytes: %f\n", abtrData.speed);
     }
 
     MsgGPS testGPS = {1.2345, 6.7890};
@@ -169,49 +158,31 @@ void recvAbtr()
 
 void goal()
 {
-    unsigned long step_timer;
+    unsigned long stepTimer;
 
-    if (receivedData == nullptr)
+    if (abtrData.speed == 0.0f)
     {
-        Serial.println("Error: receivedData is null");
-        digitalWrite(EN, HIGH);
-        timerStepper.updateInterval(200);
-        motor_status = false;
-        // led_blink = false;
-        // digitalWrite(LED_BUILTIN, led_blink);
-        return;
+        motorEnable = false;
     }
-
-    if (receivedData->speed != 0.0f)
+    else if (abtrData.speed != 0.0f)
     {
-        step_timer = 2 * PI * 1e6 / (MICRO_STEPS * abs(receivedData->speed) * RATIO_MOTOR);
+        stepTimer = 2 * PI * 1e6 / (MICRO_STEPS * abs(abtrData.speed) * RATIO_MOTOR);
 
-        if (xSemaphoreTake(xSemaphore, (TickType_t)10) == pdTRUE)
+        if (abtrData.speed < 0)
         {
-            if (receivedData->speed < 0)
-            {
-                stepper_direction = false;
-            }
-            else
-            {
-                stepper_direction = true;
-            }
-
-            motor_status = true;
-            // timerStepper.updateInterval(step_timer);
-            motorFreq = step_timer;
-            digitalWrite(EN, LOW);
-            xSemaphoreGive(xSemaphore);
+            digitalWrite(DIR, LOW);
         }
-    }
-    else if (receivedData->speed == 0.0f)
-    {
-        timerStepper.updateInterval(200);
-        motor_status = false;
-        digitalWrite(EN, HIGH);
-    }
-    else
-    {
-        motor_status = false;
+        else
+        {
+            digitalWrite(DIR, HIGH);
+        }
+
+        if (xSemaphoreTake(enableSemaphore, (TickType_t)0))
+        {
+            motorEnable = true;
+            xSemaphoreGive(enableSemaphore);
+        }
+        motorFreq = stepTimer;
+        digitalWrite(EN, LOW);
     }
 }
