@@ -35,17 +35,16 @@
 #include "driver/ledc.h"
 
 // Stoping every pwm output to stop everything before aborting
-#define ABORT()                                                                            \
-    {                                                                                      \
-        for (int speed_mode = 0; speed_mode < (int)LEDC_SPEED_MODE_MAX; speed_mode++)      \
-        {                                                                                  \
-            for (int channel = LEDC_CHANNEL_0; channel < (int)LEDC_CHANNEL_MAX; channel++) \
-            {                                                                              \
-                ledc_stop((ledc_mode_t)speed_mode, (ledc_channel_t)channel, 0);            \
-            }                                                                              \
-        }                                                                                  \
-        abort();                                                                           \
-    }
+#define ABORT()                                                                        \
+    for (int speed_mode = 0; speed_mode < (int)LEDC_SPEED_MODE_MAX; speed_mode++)      \
+    {                                                                                  \
+        for (int channel = LEDC_CHANNEL_0; channel < (int)LEDC_CHANNEL_MAX; channel++) \
+        {                                                                              \
+            ledc_stop((ledc_mode_t)speed_mode, (ledc_channel_t)channel, 0);            \
+        }                                                                              \
+    }                                                                                  \
+    Serial.flush();                                                                    \
+    abort();
 
 #define GET_MACRO_ASSERT(_0, _1, _2, ASSERT, ...) ASSERT
 #define ASSERT(...) GET_MACRO_ASSERT(_0, ##__VA_ARGS__, ASSERT_CONDITION_MESSAGE, ASSERT_CONDITION, ASSERT_ONLY)(__VA_ARGS__)
@@ -71,8 +70,8 @@
     }
 
 #define ASSERT_ONLY() \
-    {             \
-        ABORT();  \
+    {                 \
+        ABORT();      \
     }
 
 #else // defined(VERBOSE)
