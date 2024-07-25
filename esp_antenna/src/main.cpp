@@ -37,26 +37,9 @@ unsigned long periode;
 uint32_t previousFreq = 0;
 SemaphoreHandle_t sephamoreParam = NULL;
 
-// Timers
-RoverHelpers::Timer<unsigned long, millis> timerSend(100);
-RoverHelpers::Chrono<unsigned long, millis> chronoWatchdog;
-
-// UDP
-WiFiUDP udp;
-unsigned int localUdpPort = 1234; // local port to listen on
-const char *replyPacket = "pong"; // a reply string to send back
-
-// Wifi
-const char *ssid = "roverAntenna";
-const char *password = "roverAntenna";
-IPAddress local_ip(192, 168, 144, 100);
-IPAddress gateway(192, 168, 144, 1);
-IPAddress subnet(255, 255, 255, 0);
-IPAddress host_ip(192, 168, 144, 50);
-
-// Temp for testing
-bool motorEnableTemp = true;
-uint32_t periodeTemp = 1;
+// // Temp for testing
+// bool motorEnableTemp = true;
+// uint32_t periodeTemp = 1;
 
 void setup()
 {
@@ -69,24 +52,53 @@ void setup()
     digitalWrite(DIR, LOW);
     digitalWrite(EN, HIGH);
 
+    while (sephamoreParam == NULL)
+        sephamoreParam = xSemaphoreCreateMutex();
+
+    // Wifi
+    const char *ssid = "roverAntenna";
+    const char *password = "roverAntenna";
+    IPAddress local_ip(192, 168, 144, 100);
+    IPAddress gateway(192, 168, 144, 1);
+    IPAddress subnet(255, 255, 255, 0);
+
+    // Set up the ESP32 as an access point
+    Serial.println("Setting up AP (Access Point)...");
+    WiFi.softAP(ssid, password);
+    WiFi.softAPConfig(local_ip, gateway, subnet);
+
+    // Print the IP address of the access point
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+
     xTaskCreatePinnedToCore(
         motorLoop,   // Function to implement the task
         "motorLoop", // Name of the task
-        8192,        // Stack size in words
+        4096,        // Stack size in words
         NULL,        // Task input parameter
-        5,           // Priority of the task
+        1,           // Priority of the task
         NULL,        // Task handle.
-        0            // Core where the task should run
+        1            // Core where the task should run
     );
 
-    sephamoreParam = xSemaphoreCreateMutex();
+    // xTaskCreatePinnedToCore(
+    //     recvAbtr,   // Function to implement the task
+    //     "recvAbtr", // Name of the task
+    //     2048,       // Stack size in words
+    //     NULL,       // Task input parameter
+    //     1,          // Priority of the task
+    //     NULL,       // Task handle.
+    //     0           // Core where the task should run
+    // );
+
+    for(;;)
+    {
+        recvAbtr();
+    }
 }
 
-void loop()
-{
-    recvAbtr();
-    taskYIELD();
-}
+void loop() {}
 
 void motorLoop(void *pvParameters)
 {
@@ -110,7 +122,6 @@ void motorLoop(void *pvParameters)
                 if (xSemaphoreGive(sephamoreParam) != pdTRUE)
                 {
                     Serial.println("Failed to release semaphore");
-                    // Handle semaphore give failure if needed
                 }
             }
         }
@@ -121,48 +132,65 @@ void motorLoop(void *pvParameters)
             Serial.printf("Watchdog activated\n");
             chronoWatchdogUpdate.restart();
         }
-        else
+        else if(newEnable)
         {
-            // xLastWakeTime = xTaskGetTickCount();
-            // const TickType_t xPeriode = (xPeriode * (MICROSECONDS_PER_SECOND / TICKS_PER_SECOND));
-            xPeriode = periode;
-            newEnable = motorEnable;
-            pulse = pulse == HIGH ? LOW : HIGH;
+            pulse = !pulse;
             digitalWrite(PUL, pulse);
             chronoWatchdogUpdate.restart();
-            xTaskDelayUntil(&xLastWakeTime, xPeriode);
+            delayMicroseconds(periode);
         }
     }
 }
 
 void recvAbtr()
 {
-    MsgAbtrCmd abtrData;
-    uint8_t buffer[sizeof(MsgAbtrCmd)];
-    int packetSize = udp.parsePacket();
+    // UDP
+    WiFiUDP udp;
+    unsigned int localUdpPort = 1234; // local port to listen on
+    const char *replyPacket = "pong"; // a reply string to send back
 
-    if (packetSize > 0)
-    {
-        udp.read(buffer, sizeof(buffer));
-        abtrData.enable = ((MsgAbtrCmd *)buffer)->enable;
-        abtrData.speed = ((MsgAbtrCmd *)buffer)->speed;
-        Serial.printf("Received bytes: %f\n", abtrData.speed);
+    // Start listening for UDP packets
+    udp.begin(localUdpPort);
+    IPAddress IP = WiFi.softAPIP();
+    IPAddress host_ip(192, 168, 144, 50);
+    Serial.printf("Now listening at IP %s, UDP port %d\n", IP.toString().c_str(), localUdpPort);
 
-        goal(abtrData);
-        chronoWatchdog.restart();
-    }
-    else if (chronoWatchdog.getTime() > 500ul)
-    {
-        motorEnable = false;
-        // Serial.printf("No messages received\n");
-    }
+    RoverHelpers::Timer<unsigned long, millis> timerSend(100);
+    RoverHelpers::Chrono<unsigned long, millis> chronoWatchdog;
 
-    // Temp for testing
-    if (xSemaphoreTake(sephamoreParam, (TickType_t)0))
+    while (true)
     {
-        motorEnable = motorEnableTemp;
-        periode = periodeTemp;
-        xSemaphoreGive(sephamoreParam);
+        MsgAbtrCmd abtrData;
+        uint8_t buffer[sizeof(MsgAbtrCmd)];
+        int packetSize = udp.parsePacket();
+
+        // Receive message
+        if (packetSize > 0)
+        {
+            udp.read(buffer, sizeof(buffer));
+            abtrData.enable = ((MsgAbtrCmd *)buffer)->enable;
+            abtrData.speed = ((MsgAbtrCmd *)buffer)->speed;
+            // Serial.printf("Received bytes: %f\n", abtrData.speed);
+
+            goal(abtrData);
+            chronoWatchdog.restart();
+        }
+        else if (chronoWatchdog.getTime() > 500ul)
+        {
+            motorEnable = false;
+            // Serial.printf("No messages received\n");
+        }
+
+        MsgGPS testGPS = {1.2345, 6.7890};
+
+        // Send message
+        if (timerSend.isDone())
+        {
+            udp.beginPacket(host_ip, localUdpPort);
+            udp.write((uint8_t *)&testGPS, sizeof(testGPS));
+            udp.endPacket();
+            // Serial.printf("Sent %f to %s:%d\n", testGPS.lattitude, udp.remoteIP().toString().c_str(), udp.remotePort());
+        }
     }
 }
 
@@ -195,6 +223,9 @@ void goal(MsgAbtrCmd abtrData)
     {
         motorEnable = motorEnableTemp;
         periode = periodeTemp;
-        xSemaphoreGive(sephamoreParam);
+        if (xSemaphoreGive(sephamoreParam) != pdTRUE)
+        {
+            Serial.println("Failed to release semaphore");
+        }
     }
 }
