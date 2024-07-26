@@ -40,9 +40,9 @@ public:
     ~CUI_AMT222() {};
     void init(void);
     void updateInternal(void);
-    float getPositionInternal(bool raw_ = false);
+    float getPositionInternal(void);
     float getSpeedInternal(void);
-    void calib(float zeroPosition_ = 0.0f, bool fromEEPROM = false);
+    void calib(float zeroPosition_ = 0.0f);
     void reset(void);
 
 private:
@@ -105,16 +105,9 @@ void CUI_AMT222::updateInternal(void)
     }
 }
 
-float CUI_AMT222::getPositionInternal(bool raw_)
+float CUI_AMT222::getPositionInternal(void)
 {
-    if (raw_)
-    {
-        return this->readPosition();
-    }
-    else
-    {
-        return _currentPosition;
-    }
+    return _currentPosition;
 }
 
 float CUI_AMT222::getSpeedInternal(void)
@@ -122,26 +115,12 @@ float CUI_AMT222::getSpeedInternal(void)
     return _currentSpeed;
 }
 
-void CUI_AMT222::calib(float zeroPosition_, bool fromEEEProm_)
+void CUI_AMT222::calib(float zeroPosition_)
 {
-    ASSERT(zeroPosition_ >= 360.0f && zeroPosition_ < 0.0f);
+    this->sendCmd(REG_SET_ZERO);
 
-    if (_encoderType == eEncoderType::ABSOLUTE_SINGLE_TURN)
-    {
-        this->sendCmd(REG_SET_ZERO);
-        _positionCalibOffset = zeroPosition_;
-    }
-    else if (_encoderType == eEncoderType::ABSOLUTE_MULTI_TURN)
-    {
-        if (!fromEEEProm_)
-        {
-            _positionCalibOffset = -this->readPosition() + zeroPosition_;
-        }
-        else
-        {
-            _positionCalibOffset = -zeroPosition_;
-        }
-    }
+    ASSERT(zeroPosition_ >= 360.0f && zeroPosition_ < 0.0f);
+    _positionCalibOffset = zeroPosition_;
 }
 
 void CUI_AMT222::reset(void)
@@ -202,21 +181,16 @@ float CUI_AMT222::readPosition(void)
 
                 if (this->validateChecksum(turnCount))
                 {
-                    turnCount &= 0b0011'1111'1111'1111;
-                    // Check if negative value and pad with ones for 2nd complement form
-                    if (turnCount & 0b0010'0000'0000'0000)
-                    {
-                        turnCount |= 0b1100'0000'0000'0000;
-                    }
-
+                    turnCount &= 0x3FFF;
+                    LOG(WARN, "turnCount: %u", turnCount);
                     _turnCount = turnCount;
-                    position = position + turnCount * TWO_PI;
+                    position = position; //+ turnCount*TWO_PI;
                 }
                 else
                 {
                     if (_errorAvg.addValue(true) > ERROR_THRESHOLD)
                     {
-                        LOG(WARN, "Failed checksum, return old turn count");
+                        // LOG(WARN, "Failed checksum, return old turn count");
                     }
                 }
             }
@@ -226,7 +200,7 @@ float CUI_AMT222::readPosition(void)
             // Checksum failed
             if (_errorAvg.addValue(true) > ERROR_THRESHOLD)
             {
-                LOG(WARN, "Encoder read checksum failed, returning last valid values instead");
+                // LOG(WARN, "Encoder read checksum failed, returning last valid values instead");
             }
             position = _currentPosition;
         }
