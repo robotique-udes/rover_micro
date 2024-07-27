@@ -82,16 +82,6 @@ void setup()
         1            // Core where the task should run
     );
 
-    // xTaskCreatePinnedToCore(
-    //     recvAbtr,   // Function to implement the task
-    //     "recvAbtr", // Name of the task
-    //     2048,       // Stack size in words
-    //     NULL,       // Task input parameter
-    //     1,          // Priority of the task
-    //     NULL,       // Task handle.
-    //     0           // Core where the task should run
-    // );
-
     for(;;)
     {
         recvAbtr();
