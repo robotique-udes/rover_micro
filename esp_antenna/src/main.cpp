@@ -10,8 +10,7 @@
 #define MICRO_STEPS 800
 #define RATIO_MOTOR 99.51
 
-#define MICROSECONDS_PER_SECOND 1000000
-#define TICKS_PER_SECOND configTICK_RATE_HZ
+#define UDP_PORT 1234
 
 // Structure
 struct MsgAbtrCmd
@@ -22,7 +21,7 @@ struct MsgAbtrCmd
 
 struct MsgGPS
 {
-    float lattitude;
+    float latitude;
     float longitude;
 };
 
@@ -36,10 +35,6 @@ bool motorEnable = false;
 unsigned long periode;
 uint32_t previousFreq = 0;
 SemaphoreHandle_t sephamoreParam = NULL;
-
-// // Temp for testing
-// bool motorEnableTemp = true;
-// uint32_t periodeTemp = 1;
 
 void setup()
 {
@@ -58,8 +53,8 @@ void setup()
     // Wifi
     const char *ssid = "roverAntenna";
     const char *password = "roverAntenna";
-    IPAddress local_ip(192, 168, 144, 100);
-    IPAddress gateway(192, 168, 144, 1);
+    IPAddress local_ip(192, 168, 140, 50);
+    IPAddress gateway(192, 168, 140, 1);
     IPAddress subnet(255, 255, 255, 0);
 
     // Set up the ESP32 as an access point
@@ -73,13 +68,13 @@ void setup()
     Serial.println(IP);
 
     xTaskCreatePinnedToCore(
-        motorLoop,   // Function to implement the task
-        "motorLoop", // Name of the task
-        4096,        // Stack size in words
-        NULL,        // Task input parameter
-        1,           // Priority of the task
-        NULL,        // Task handle.
-        1            // Core where the task should run
+        motorLoop,
+        "motorLoop",
+        4096,
+        NULL,
+        1,
+        NULL,
+        1
     );
 
     for(;;)
@@ -136,13 +131,12 @@ void recvAbtr()
 {
     // UDP
     WiFiUDP udp;
-    unsigned int localUdpPort = 1234; // local port to listen on
-    const char *replyPacket = "pong"; // a reply string to send back
+    unsigned int localUdpPort = UDP_PORT;
 
     // Start listening for UDP packets
     udp.begin(localUdpPort);
     IPAddress IP = WiFi.softAPIP();
-    IPAddress host_ip(192, 168, 144, 50);
+    IPAddress host_ip(192, 168, 140, 100);
     Serial.printf("Now listening at IP %s, UDP port %d\n", IP.toString().c_str(), localUdpPort);
 
     RoverHelpers::Timer<unsigned long, millis> timerSend(100);
@@ -160,15 +154,12 @@ void recvAbtr()
             udp.read(buffer, sizeof(buffer));
             abtrData.enable = ((MsgAbtrCmd *)buffer)->enable;
             abtrData.speed = ((MsgAbtrCmd *)buffer)->speed;
-            // Serial.printf("Received bytes: %f\n", abtrData.speed);
-
             goal(abtrData);
             chronoWatchdog.restart();
         }
         else if (chronoWatchdog.getTime() > 500ul)
         {
             motorEnable = false;
-            // Serial.printf("No messages received\n");
         }
 
         MsgGPS testGPS = {1.2345, 6.7890};
@@ -179,7 +170,6 @@ void recvAbtr()
             udp.beginPacket(host_ip, localUdpPort);
             udp.write((uint8_t *)&testGPS, sizeof(testGPS));
             udp.endPacket();
-            // Serial.printf("Sent %f to %s:%d\n", testGPS.lattitude, udp.remoteIP().toString().c_str(), udp.remotePort());
         }
     }
 }
