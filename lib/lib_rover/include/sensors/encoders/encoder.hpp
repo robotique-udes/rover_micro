@@ -25,11 +25,11 @@ public:
 
     virtual void init(void) = 0;
     // Units should be rads for angular joint and meters for linear joints
-    virtual void calib(float zeroPosition) = 0;
+    virtual void calib(float zeroPosition = 0.0f, bool fromEEEProm_= false) = 0;
     virtual void reset(void) = 0;
 
     void update(void);
-    float getPosition(void);
+    float getPosition(bool raw_ = false);
     float getSpeed(void);
 
 protected:
@@ -37,7 +37,7 @@ protected:
     bool _reversed = false;
 
     virtual void updateInternal(void) = 0;
-    virtual float getPositionInternal(void) = 0;
+    virtual float getPositionInternal(bool raw_ = false);
     virtual float getSpeedInternal(void) = 0;
 
     void initDone(void);
@@ -52,10 +52,11 @@ Encoder::Encoder(bool reversed_)
     _reversed = reversed_;
 };
 
-float Encoder::getPosition(void)
+float Encoder::getPosition(bool raw_)
 {
-    return _reversed ? -this->getPositionInternal() : this->getPositionInternal();
+    return _reversed ? -this->getPositionInternal(raw_) : this->getPositionInternal(raw_);
 }
+
 float Encoder::getSpeed(void)
 {
     return _reversed ? -this->getSpeedInternal() : this->getSpeedInternal();

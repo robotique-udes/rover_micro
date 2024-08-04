@@ -26,7 +26,7 @@ public:
 
 protected:
     /// @brief Parent constructor
-    /// @param encoderType_ eEncoderType::ABSOLUTE_SINGLE_TURN or 
+    /// @param encoderType_ eEncoderType::ABSOLUTE_SINGLE_TURN or
     /// eEncoderType::ABSOLUTE_MULTI_TURN
     /// @param controlMode_ eControlMode::POSITION or eControlMode::SPEED
     /// @param dualPID_ In position control mode, the speed goal will be used as
@@ -37,14 +37,14 @@ protected:
     Joint(Encoder::eEncoderType encoderType_, eControlMode controlMode_, bool dualPID_, PID *pidPosition_, PID *pidSpeed_);
 
 public:
-    virtual ~Joint(){};
+    virtual ~Joint() {};
 
     /// Always call this after constructor
     virtual void init(void) = 0;
     /// Rad for revolute or meter for linear
     virtual void setPosition(float goalPosition_, bool overwriteControlMode = false) = 0;
     /// Returns position in rad or in m
-    virtual float getPosition(void) = 0;
+    virtual float getPosition(bool raw_ = false) = 0;
     /// Set target speed in speed mode or max speed in case of dualPID control
     virtual void setSpeed(float goalSpeed_) = 0;
     /// Returns speed in rad/s or meter/s
@@ -109,7 +109,8 @@ protected:
 
 Joint::Joint(Encoder::eEncoderType encoderType_, eControlMode controlMode_, bool dualPID_, PID *pidPosition_, PID *pidSpeed_)
 {
-    if (encoderType_ == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN)
+    if (encoderType_ == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN ||
+        encoderType_ == Encoder::eEncoderType::ABSOLUTE_MULTI_TURN)
     {
         _encoderType = encoderType_;
     }
