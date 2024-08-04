@@ -1,7 +1,7 @@
+#include "esp_system.h"
 #include "Arduino.h"
 
 #include "config_local.hpp"
-
 #include "rover_helpers/helpers.hpp"
 #include "rover_can_lib/rover_can_lib.hpp"
 #include "rover_can_lib/msgs/propulsion_motor_cmd.hpp"
@@ -18,10 +18,11 @@ RoverCanLib::Msgs::PropulsionMotorStatus msgPropStatus;
 void setup()
 {
     Serial.begin(115200);
+    // WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
 
     IFX007T motor(PIN_EN_1, PIN_EN_2, PIN_IN_1, PIN_IN_2, MotorDriver::eBrakeMode::COAST, false);
     motor.init();
-    motor.attachRGBLed(PIN_LED_R, PIN_LED_G, PIN_LED_B);
+    // motor.attachRGBLed(PIN_LED_R, PIN_LED_G, PIN_LED_B);
     motor.enable();
 
     RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_CAN_TX, PIN_CAN_RX, canCB, true, PIN_LED_CAN);
