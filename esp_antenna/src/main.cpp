@@ -7,19 +7,19 @@
 #define PUL 37
 #define DIR 38
 #define EN 39
-#define MICRO_STEPS 800
+#define MICRO_STEPS 1600
 #define RATIO_MOTOR 99.51
 
 #define UDP_PORT 1234
 
 // Structure
-struct MsgAbtrCmd
+struct sMsgAbtrCmd
 {
     float speed;
     bool enable;
 };
 
-struct MsgGPS
+struct sMsgGPS
 {
     float latitude;
     float longitude;
@@ -27,7 +27,7 @@ struct MsgGPS
 
 // functions
 void recvAbtr();
-void goal(MsgAbtrCmd abtrData);
+void goal(sMsgAbtrCmd abtrData);
 void motorLoop(void *pvParameters);
 
 // Global variables
@@ -45,7 +45,7 @@ void setup()
     pinMode(EN, OUTPUT);
 
     digitalWrite(DIR, LOW);
-    digitalWrite(EN, HIGH);
+    digitalWrite(EN, LOW);
 
     while (sephamoreParam == NULL)
         sephamoreParam = xSemaphoreCreateMutex();
@@ -53,19 +53,18 @@ void setup()
     // Wifi
     const char *ssid = "roverAntenna";
     const char *password = "roverAntenna";
-    IPAddress local_ip(192, 168, 140, 50);
+    IPAddress local_ip(192, 168, 140, 60);
     IPAddress gateway(192, 168, 140, 1);
     IPAddress subnet(255, 255, 255, 0);
 
     // Set up the ESP32 as an access point
-    Serial.println("Setting up AP (Access Point)...");
+    LOG(INFO, "Setting up AP (Access Point)...");
     WiFi.softAP(ssid, password);
     WiFi.softAPConfig(local_ip, gateway, subnet);
 
     // Print the IP address of the access point
     IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
+    LOG(INFO,"AP IP address: %s", IP.toString().c_str());
 
     xTaskCreatePinnedToCore(
         motorLoop,
@@ -74,10 +73,9 @@ void setup()
         NULL,
         1,
         NULL,
-        1
-    );
+        1);
 
-    for(;;)
+    for (;;)
     {
         recvAbtr();
     }
@@ -106,7 +104,7 @@ void motorLoop(void *pvParameters)
                 newEnable = motorEnable;
                 if (xSemaphoreGive(sephamoreParam) != pdTRUE)
                 {
-                    Serial.println("Failed to release semaphore");
+                    LOG(WARN, "Failed to release semaphore");
                 }
             }
         }
@@ -114,15 +112,16 @@ void motorLoop(void *pvParameters)
         if (chronoWatchdogUpdate.getTime() > 500)
         {
             newEnable = false;
-            Serial.printf("Watchdog activated\n");
+            LOG(INFO, "Watchdog activated");
             chronoWatchdogUpdate.restart();
         }
-        else if(newEnable)
+        else if (newEnable)
         {
             pulse = !pulse;
             digitalWrite(PUL, pulse);
             chronoWatchdogUpdate.restart();
             delayMicroseconds(periode);
+            LOG(INFO, "pulse");
         }
     }
 }
@@ -137,44 +136,45 @@ void recvAbtr()
     udp.begin(localUdpPort);
     IPAddress IP = WiFi.softAPIP();
     IPAddress host_ip(192, 168, 140, 100);
-    Serial.printf("Now listening at IP %s, UDP port %d\n", IP.toString().c_str(), localUdpPort);
+    LOG(INFO, "Now listening at IP %s, UDP port %d\n", IP.toString().c_str(), localUdpPort);
 
     RoverHelpers::Timer<unsigned long, millis> timerSend(100);
     RoverHelpers::Chrono<unsigned long, millis> chronoWatchdog;
 
     while (true)
     {
-        MsgAbtrCmd abtrData;
-        uint8_t buffer[sizeof(MsgAbtrCmd)];
+        sMsgAbtrCmd abtrData;
+        uint8_t buffer[sizeof(sMsgAbtrCmd)];
         int packetSize = udp.parsePacket();
 
         // Receive message
         if (packetSize > 0)
         {
             udp.read(buffer, sizeof(buffer));
-            abtrData.enable = ((MsgAbtrCmd *)buffer)->enable;
-            abtrData.speed = ((MsgAbtrCmd *)buffer)->speed;
+            abtrData.enable = ((sMsgAbtrCmd *)buffer)->enable;
+            abtrData.speed = ((sMsgAbtrCmd *)buffer)->speed;
             goal(abtrData);
             chronoWatchdog.restart();
+            LOG(INFO, "Message received : %f", abtrData.speed)
         }
         else if (chronoWatchdog.getTime() > 500ul)
         {
             motorEnable = false;
         }
 
-        MsgGPS testGPS = {1.2345, 6.7890};
+        sMsgGPS testGPS = {1.2345, 6.7890};
 
-        // Send message
-        if (timerSend.isDone())
-        {
-            udp.beginPacket(host_ip, localUdpPort);
-            udp.write((uint8_t *)&testGPS, sizeof(testGPS));
-            udp.endPacket();
-        }
+        // // Send message
+        // if (timerSend.isDone())
+        // {
+        //     udp.beginPacket(host_ip, localUdpPort);
+        //     udp.write((uint8_t *)&testGPS, sizeof(testGPS));
+        //     udp.endPacket();
+        // }
     }
 }
 
-void goal(MsgAbtrCmd abtrData)
+void goal(sMsgAbtrCmd abtrData)
 {
     bool motorEnableTemp;
     uint32_t periodeTemp;
@@ -205,7 +205,7 @@ void goal(MsgAbtrCmd abtrData)
         periode = periodeTemp;
         if (xSemaphoreGive(sephamoreParam) != pdTRUE)
         {
-            Serial.println("Failed to release semaphore");
+            LOG(WARN, "Failed to release semaphore");
         }
     }
 }
