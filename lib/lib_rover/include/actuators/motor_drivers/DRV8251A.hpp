@@ -26,13 +26,13 @@ public:
     }
 
     DRV8251A(
-            gpio_num_t in_1_,
-            gpio_num_t in_2_,
-            MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::BRAKE,
-            bool reversed_ = false,
-            ledc_timer_t timerNumber_ = LEDC_TIMER_0,
-            ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
-            ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
+        gpio_num_t in_1_,
+        gpio_num_t in_2_,
+        MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::BRAKE,
+        bool reversed_ = false,
+        ledc_timer_t timerNumber_ = LEDC_TIMER_0,
+        ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
+        ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
     {
         ASSERT(brakeMode_ == eBrakeMode::NONE,
                "DRV8251A cannot have NONE brake mode");
