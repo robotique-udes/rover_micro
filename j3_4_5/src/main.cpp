@@ -20,7 +20,7 @@ constexpr char EEPROM_JOINT_A_OFFSET[] = {"ja"};
 constexpr char EEPROM_JOINT_B_OFFSET[] = {"jb"};
 
 constexpr float GRIP_GOAL_THRESHOLD = 0.9f;  // 90%
-constexpr float GRIPPER_MOTOR_SPEED = 50.0f; // % Percent of max cmd
+constexpr float GRIPPER_MOTOR_SPEED = 100.0f; // % Percent of max cmd
 
 constexpr uint8_t ADDRESS_CALIB_DIFF_A = 0x10;
 constexpr uint8_t ADDRESS_CALIB_DIFF_B = 0x20;
@@ -32,7 +32,7 @@ void CB_Can(RoverCanLib::CanBusManager *canManager_, const twai_message_t *msgPt
 
 float g_posDiffUpDown = 0.0f;
 float g_posDiffRot = 0.0f;
-float g_posGrip = 0.0f;
+float g_posGrip = 1.0f;
 
 void setup()
 {
@@ -41,7 +41,7 @@ void setup()
     Serial.begin(115200);
     SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI, GPIO_NUM_NC);
 
-    RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_RXC, PIN_TXC, CB_Can, false);
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_RXC, PIN_TXC, CB_Can, true);
     canBus.init();
 
     // =========================================================================
@@ -86,7 +86,7 @@ void setup()
 
     DifferentialJoint differential(&jointDiffA, &jointDiffB, Joint::eControlMode::POSITION);
     differential.init();
-    differential.setJointLimitsUpDown(DEG_TO_RAD * -110.0f, DEG_TO_RAD * 81.0f);
+    differential.setJointLimitsUpDown(DEG_TO_RAD * -81.0f, DEG_TO_RAD * 100.0f);
     differential.setJointLimitsRot(DEG_TO_RAD * -70.0f, DEG_TO_RAD * 110.0f);
 
     // =========================================================================
@@ -101,13 +101,13 @@ void setup()
                           LEDC_CHANNEL_5);
     motorGripper.init();
     motorGripper.enable();
-    LimitSwitch SW_GripClosed(LimitSwitch::eLimitSwitchMode::PullUp, PIN_SWT_A_GRIP);
+    LimitSwitch SW_GripClosed(LimitSwitch::eLimitSwitchMode::PullUp, PIN_SWT_B_GRIP);
     SW_GripClosed.init();
-    LimitSwitch SW_GripOpenned(LimitSwitch::eLimitSwitchMode::PullUp, PIN_SWT_B_GRIP);
-    SW_GripClosed.init();
-    RoverHelpers::MovingAverage<bool, 100> avgGripIsClosed = RoverHelpers::MovingAverage<bool, 100>(SW_GripClosed.isClicked());
-    RoverHelpers::MovingAverage<bool, 100> avgGripIsOpenned = RoverHelpers::MovingAverage<bool, 100>(SW_GripOpenned.isClicked());
-    RoverHelpers::Timer<unsigned long, millis> timerGripCheck = RoverHelpers::Timer<unsigned long, millis>(5); // 450 ms of overshoot
+    LimitSwitch SW_GripOpenned(LimitSwitch::eLimitSwitchMode::PullUp, PIN_SWT_A_GRIP);
+    SW_GripOpenned.init();
+    RoverHelpers::MovingAverage<bool, 25> avgGripIsClosed = RoverHelpers::MovingAverage<bool, 25>(SW_GripClosed.isClicked());
+    RoverHelpers::MovingAverage<bool, 25> avgGripIsOpenned = RoverHelpers::MovingAverage<bool, 25>(SW_GripOpenned.isClicked());
+    RoverHelpers::Timer<unsigned long, millis> timerGripCheck = RoverHelpers::Timer<unsigned long, millis>(5);
 
     // =========================================================================
     // Jog switch init
@@ -143,6 +143,8 @@ void setup()
         canBus.update();
         differential.update();
 
+        LOG(INFO, "g_posGrip: %f", g_posGrip);
+
         if (timerGripCheck.isDone())
         {
             if (g_posGrip > 0.0f) // Closed
@@ -156,7 +158,7 @@ void setup()
                     motorGripper.setCmd(GRIPPER_MOTOR_SPEED);
                 }
             }
-            else // openned
+            else // Openned
             {
                 if (avgGripIsOpenned.addValue(SW_GripOpenned.isClicked()) > GRIP_GOAL_THRESHOLD)
                 {
@@ -211,9 +213,8 @@ void setup()
             msg.data.currentSpeed = differential.getPositionRot();
             canBus.sendMsg(&msg, (uint32_t)RoverCanLib::Constant::eDeviceId::GRIPPER_ROT_CONTROLLER);
 
-            // RoverCanLib::Msgs::armStatus msg;
-            // msg.data.currentSpeed = differential.getPositionRot();
-            // canBus.sendMsg(&msg, (uint32_t)RoverCanLib::Constant::eDeviceId::J5_CONTROLLER);
+            msg.data.currentSpeed = g_posGrip;
+            canBus.sendMsg(&msg, (uint32_t)RoverCanLib::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER);
         }
     }
 }
@@ -271,26 +272,25 @@ void CB_Can(RoverCanLib::CanBusManager *canManager_, const twai_message_t *msgPt
     {
     case (RoverCanLib::Constant::eDeviceId::GRIPPER_TILT_CONTROLLER):
     {
+        canManager_->resetWatchDog();
         RoverCanLib::Msgs::armCmd armMsg;
         canManager_->sendErrorCode(armMsg.parseMsg(msgPtr_));
-
         g_posDiffUpDown = armMsg.data.targetSpeed;
-        LOG(INFO, "Received targetPos: %f", g_posDiffUpDown);
         break;
     }
     case (RoverCanLib::Constant::eDeviceId::GRIPPER_ROT_CONTROLLER):
     {
+        canManager_->resetWatchDog();
         RoverCanLib::Msgs::armCmd armMsg;
         canManager_->sendErrorCode(armMsg.parseMsg(msgPtr_));
-
         g_posDiffRot = armMsg.data.targetSpeed;
         break;
     }
     case (RoverCanLib::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER):
     {
+        canManager_->resetWatchDog();
         RoverCanLib::Msgs::armCmd armMsg;
         canManager_->sendErrorCode(armMsg.parseMsg(msgPtr_));
-
         g_posGrip = armMsg.data.targetSpeed;
         break;
     }
