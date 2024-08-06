@@ -120,7 +120,7 @@ void DcRevoluteJoint::updateInternal(void)
                 error = _goalPosition - currentPosition;
             }
 
-            if (IN_ERROR(error, DEFAULT_PID_DEADBAND_RAD_POSITION, 0.0f))
+            if (IN_ERROR(error, _pidDeadBandPosition, 0.0f))
             {
                 cmd = 0.0f;
             }
@@ -142,7 +142,7 @@ void DcRevoluteJoint::updateInternal(void)
             float error = _encoder->getSpeed() - _goalSpeed;
             cmd = _pidSpeed->computeCommand(error);
 
-            if (IN_ERROR(_goalSpeed, DEFAULT_PID_DEADBAND_RAD_POSITION, 0.0f))
+            if (IN_ERROR(_goalSpeed, _pidDeadBandSpeed, 0.0f))
             {
                 cmd = 0.0f;
             }

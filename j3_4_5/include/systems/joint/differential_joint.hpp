@@ -29,7 +29,9 @@ public:
     void init()
     {
         _jointA->init();
+        _jointA->setPosition(_jointA->getPosition());
         _jointB->init();
+        _jointB->setPosition(_jointB->getPosition());
     }
 
     void setPosition(float upDownPosition_, float rotPosition_)
@@ -40,12 +42,12 @@ public:
 
     float getPositionUpDown(void)
     {
-        return _goalPosUpDown;
+        return _currentPosUpDown;
     }
 
     float getPositionRot(void)
     {
-        return _goalPosRot;
+        return _currentPosRot;
     }
 
     void setSpeed(float goalSpeedUpDown_, float goalSpeedRot_)
@@ -64,26 +66,27 @@ public:
         return _currentSpeedRot;
     }
 
-    void calib(float calibPositionUpDown_, float calibPositionRot_)
-    {
-#warning TODO
-    }
-
     void setJointLimitsUpDown(float min_, float max_)
     {
         _withJointLimitUpDown = true;
-#warning TODO
+        _jointlimitUpDownMin = min_;
+        _jointlimitUpDownMax = max_;
     }
 
     void setJointLimitsRot(float min_, float max_)
     {
         _withJointLimitRot = true;
-#warning TODO
+        _jointlimitRotMin = min_;
+        _jointlimitRotMax = max_;
     }
 
     void printDebugInfo()
     {
-        LOG(DEBUG, "Current Pos UP|DOWN: %f, Current Pos ROT: %f", _currentPosUpDown, _currentPosRot)
+        LOG(DEBUG, "Current UP|DOWN: %f, GOAL UP|DOWN: %f, Current ROT: %f, Goal ROT: %f",
+            _currentPosUpDown,
+            _goalPosUpDown,
+            _currentPosRot,
+            _goalPosRot)
     }
 
     void update(void)
@@ -91,27 +94,16 @@ public:
         _jointA->update();
         _jointB->update();
 
-        _currentPosUpDown = (_jointA->getPosition() + _jointB->getPosition())/2.0f;
-        _currentPosRot = (_jointA->getPosition() - _jointB->getPosition())/2.0f;
+        _currentPosUpDown = (_jointA->getPosition() + _jointB->getPosition()) / 2.0f;
+        _currentPosRot = (-_jointA->getPosition() + _jointB->getPosition()) / 2.0f;
 
-        float newPosUpDown = _goalPosUpDown - _currentPosUpDown;
-        _jointA->setPosition(_jointA->getPosition() + newPosUpDown);
-        _jointB->setPosition(_jointB->getPosition() + newPosUpDown);
+        applyJointLimits(&_goalPosUpDown, &_goalPosRot);
 
-        float newPosRot = _goalPosRot - _currentPosRot;
-        _jointA->setPosition(_jointA->getPosition() + newPosRot/2);
-        _jointA->setPosition(_jointA->getPosition() - newPosRot/2);
+        float deltaPosUpDown = _goalPosUpDown - _currentPosUpDown;
+        float deltaPosRot = _goalPosRot - _currentPosRot;
 
-    }
-
-    void setJogButtonUpDown(LimitSwitch *switchREV_, float speedREV_, LimitSwitch *switchFWD_, float speedFWD_)
-    {
-#warning TODO
-    }
-
-    void setJogButtonRot(LimitSwitch *switchREV_, float speedREV_, LimitSwitch *switchFWD_, float speedFWD_)
-    {
-#warning TODO
+        _jointA->setPosition(_jointA->getPosition() + deltaPosUpDown - deltaPosRot/2.0f);
+        _jointB->setPosition(_jointB->getPosition() + deltaPosUpDown + deltaPosRot/2.0f);
     }
 
     void setControlMode(Joint::eControlMode newControlMode_)
@@ -124,7 +116,6 @@ public:
         _controlMode = newControlMode_;
         if (_controlMode == Joint::eControlMode::POSITION)
         {
-
         }
         else
         {
@@ -151,18 +142,17 @@ public:
         }
     }
 
-    float applyJointLimits(float cmd_, float currentPositionUpDown_, float currentPositionRot_)
+    void applyJointLimits(float *newPosUpDown_, float *newPosRot_)
     {
-#warning TODO
         if (_withJointLimitUpDown)
         {
+            *newPosUpDown_ = constrain(*newPosUpDown_, _jointlimitUpDownMin, _jointlimitUpDownMax);
         }
 
         if (_withJointLimitRot)
         {
+            *newPosRot_ = constrain(*newPosRot_, _jointlimitRotMin, _jointlimitRotMax);
         }
-
-        return cmd_;
     };
 
 private:

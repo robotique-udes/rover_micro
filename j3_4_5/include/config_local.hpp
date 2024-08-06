@@ -8,8 +8,7 @@
 #include "Arduino.h"
 #include "rover_can_lib/constant.hpp"
 
-#warning TODO: Define DEVICE_ID
-constexpr uint16_t DEVICE_ID = (uint16_t)RoverCanLib::Constant::eDeviceId::REARRIGHT_MOTOR;
+constexpr uint16_t DEVICE_ID = (uint16_t)RoverCanLib::Constant::eDeviceId::GRIPPER_ROT_CONTROLLER;
 
 constexpr gpio_num_t PIN_DIFF_A_IN_1 = GPIO_NUM_38;
 constexpr gpio_num_t PIN_DIFF_A_IN_2 = GPIO_NUM_1;

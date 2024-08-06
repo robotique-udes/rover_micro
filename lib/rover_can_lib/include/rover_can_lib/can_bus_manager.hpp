@@ -57,9 +57,21 @@ namespace RoverCanLib
         /// @brief Required to call after the constructor
         void init();
 
-        /// @brief Send a already initialised twai_message_t (can frame)
-        /// @param msg_ pointer to already initialised twai_message_t
-        void sendMsg(twai_message_t *msg_);
+        /// @brief Send all required can msgs to send a whole RoverCanLib::Msgs
+        /// ::Msg
+        /// @param msg Pointer to the message RoverCanLib::Msgs::Msg child object
+        /// @param validateIntegrity_ Will automatically retry the message
+        /// transmission until some node AKC the msg
+        void sendMsg(RoverCanLib::Msgs::Msg *msg, bool validateIntegrity_ = false);
+
+        /// @brief Send all required can msgs to send a whole RoverCanLib::Msgs
+        /// and allows the user to send them with a custom CanDeviceID
+        /// @param msg Pointer to the message RoverCanLib::Msgs::Msg child object
+        /// @param validateIntegrity_ Will automatically retry the message
+        /// transmission until some node AKC the msg
+        /// @param customCanID_ Overwrites the default CanDeviceId with the one 
+        /// specified for this transmission
+        void sendMsg(RoverCanLib::Msgs::Msg *msg, uint32_t customCanID_, bool validateIntegrity_ = false);
 
         /// @brief Send a message with parameters for automatic initialisation
         /// of the twai_message_t (can frame)
@@ -70,10 +82,9 @@ namespace RoverCanLib
         /// transmission until some node AKC the msg
         void sendMsg(uint32_t id, uint8_t *data_, uint8_t dataLenght_, bool validateIntegrity_ = false);
 
-        /// @brief Send all required can msgs to send a whole RoverCanLib::Msgs
-        /// ::Msg
-        /// @param msg Pointer to the message RoverCanLib::Msgs::Msg child object
-        void sendMsg(RoverCanLib::Msgs::Msg *msg, bool validateIntegrity_ = false);
+        /// @brief Send a already initialised twai_message_t (can frame)
+        /// @param msg_ pointer to already initialised twai_message_t
+        void sendMsg(twai_message_t *msg_);
 
         /// @brief Check if some message are available and return them if there
         /// are or return an empty message with ID = 0x00 if not
@@ -134,8 +145,8 @@ namespace RoverCanLib
                                  gpio_num_t pinStatusLED_,
                                  twai_mode_t nodeMode_,
                                  twai_timing_config_t configSpeed_)
-        : _statusLed(pinStatusLED_),
-          _timerHeartbeat(static_cast<unsigned long>(1000.0f / static_cast<float>(RoverCanLib::Constant::HEARTBEAT_FREQ)))
+        : _timerHeartbeat(static_cast<unsigned long>(1000.0f / static_cast<float>(RoverCanLib::Constant::HEARTBEAT_FREQ))),
+          _statusLed(pinStatusLED_)
     {
         _id = deviceId_;
 
@@ -245,8 +256,13 @@ namespace RoverCanLib
 
     void CanBusManager::sendMsg(RoverCanLib::Msgs::Msg *msg, bool validateIntegrity_)
     {
+        this->sendMsg(msg, _id, validateIntegrity_);
+    }
+
+    void CanBusManager::sendMsg(RoverCanLib::Msgs::Msg *msg, uint32_t customCanID_, bool validateIntegrity_)
+    {
         twai_message_t canMsg;
-        canMsg.identifier = _id;
+        canMsg.identifier = customCanID_;
         canMsg.ss = validateIntegrity_;
         canMsg.extd = 0;
         canMsg.dlc_non_comp = 0;
@@ -390,7 +406,6 @@ namespace RoverCanLib
                     RoverCanLib::Helpers::msgContentIsLastElement<Msgs::ErrorState>(&msg))
                 {
                     LOG(INFO, "Asked by master to send error code, sending...");
-                    Constant::eInternalErrorCode errorState;
                     if (_canBusState > eCanBusStatus::ERROR_DELIMITER)
                     {
                         this->sendErrorCode(Constant::eInternalErrorCode::ERROR);
