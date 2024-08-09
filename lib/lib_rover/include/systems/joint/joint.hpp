@@ -247,7 +247,7 @@ float Joint::applyJointLimits(float cmd_, float currentPosition_)
 {
     if (_withJointLimits)
     {
-        if (currentPosition_ > _jointLimitMax && currentPosition_ < _jointLimitMin)
+        if (currentPosition_ > _jointLimitMax || currentPosition_ < _jointLimitMin)
         {
             if (abs(_jointLimitMin - currentPosition_) < abs(_jointLimitMax - currentPosition_))
             {

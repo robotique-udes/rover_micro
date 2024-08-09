@@ -21,11 +21,11 @@ protected:
     Encoder(bool reversed_);
 
 public:
-    virtual ~Encoder(){};
+    virtual ~Encoder() {};
 
     virtual void init(void) = 0;
     // Units should be rads for angular joint and meters for linear joints
-    virtual void calib(float zeroPosition = 0.0f, bool fromEEEProm_= false) = 0;
+    virtual void calib(float zeroPosition = 0.0f, bool fromEEEProm_ = false) = 0;
     virtual void reset(void) = 0;
 
     void update(void);
@@ -54,7 +54,8 @@ Encoder::Encoder(bool reversed_)
 
 float Encoder::getPosition(bool raw_)
 {
-    return _reversed ? -this->getPositionInternal(raw_) : this->getPositionInternal(raw_);
+    // When raw we don't want to add the "-"
+    return _reversed && !raw_ ? -this->getPositionInternal() : this->getPositionInternal(raw_);
 }
 
 float Encoder::getSpeed(void)

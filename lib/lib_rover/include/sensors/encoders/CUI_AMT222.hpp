@@ -129,7 +129,14 @@ void CUI_AMT222::calib(float zeroPosition_, bool fromEEEProm_)
     if (_encoderType == eEncoderType::ABSOLUTE_SINGLE_TURN)
     {
         this->sendCmd(REG_SET_ZERO);
-        _positionCalibOffset = zeroPosition_;
+        if (_reversed)
+        {
+            _positionCalibOffset = -zeroPosition_;
+        }
+        else
+        {
+            _positionCalibOffset = zeroPosition_;
+        }
     }
     else if (_encoderType == eEncoderType::ABSOLUTE_MULTI_TURN)
     {

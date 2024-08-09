@@ -120,13 +120,12 @@ void DcRevoluteJoint::updateInternal(void)
                 error = _goalPosition - currentPosition;
             }
 
+            cmd = _pidPosition->computeCommand(error);
+
             if (IN_ERROR(error, _pidDeadBandPosition, 0.0f))
             {
+                _pidPosition->reset();
                 cmd = 0.0f;
-            }
-            else
-            {
-                cmd = _pidPosition->computeCommand(error);
             }
 
             if (_dualPID)
@@ -158,10 +157,7 @@ void DcRevoluteJoint::updateInternal(void)
         }
 
         cmd = this->applyJointLimits(cmd, currentPosition);
-        cmd = _cmdAvg.addValue(cmd);
-
         _DCMotor->setCmd(_cmdAvg.addValue(cmd));
-        _currentMotorCmd = cmd;
     }
 }
 
@@ -196,14 +192,7 @@ void DcRevoluteJoint::setPosition(float goalPosition_, bool overwriteControlMode
 
 float DcRevoluteJoint::getPosition(bool raw_)
 {
-    if (raw_)
-    {
-        return _encoder->getPosition(true);
-    }
-    else
-    {
-        return _encoder->getPosition();
-    }
+    return _encoder->getPosition(raw_);
 }
 
 void DcRevoluteJoint::setSpeed(float goalSpeed_)

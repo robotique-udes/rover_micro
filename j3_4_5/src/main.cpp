@@ -19,7 +19,7 @@ constexpr char EEPROM_NS[] = {"ns"};
 constexpr char EEPROM_JOINT_A_OFFSET[] = {"ja"};
 constexpr char EEPROM_JOINT_B_OFFSET[] = {"jb"};
 
-constexpr float GRIP_GOAL_THRESHOLD = 0.9f;  // 90%
+constexpr float GRIP_GOAL_THRESHOLD = 0.9f;   // 90%
 constexpr float GRIPPER_MOTOR_SPEED = 100.0f; // % Percent of max cmd
 
 constexpr uint8_t ADDRESS_CALIB_DIFF_A = 0x10;
@@ -40,9 +40,6 @@ void setup()
 
     Serial.begin(115200);
     SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI, GPIO_NUM_NC);
-
-    RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_RXC, PIN_TXC, CB_Can, true);
-    canBus.init();
 
     // =========================================================================
     // Diff init
@@ -130,7 +127,6 @@ void setup()
     // =========================================================================
     applyCalibOffset(&eeprom, &jointDiffA, &encoderDiffA, &jointDiffB, &encoderDiffB);
 
-    LOG(WARN, "Init done starting!");
     RoverHelpers::Timer<unsigned long, millis> timerFeedback(100); // 10 Hz
 
     differential.update();
@@ -138,12 +134,14 @@ void setup()
     g_posDiffRot = differential.getPositionRot();
     differential.setPosition(g_posDiffUpDown, g_posDiffRot);
 
+    RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_RXC, PIN_TXC, CB_Can, true);
+    canBus.init();
+
+    LOG(WARN, "Init done starting!");
     for (;;)
     {
         canBus.update();
         differential.update();
-
-        LOG(INFO, "g_posGrip: %f", g_posGrip);
 
         if (timerGripCheck.isDone())
         {
@@ -171,8 +169,7 @@ void setup()
             }
         }
 
-#warning TODO
-        if (canBus.isOk() /* && watchdog ok TODO*/)
+        if (canBus.isOk())
         {
             differential.setPosition(g_posDiffUpDown, g_posDiffRot);
         }
@@ -259,6 +256,18 @@ void saveCalibOffset(Preferences *eeprom, Joint *jA_, Joint *jB_)
     eeprom->begin(EEPROM_NS, false);
     float positionOffsetA = -jA_->getPosition(true);
     float positionOffsetB = -jB_->getPosition(true);
+
+    uint8_t nbByteWritten = (uint8_t)(eeprom->putFloat(EEPROM_JOINT_A_OFFSET, positionOffsetA) +
+                               eeprom->putFloat(EEPROM_JOINT_B_OFFSET, positionOffsetB));
+
+    if (nbByteWritten == 2u*sizeof(float))
+    {
+        LOG(INFO, "Differential calibration values successfully updated!");
+    }
+    else
+    {
+        LOG(ERROR, "Couldn't write calibration value to internal storage, try again");
+    }
 
     LOG(DEBUG, "Nb of bytes written: %u", eeprom->putFloat(EEPROM_JOINT_A_OFFSET, positionOffsetA));
     LOG(DEBUG, "Nb of bytes written: %u", eeprom->putFloat(EEPROM_JOINT_B_OFFSET, positionOffsetB));

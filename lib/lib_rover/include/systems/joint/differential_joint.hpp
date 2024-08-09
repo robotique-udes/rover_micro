@@ -140,6 +140,9 @@ public:
         {
             LOG(WARN, "Warning renabling joint limits on Rotation but some are at initial values and might have been set...");
         }
+        
+        _withJointLimitUpDown = true;
+        _withJointLimitRot = true;
     }
 
     void applyJointLimits(float *newPosUpDown_, float *newPosRot_)
