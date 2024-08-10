@@ -12,18 +12,23 @@ void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_mes
 
 RoverCanLib::Msgs::Science msgScience;
 
+#define DOWN 0
+#define UP 1
+
 void setup()
 {
     delay(2500);
     Serial.begin(115200);
 
-    LimitSwitch switchGrinder(LimitSwitch::eLimitSwitchMode::PullDown, PB_GRINDER);
+    LimitSwitch switchUp(LimitSwitch::eLimitSwitchMode::PullDown, PB_UP);
+    LimitSwitch switchDown(LimitSwitch::eLimitSwitchMode::PullDown, PB_DOWN);
     DRV8251A actuator(LIN_IN_1, LIN_IN_2);
 
     RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_CAN_TX, PIN_CAN_RX, canCB, true);
     canBus.init();
 
-    switchGrinder.init();
+    switchUp.init();
+    switchDown.init();
     actuator.init();
 
     pinMode(FAN_A_PWM, OUTPUT);
@@ -31,7 +36,9 @@ void setup()
     pinMode(PB_GRINDER, INPUT);
 
     RoverHelpers::Timer<unsigned long, millis> timerSetCmd(10);
-    
+
+    float speedCmd = 0.0f;
+
     LOG(INFO, "Init done, starting loop!");
 
     for (EVER)
@@ -40,16 +47,79 @@ void setup()
 
         if (timerSetCmd.isDone())
         {
-            if(canBus.isOk() && msgScience.data.cmd == 0)
+            if (canBus.isOk() && msgScience.data.cmd == 0 && !switchDown)
+            {
+                if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
+                {
+                    speedCmd = 100.0f;
+                }
+            }
+            else if ()
+            {
+                speedCmd = 0.0f;
+            }
+
+            if (canBus.isOk() && msgScience.data.dig)
+            {
+                if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
+                {
+                    digitalWrite(GRINDER_PWM, HIGH);
+                    digitalWrite(FAN_A_PWM, HIGH);
+                }
+            }
+            else
+            {
+                digitalWrite(GRINDER_PWM, LOW);
+                digitalWrite(FAN_A_PWM, LOW);
+            }
+
+            if (canBus.isOk() &&msgScience.data.current_sample = 0)
+            {
+                if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
+                {
+                    
+                }
+            }
+            else
+            {
+            }
+
+            if (canBus.isOk() &&msgScience.data.current_sample = 1)
+            {
+                if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
+                {
+                }
+            }
+            else
+            {
+            }
+
+            if (canBus.isOk() &&msgScience.data.current_sample = 2)
+            {
+                if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
+                {
+                }
+            }
+            else
+            {
+            }
+
+            actuator.setCmd(speedCmd);
+            // TODO
+        }
+
+        if (timerSetCmd.isDone())
+        {
+            if (canBus.isOk() && msgScience.data.cmd == 0)
             {
                 LOG(INFO, "LINEAR ACTUATOR UP");
             }
-            else if(canBus.isOk() && msgScience.data.cmd == 1)
+            else if (canBus.isOk() && msgScience.data.cmd == 1)
             {
                 LOG(INFO, "LINEAR ACTUATOR DOWN");
             }
 
-            if(canBus.isOk() && msgScience.data.dig == true)
+            if (canBus.isOk() && msgScience.data.dig == true)
             {
                 LOG(INFO, "DIG MOTHERFUCKER");
             }
@@ -63,7 +133,11 @@ void setup()
 
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_)
 {
-
+    // switch (msg_->identifier)
+    // {
+    // case (DEVICE_ID)
+    //     if(msg_)
+    // }
 }
 
 void loop() {}
