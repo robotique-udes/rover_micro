@@ -6,9 +6,13 @@
 #include "actuators/motor_drivers/DRV8251A.hpp"
 #include "sensors/limit_switch.hpp"
 #include "rover_can_lib/msgs/science.hpp"
+#include "actuators/servo.h"
 
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
+Servo scienceServo(SERVO_0, 500.0f, 2650.0f, 840.0f);
+
+float g_servoPos = 840.0f;
 
 RoverCanLib::Msgs::Science msgScience;
 
@@ -30,6 +34,7 @@ void setup()
     switchUp.init();
     switchDown.init();
     actuator.init();
+    scienceServo.init();
 
     pinMode(FAN_A_PWM, OUTPUT);
     pinMode(GRINDER_PWM, OUTPUT);
@@ -77,35 +82,40 @@ void setup()
             {
                 if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
                 {
-                    
+                    g_servoPos = MAP(15.0f, 0.0f, 360.0f, 500.0f, 2650.0f);
                 }
             }
             else
             {
+                g_servoPos = MAP(15.0f, 0.0f, 360.0f, 500.0f, 2650.0f);
             }
 
             if (canBus.isOk() &&msgScience.data.current_sample = 1)
             {
                 if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
                 {
+                    g_servoPos = MAP(50.0f, 0.0f, 360.0f, 500.0f, 2650.0f);
                 }
             }
             else
             {
+                g_servoPos = MAP(15.0f, 0.0f, 360.0f, 500.0f, 2650.0f);
             }
 
             if (canBus.isOk() &&msgScience.data.current_sample = 2)
             {
                 if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::SCIENCE)
                 {
+                    g_servoPos = MAP(450.0f, 0.0f, 360.0f, 500.0f, 2650.0f);
                 }
             }
             else
             {
+                g_servoPos = MAP(15.0f, 0.0f, 360.0f, 500.0f, 2650.0f);
             }
 
             actuator.setCmd(speedCmd);
-            // TODO
+            scienceServo.writeMicroseconds(g_servoPos);
         }
 
         if (timerSetCmd.isDone())
