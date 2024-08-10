@@ -68,11 +68,12 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
         break;
     }
 
-    case (RoverCanLib::Constant::eDeviceId::CAMERA_A2):
+    case (RoverCanLib::Constant::eDeviceId::CAMERA_PAN):
     {
         RoverCanLib::Msgs::CamPan msg;
         canBusManager_->sendErrorCode(msg.parseMsg(msg_));
-        g_servoPos = MAP(msg.data.servoPosition, 0.0f, 360.0f, 500, 2650);
+        g_servoPos = MAP(msg.data.servoPosition, 0.0f, 360.0f, 500.0f, 2650.0f);
+        LOG(INFO, "g_servoPos: %f", g_servoPos);
         break;
     }
 
