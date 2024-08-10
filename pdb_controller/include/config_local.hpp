@@ -12,8 +12,8 @@
 constexpr uint16_t DEVICE_ID = (uint16_t)RoverCanLib::Constant::eDeviceId::PDB_CONTROLLER;
 
 constexpr gpio_num_t CAM_ENABLE_A2 = GPIO_NUM_18;
-constexpr gpio_num_t CAM_ENABLE_A2_ROT_SIDE = GPIO_NUM_21;
-constexpr gpio_num_t CAM_ENABLE_A2_ROT_UP = GPIO_NUM_22;
+
+constexpr gpio_num_t CAM_PIN_PWM = GPIO_NUM_22;
 
 constexpr gpio_num_t CAM_ENABLE_R1M_1 = GPIO_NUM_19;
 constexpr gpio_num_t CAM_ENABLE_R1M_2 = GPIO_NUM_33;

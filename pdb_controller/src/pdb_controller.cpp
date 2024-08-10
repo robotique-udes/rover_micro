@@ -3,22 +3,24 @@
 #include "config_local.hpp"
 
 #include "rover_helpers/helpers.hpp"
+#include "actuators/servo.h"
 #include "rover_can_lib/rover_can_lib.hpp"
 
 #include "rover_can_lib/msgs/cam_control.hpp"
-#include "rover_can_lib/msgs/cam_control_a2.hpp"
+#include "rover_can_lib/msgs/cam_pan.hpp"
 #include "rover_can_lib/msgs/light_control.hpp"
 
 void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void parseDeviceIdMsg(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
 void controlCamera(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_, gpio_num_t camGPIO_);
 
+float g_servoPos = 840.0f;
+
 void setup()
 {
     Serial.begin(115200);
 
     RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, canCB, false, (gpio_num_t)LED_BUILTIN);
-
     canBus.init();
 
     pinMode(CAM_ENABLE_A2, OUTPUT);
@@ -33,8 +35,12 @@ void setup()
     digitalWrite(CAM_ENABLE_R1M_3, HIGH);
     digitalWrite(LIGHT_ENABLE, LOW);
 
+    Servo panoCamera(CAM_PIN_PWM, 500.0f, 2650.0f, 840.0f);
+    panoCamera.init();
+
     for (;;)
     {
+        panoCamera.writeMicroseconds(g_servoPos);
         canBus.update();
     }
 }
@@ -64,24 +70,9 @@ void canCB(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg
 
     case (RoverCanLib::Constant::eDeviceId::CAMERA_A2):
     {
-        RoverCanLib::Msgs::camControlA2 camMsg;
-        canBusManager_->sendErrorCode(camMsg.parseMsg(msg_));
-
-        if (camMsg.data.enable)
-        {
-            digitalWrite(CAM_ENABLE_A2, HIGH);
-        }
-        else
-        {
-            digitalWrite(CAM_ENABLE_A2, LOW);
-        }
-
-        if (camMsg.data.posTilt != 0.0f && camMsg.data.posYaw != 0.0f)
-        {
-            canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
-            LOG(WARN, "Tilt and yaw not implemented yet")
-        }
-        
+        RoverCanLib::Msgs::CamPan msg;
+        canBusManager_->sendErrorCode(msg.parseMsg(msg_));
+        g_servoPos = MAP(msg.data.servoPosition, 0.0f, 360.0f, 500, 2650);
         break;
     }
 
