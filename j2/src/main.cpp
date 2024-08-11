@@ -42,7 +42,6 @@ void setup()
                        false,
                        &pidPos,
                        NULL);
-    j2.setJointLimits(DEG_TO_RAD * -30.0f, 1.10f + DEG_TO_RAD*90.0f);
     j2.init();
     j2.update();
     j2.setPosition(j2.getPosition());
