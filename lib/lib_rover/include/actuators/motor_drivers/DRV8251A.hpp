@@ -118,7 +118,6 @@ public:
         if (timerLoopUpdate.isDone())
         {
             _currentSpd = cmdAvg.addValue(spd_);
-            // LOG(INFO, "_currentSpd: %f", spd_);
 
             if (IN_ERROR(spd_, 0.001f, 0.0f))
             {
