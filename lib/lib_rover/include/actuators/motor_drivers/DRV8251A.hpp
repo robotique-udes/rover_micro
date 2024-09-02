@@ -9,8 +9,10 @@
 #include "driver/ledc.h"
 
 #include "actuators/motor_drivers/motor_driver.hpp"
+#include "rover_helpers/moving_average.hpp"
 #include "rover_helpers/macros.hpp"
 #include "rover_helpers/assert.hpp"
+#include "rover_helpers/timer.hpp"
 
 class DRV8251A : public MotorDriver
 {
@@ -18,18 +20,19 @@ public:
     static constexpr uint32_t PWM_FREQUENCY = 1'000;
     static constexpr ledc_timer_bit_t LEDC_TIMER_RESOLUTION = LEDC_TIMER_14_BIT;
 
-    static constexpr uint32_t PERCENT_TO_DUTY(float percent_) {
+    static constexpr uint32_t PERCENT_TO_DUTY(float percent_)
+    {
         return (uint32_t)round(abs(percent_) / 100.0f * (float)(1u << LEDC_TIMER_RESOLUTION) - 1.0f);
     }
 
     DRV8251A(
-            gpio_num_t in_1_,
-            gpio_num_t in_2_,
-            MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::BRAKE,
-            bool reversed_ = false,
-            ledc_timer_t timerNumber_ = LEDC_TIMER_1,
-            ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
-            ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
+        gpio_num_t in_1_,
+        gpio_num_t in_2_,
+        MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::BRAKE,
+        bool reversed_ = false,
+        ledc_timer_t timerNumber_ = LEDC_TIMER_0,
+        ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
+        ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
     {
         ASSERT(brakeMode_ == eBrakeMode::NONE,
                "DRV8251A cannot have NONE brake mode");
@@ -40,6 +43,7 @@ public:
         _in_1 = in_1_;
         _in_2 = in_2_;
 
+        _brakeMode = brakeMode_;
         _reversed = reversed_;
 
         _ledc_motorTimer = timerNumber_;
@@ -58,8 +62,6 @@ public:
     {
         pinMode(_in_1, OUTPUT);
         pinMode(_in_2, OUTPUT);
-
-        uint32_t _freqPWM;
 
         // Timer for PWM
         _freqPWM = PWM_FREQUENCY;
@@ -80,7 +82,7 @@ public:
         ledc_channel_1.gpio_num = _in_1;
         ledc_channel_1.duty = PERCENT_TO_DUTY(0.0f);
         ledc_channel_1.hpoint = 0;
-        ledc_channel_1.flags.output_invert = false;
+        ledc_channel_1.flags.output_invert = true;
         ledc_channel_config(&ledc_channel_1);
 
         // Channel for 2nd input (on same timer as 1st)
@@ -92,7 +94,7 @@ public:
         ledc_channel_2.gpio_num = _in_2;
         ledc_channel_2.duty = PERCENT_TO_DUTY(0.0f);
         ledc_channel_2.hpoint = 0;
-        ledc_channel_2.flags.output_invert = false;
+        ledc_channel_2.flags.output_invert = true;
         ledc_channel_config(&ledc_channel_2);
 
         ledc_set_freq(LEDC_LOW_SPEED_MODE, _ledc_motorTimer, _freqPWM);
@@ -113,61 +115,60 @@ public:
             return;
         }
 
-        _currentSpd = spd_;
+        if (timerLoopUpdate.isDone())
+        {
+            _currentSpd = cmdAvg.addValue(spd_);
 
-        if (IN_ERROR(spd_, 0.001f, 0.0f))
-        {
-            _currentSpd = 0.0f;
-            if(_brakeMode == MotorDriver::eBrakeMode::BRAKE)
+            if (IN_ERROR(spd_, 0.001f, 0.0f))
             {
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(100.0f));
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(100.0f));
+                _currentSpd = 0.0f;
+                if (_brakeMode == MotorDriver::eBrakeMode::BRAKE)
+                {
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+                }
+                else // Since outputs are reversed, 100.0f pwm means GND
+                {
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(100.0f));
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(100.0f));
+                }
             }
-            else
+            else if (_currentSpd > 0.0f)
             {
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+                if (!_reversed)
+                {
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(_currentSpd));
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+                }
+                else
+                {
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(_currentSpd));
+                }
             }
-        }
-        else if (spd_ > 0.0f)
-        {
-            if (!_reversed)
+            else if (_currentSpd < 0.0f)
             {
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(spd_));
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+                if (!_reversed)
+                {
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(_currentSpd));
+                }
+                else
+                {
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(_currentSpd));
+                    ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
+                }
             }
-            else
-            {
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(spd_));
-            }
-        }
-        else if (spd_ < 0.0f)
-        {
-            if (!_reversed)
-            {
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(spd_));
-            }
-            else
-            {
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(spd_));
-                ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
-            }
-        }
 
-        ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1);
-        ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2);
+            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1);
+            ledc_update_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2);
+        }
     }
 
     void enable(void)
     {
         this->checkInit();
-
-        if (_enabled)
-        {
-            return;
-        }
+        _enabled = true;
     }
 
     void disable(void)
@@ -179,7 +180,7 @@ public:
             return;
         }
 
-        LOG(ERROR, "DRV8251A cannot be disabled; braking at speed=0 instead")
+        LOG(INFO, "DRV8251A cannot be disabled; braking at speed=0 instead")
         this->setCmd(0.0f);
     }
 
@@ -187,7 +188,8 @@ public:
     {
         this->checkInit();
 
-        LOG(ERROR, "DRV8251A cannot reset");
+        this->disable();
+        this->enable();
     }
 
     bool isMoving(void)
@@ -230,6 +232,7 @@ private:
     gpio_num_t _in_1 = GPIO_NUM_NC;
     gpio_num_t _in_2 = GPIO_NUM_NC;
 
+    uint32_t _freqPWM;
     bool _reversed = false;
 
     ledc_timer_t _ledc_motorTimer;
@@ -238,6 +241,9 @@ private:
 
     bool _enabled = false;
     float _currentSpd = 0.0f;
+
+    RoverHelpers::Timer<unsigned long, millis> timerLoopUpdate = RoverHelpers::Timer<unsigned long, millis>(1);
+    RoverHelpers::MovingAverage<float, 100> cmdAvg;
 };
 
 #endif // !defined(ESP32)

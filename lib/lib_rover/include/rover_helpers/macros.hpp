@@ -105,7 +105,7 @@
 #define REMOVE_UNUSED(x) (void)(x)
 
 // Return specified angle value in the range set, default [0.0f and TWO_PI]
-static constexpr float CONSTRAIN_ANGLE(float angle, float rangeMin_ = 0.0f, float rangeMax_ = TWO_PI)
+static constexpr float CONSTRAIN_ANGLE(float angle, float rangeMin_ = -PI, float rangeMax_ = PI)
 {
     while(angle < rangeMin_)
     {

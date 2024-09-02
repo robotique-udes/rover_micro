@@ -2,7 +2,7 @@
 #define __LOG_H__
 
 // =============================================================================
-// log.hpp helps redirecting log to either microRos or the Serial or to not 
+// log.hpp helps redirecting log to either microRos or the Serial or to not
 // compiled them at all for performance enhancement
 //
 //  Usage example:
@@ -119,6 +119,36 @@ typedef enum eLoggerLevel
         }                                                                                   \
     }
 #endif // defined(MICRO_ROS_LOGGER)
+
+template <typename T>
+constexpr const char *variable_to_bit_string(T value)
+{
+    constexpr size_t bit_count = sizeof(T) * 8;
+    static char bit_string[bit_count * 7 + 10] = {};
+
+    char *current = bit_string;
+    for (size_t i = 0; i < bit_count; ++i)
+    {
+        unsigned bit = (value >> (bit_count - 1 - i)) & 1;
+        if (i == 0)
+        {
+            current += sprintf(current, "MSB[0x%u", bit);
+        }
+        else if (i == bit_count - 1)
+        {
+            current += sprintf(current, " | 0x%u|LSB]", bit);
+        }
+        else
+        {
+            current += sprintf(current, " | 0x%u", bit);
+        }
+    }
+    return bit_string;
+}
+
+// Macro to log the bits of a variable using the Logger class
+#define LOG_BITS(severity, var) \
+    LOG(severity, "%s = %s", #var, variable_to_bit_string(var))
 
 #else // VERBOSE
 #define LOG(severity, ...)

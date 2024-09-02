@@ -30,7 +30,7 @@ public:
     void init(void);
     void updateInternal(void);
     void setPosition(float goalPosition_, bool switchControlMode = false);
-    float getPosition(void);
+    float getPosition(bool raw_ = false);
     /// @brief In POSITION control mode, this will limit the joint maximum speed (but not command)
     /// @param goalSpeed_ // target speed in rad/s
     void setSpeed(float goalSpeed_);
@@ -71,6 +71,17 @@ void DcRevoluteJoint::init(void)
     LOG(DEBUG, "DcRevoluteJoint init...");
     _encoder->init();
     _DCMotor->init();
+    _DCMotor->enable();
+
+    if (_pidPosition != NULL)
+    {
+        _pidPosition->init();
+    }
+
+    if (_pidSpeed != NULL)
+    {
+        _pidSpeed->init();
+    }
 
     this->initDone();
     LOG(DEBUG, "DcRevoluteJoint init successful");
@@ -104,18 +115,17 @@ void DcRevoluteJoint::updateInternal(void)
                     error += TWO_PI;
                 }
             }
-            else
+            else if (_encoderType == Encoder::eEncoderType::ABSOLUTE_MULTI_TURN)
             {
-                ASSERT("Not yet implemented");
+                error = _goalPosition - currentPosition;
             }
 
-            if (IN_ERROR(error, DEFAULT_PID_DEADBAND_RAD_POSITION, 0.0f))
+            cmd = _pidPosition->computeCommand(error);
+
+            if (IN_ERROR(error, _pidDeadBandPosition, 0.0f))
             {
+                _pidPosition->reset();
                 cmd = 0.0f;
-            }
-            else
-            {
-                cmd = _pidPosition->computeCommand(error);
             }
 
             if (_dualPID)
@@ -131,7 +141,7 @@ void DcRevoluteJoint::updateInternal(void)
             float error = _encoder->getSpeed() - _goalSpeed;
             cmd = _pidSpeed->computeCommand(error);
 
-            if (IN_ERROR(_goalSpeed, DEFAULT_PID_DEADBAND_RAD_POSITION, 0.0f))
+            if (IN_ERROR(_goalSpeed, _pidDeadBandSpeed, 0.0f))
             {
                 cmd = 0.0f;
             }
@@ -147,10 +157,7 @@ void DcRevoluteJoint::updateInternal(void)
         }
 
         cmd = this->applyJointLimits(cmd, currentPosition);
-        cmd = _cmdAvg.addValue(cmd);
-
         _DCMotor->setCmd(_cmdAvg.addValue(cmd));
-        _currentMotorCmd = cmd;
     }
 }
 
@@ -173,15 +180,19 @@ void DcRevoluteJoint::setPosition(float goalPosition_, bool overwriteControlMode
     {
         _goalPosition = CONSTRAIN_ANGLE(goalPosition_);
     }
+    else if (_encoderType == Encoder::eEncoderType::ABSOLUTE_MULTI_TURN)
+    {
+        _goalPosition = goalPosition_;
+    }
     else
     {
         ASSERT("Not implemented");
     }
 }
 
-float DcRevoluteJoint::getPosition(void)
+float DcRevoluteJoint::getPosition(bool raw_)
 {
-    return _encoder->getPosition();
+    return _encoder->getPosition(raw_);
 }
 
 void DcRevoluteJoint::setSpeed(float goalSpeed_)
@@ -203,7 +214,8 @@ float DcRevoluteJoint::getSpeed(void)
 
 void DcRevoluteJoint::calib(float calibPosition_)
 {
-    if (_encoderType == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN)
+    if (_encoderType == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN ||
+        _encoderType == Encoder::eEncoderType::ABSOLUTE_MULTI_TURN)
     {
         _encoder->calib(CONSTRAIN_ANGLE(calibPosition_));
     }
@@ -215,10 +227,10 @@ void DcRevoluteJoint::calib(float calibPosition_)
 
 void DcRevoluteJoint::printDebugInfo()
 {
-    LOG(DEBUG, "Ctr: \"%s\"Cmd: %f | Position: %f | Goal: %f | Speed: %f",
+    LOG(DEBUG, "Ctr: \"%s\" | Cmd: %f | Position: %f | Goal: %f | Speed: %f",
         (_controlMode == eControlMode::POSITION) ? "pos" : "spd",
         _DCMotor->getCmd(),
-        _encoder->getPosition(),
+        this->getPosition(),
         (_controlMode == eControlMode::POSITION) ? _goalPosition : _goalSpeed,
         _encoder->getSpeed());
 }
