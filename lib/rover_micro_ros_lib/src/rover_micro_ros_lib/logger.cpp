@@ -93,6 +93,6 @@ namespace RoverMicroRosLib
 
     bool Logger::isAlive(void)
     {
-        return _alive;
+        return false; // _alive;
     }
 }
