@@ -1,0 +1,23 @@
+name: PIO Build All Project
+
+on:
+    pull_request:
+      branches:
+        - release/**
+    push:
+      branches:
+        - release/**
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: 
+        run: |
+            set -e
+
+            ./build_all.sh
