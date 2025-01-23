@@ -5,7 +5,6 @@
 // device of the same type. For example, all propulsion motors should have the
 // same code other then the constant specified here.
 #include <cstdint>
-#include "Arduino.h"
 #include "rover_can_lib/constant.hpp"
 
 constexpr uint16_t DEVICE_ID = (uint16_t)RoverCanLib::Constant::eDeviceId::REARRIGHT_MOTOR;
