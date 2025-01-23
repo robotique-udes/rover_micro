@@ -20,10 +20,6 @@ void setup()
 
     IFX007T motor(PIN_EN_1, PIN_EN_2, PIN_IN_1, PIN_IN_2, MotorDriver::eBrakeMode::COAST, false);
     motor.init();    
-    // 04-08-2024: Not using the internal LED as it seems to draw to much
-    // current and causes ESP32 brownout detection. A fix should be done to the 
-    // PCB before reactivating.
-    // motor.attachRGBLed(PIN_LED_R, PIN_LED_G, PIN_LED_B);
     motor.enable();
 
     RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_CAN_TX, PIN_CAN_RX, canCB, true, PIN_LED_CAN);
