@@ -1,81 +1,62 @@
-#ifndef __ASSERT_HPP__
-#define __ASSERT_HPP__
+#ifndef ASSERT_HPP
+#define ASSERT_HPP
 
-// =============================================================================
-// assert.hpp defines macro which can be used to block code execution.
-// 3 Versions exists:
-//      ASSERT():
-//          Block code execution but doesn't log anything, can be useful for
-//          debugging, but other versions should be prefered in your codes
-//
-//      ASSERT(condition):
-//          Check the condition. If it's true, the condition if logged and then
-//          the code execution is stopped.
-//
-//      ASSERT(condition, ...):
-//          Check the condition. If it's true, the custom msg "..." is logged
-//          and then the code execution is stopped.
-//
-//      Usage Example:
-//          void setup (void)
-//          {
-//              int* intPointer = NULL;
-//              ASSERT(intPointer == NULL);
-//          }
-//
-//          This will print the following: [FATAL][...]"intPointer == NULL"
-//          and will cancel code execution
-//
-// On certain boards, assertion will reboot the controller instead of calling a
-// for(;;) loop.
-// =============================================================================
+#if !defined(ARDUINO_ESP32S3_DEV)
+#error CPU not supported
+#endif
 
-#if defined(VERBOSE)
-#include "rover_lib2/helpers/log.hpp"
 #include "driver/ledc.h"
+#include "rover_lib2/helpers/log.hpp"
+#include <cstdarg>
 
-// Stoping every pwm output to stop everything before aborting
-#define ABORT()                                                                        \
-    for (int speed_mode = 0; speed_mode < (int)LEDC_SPEED_MODE_MAX; speed_mode++)      \
-    {                                                                                  \
-        for (int channel = LEDC_CHANNEL_0; channel < (int)LEDC_CHANNEL_MAX; channel++) \
-        {                                                                              \
-            ledc_stop((ledc_mode_t)speed_mode, (ledc_channel_t)channel, 0);            \
-        }                                                                              \
-    }                                                                                  \
-    Serial.flush();                                                                    \
-    abort();
+DEFINE_LOG_NODE(ASSERTS, Logger::eNodeState::ON);
 
-#define GET_MACRO_ASSERT(_0, _1, _2, ASSERT, ...) ASSERT
-#define ASSERT(...) GET_MACRO_ASSERT(_0, ##__VA_ARGS__, ASSERT_CONDITION_MESSAGE, ASSERT_CONDITION, ASSERT_ONLY)(__VA_ARGS__)
-
-#define ASSERT_CONDITION_MESSAGE(condition, ...) \
-    {                                            \
-        if (!condition)                           \
-        {                                        \
-            LOG(FATAL, __VA_ARGS__);             \
-            Serial.flush();                      \
-            ABORT();                             \
-        }                                        \
+namespace
+{
+    constexpr void SHUTDOWN_PWM(void)
+    {
+        for (int speed_mode = 0; speed_mode < (int)LEDC_SPEED_MODE_MAX; speed_mode++)
+        {
+            for (int channel = 0; channel < (int)LEDC_CHANNEL_MAX; channel++)
+            {
+                ledc_stop((ledc_mode_t)speed_mode, (ledc_channel_t)channel, 0);
+            }
+        }
     }
 
-#define ASSERT_CONDITION(condition)       \
-    {                                     \
-        if (!condition)                    \
-        {                                 \
-            LOG(FATAL, "%s", #condition); \
-            Serial.flush();               \
-            ABORT();                      \
-        }                                 \
+    inline void ABORT(void)
+    {
+        SHUTDOWN_PWM();
+        LOG::FLUSH();
+        abort();
     }
+}  // namespace
 
-#define ASSERT_ONLY() \
-    {                 \
-        ABORT();      \
+inline void ASSERT(void)
+{
+    LOG::FATAL(Logger::Nodes::ASSERTS, "Explicit assertion");
+    ABORT();
+}
+
+inline void ASSERT(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    LOG::FATAL(Logger::Nodes::ASSERTS, "Explicit assertion: %s", format, args);
+    va_end(args);
+    ABORT();
+}
+
+inline void ASSERT(bool condition, const char* format, ...)
+{
+    if (!condition)
+    {
+        va_list args;
+        va_start(args, format);
+        LOG::FATAL(Logger::Nodes::ASSERTS, "Assertion failed: %s", format, args);
+        va_end(args);
+        ABORT();
     }
+}
 
-#else // defined(VERBOSE)
-#define ASSERT(condition, ...) condition ? abort() : (void)0;
-#endif // defined(VERBOSE)
-
-#endif // __ASSERT_HPP__
+#endif  // ASSERT_HPP

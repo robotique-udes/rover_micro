@@ -2,26 +2,25 @@
 
 #include "config_local.hpp"
 #include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/helpers/macros.hpp"
 // #include "rover_helpers/helpers.hpp"
 
 #include "rover_can2/can_driver.hpp"
 
-DEFINE_LOG_NODE(MotorController);
-struct EnabledNodes : Logger::NodeFilter<Logger::Nodes::MotorController> {};
+DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
 
 void setup()
 {
-    // Logger::g_loggerOutput = Serial;
+    // Logger::loggerStream = ;
     Serial.begin(115200UL);
+    delay(1000);
 
-    float a = 60.0f;
-    while (true)
+    RoverCan2::CanDriver driver(GPIO_NUM_47, GPIO_NUM_48);
+    driver.init();
+
+    for (EVER)
     {
-        LOG::DEBUG("Nothing to see here... %.3f", a);
-        LOG::INFO("Nothing to see here... %.3f", a);
-        LOG::WARN("Nothing to see here... %.3f", a);
-        LOG::ERROR("Nothing to see here... %.3f", a);
-        LOG::FATAL("Nothing to see here... %.3f", a);
+        driver.update();
     }
 }
 

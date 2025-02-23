@@ -1,0 +1,63 @@
+dependencies:
+  espressif/esp-dsp:
+    component_hash: fa7fe74305df6da25867437ebcd4213e047cbfc0556cf92067ab657fce537c6e
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.2'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.5.2
+  espressif/esp32-camera:
+    component_hash: aa4445082c5397333652694cfccf6f190944fe66a2c94cf22c347e7a04f0c8aa
+    dependencies: []
+    source:
+      git: https://github.com/espressif/esp32-camera.git
+      path: .
+      type: git
+    version: 6a821a898651d9437f4794a8a2d76d7d0f283d2b
+  espressif/esp_modem:
+    component_hash: 681d7c8417ce0f2a11a562c6998b7b379a4847be41d84673c11c0c7a6b00e918
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.1'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.3.0
+  espressif/mdns:
+    component_hash: 4e21149422be01c24d4b1d4dec64fa07d136d8c5d234e931f3ebf375cbde51a0
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.5.2
+  idf:
+    source:
+      type: idf
+    version: 5.1.5
+  joltwallet/littlefs:
+    component_hash: cc23c607cbc8671bc03b1b1b39ae13d8f5e8e23771e0b1c66599d04ecd0a3527
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.3'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.16.2
+direct_dependencies:
+- espressif/esp-dsp
+- espressif/esp32-camera
+- espressif/esp_modem
+- espressif/mdns
+- idf
+- joltwallet/littlefs
+manifest_hash: 1dddfe69a4a2d5a02d6bc7acfe9f792431f541cbdbfb7129debb28a86a17b938
+target: esp32s2
+version: 2.0.0

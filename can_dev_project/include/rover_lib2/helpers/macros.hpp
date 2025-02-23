@@ -10,4 +10,8 @@ constexpr std::underlying_type_t<ENUM_T> TO_UNDERLYING(ENUM_T e) noexcept
     return static_cast<std::underlying_type_t<ENUM_T>>(e);
 }
 
+#define EVER \
+    ;        \
+    ;
+
 #endif  // MACROS_HPP
