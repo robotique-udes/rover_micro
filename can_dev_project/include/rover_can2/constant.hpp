@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace RoverCanLib::Constant
+namespace RoverCan2::Constant
 {
     enum class eDeviceId : uint16_t
     {
@@ -49,6 +49,7 @@ namespace RoverCanLib::Constant
     enum class eMsgId : uint8_t
     {
         NOT_USED = 0x00,
+        INVALID = 0x00,
         ERROR_STATE = 0x01,
         HEARTBEAT = 0x02,
         GPS = 0x10,
@@ -77,7 +78,6 @@ namespace RoverCanLib::Constant
         WARNING,
         ERROR
     };
-
 }
 
 #endif // __CONSTANT_HPP__

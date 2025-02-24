@@ -2,31 +2,74 @@
 #define CAN_DRIVER_HPP
 
 #if defined(ARDUINO_ESP32S3_DEV)
+
+#include "rover_can2/msgs/msg.hpp"
+
+#include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/helpers/assert.hpp"
+#include "rover_lib2/helpers/circular_buffer.hpp"
+
 #include "driver/gpio.h"
 #include "driver/twai.h"
-#include "rover_lib2/helpers/assert.hpp"
-#include "rover_lib2/helpers/log.hpp"
+#include "optional"
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
 DEFINE_LOG_NODE(CanDriver, Logger::eNodeState::ON);
 
-namespace
-{
-    constexpr Logger::Nodes::Node LOGGER = Logger::Nodes::CanDriver;
-}
-
 namespace RoverCan2
 {
-
 #if defined(ARDUINO_ESP32S3_DEV)
-
     class CanDriver
     {
+      public:
+        struct sCanMsg
+        {
+            sCanMsg(twai_message_t& twaiMsg_): sCanMsg(twaiMsg_.identifier, twaiMsg_.data, twaiMsg_.data_length_code) {}
+
+            sCanMsg(uint32_t canID_, const uint8_t* data_, uint8_t dataLength_)
+            {
+                canID = canID_;
+                dataLength = dataLength_;
+                memcpy(msgData, data_, dataLength_);
+                msgID = this->getMsgID();
+                msgContentID = this->getMsgContentID();
+            }
+
+            uint32_t canID;
+            uint8_t dataLength;
+            uint8_t msgData[8U] = {0};
+            RoverCan2::Constant::eMsgId msgID;
+            std::optional<uint8_t> msgContentID;
+
+          private:
+            RoverCan2::Constant::eMsgId getMsgID()
+            {
+                if (dataLength < (TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)))
+                {
+                    return RoverCan2::Constant::eMsgId::INVALID;
+                }
+
+                uint8_t msgID = msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::MSG_ID)];
+                return static_cast<RoverCan2::Constant::eMsgId>(msgID);
+            };
+
+            std::optional<uint8_t> getMsgContentID()
+            {
+                if (dataLength < (TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)))
+                {
+                    return std::nullopt;
+                }
+
+                return msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::MSG_CONTENT_ID)];
+            };
+        };
+
         static constexpr twai_timing_config_t CAN_SPEED_CONFIG = TWAI_TIMING_CONFIG_1MBITS();
         static constexpr twai_mode_t TWAI_MODE = TWAI_MODE_NORMAL;
         static constexpr twai_filter_config_t TWAI_ID_FILTER = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
-        static constexpr TickType_t MESSAGE_RECV_TIMEOUT = 0U;  // Don't wait
+        static constexpr TickType_t MESSAGE_RECV_TIMEOUT = 0U;         // Don't wait
+        static constexpr size_t CAN_DATA_LENGTH = TWAI_FRAME_MAX_DLC;  // Don't wait
 
         enum eState : size_t
         {
@@ -48,10 +91,26 @@ namespace RoverCan2
         {
             switch (_state)
             {
-                case eState::UNINSTALLED: this->installDriver(); [[fallthrough]];
-                case eState::INSTALLED: this->startDriver(); [[fallthrough]];
-                case eState::RUNNING: this->processNewMessage(); break;
+                case eState::UNINSTALLED:
+                    this->installDriver();
+                    [[fallthrough]];
+                case eState::INSTALLED:
+                    this->startDriver();
+                    [[fallthrough]];
+                case eState::RUNNING:
+                    this->processNewMessage();
+                    break;
             }
+        }
+
+        size_t getAvailableMessagesNb(void) const
+        {
+            return _msgBuffer.size();
+        }
+
+        std::optional<sCanMsg> getMsg(void)
+        {
+            return _msgBuffer.getValue();
         }
 
       private:
@@ -65,15 +124,21 @@ namespace RoverCan2
             switch (successCode)
             {
                 case ESP_OK:
-                    LOG::DEBUG(LOGGER, "Twai driver installed successfully");
+                    LOG::DEBUG(Logger::Nodes::CanDriver, "Twai driver installed successfully");
                     _state = eState::INSTALLED;
                     break;
                 case ESP_ERR_INVALID_STATE:
-                    LOG::WARN(LOGGER, "Can't install twai driver in current state (%u)", TO_UNDERLYING(_state));
+                    LOG::WARN(Logger::Nodes::CanDriver, "Can't install twai driver in current state (%u)", TO_UNDERLYING(_state));
                     break;
-                case ESP_ERR_INVALID_ARG: ASSERT("Can't install twai driver with specified arguments"); break;
-                case ESP_ERR_NO_MEM: ASSERT("Can't install twai driver... no more memory"); break;
-                default: ASSERT("Can't install twai driver... Unknown error %d", successCode); break;
+                case ESP_ERR_INVALID_ARG:
+                    ASSERT("Can't install twai driver with specified arguments");
+                    break;
+                case ESP_ERR_NO_MEM:
+                    ASSERT("Can't install twai driver... no more memory");
+                    break;
+                default:
+                    ASSERT("Can't install twai driver... Unknown error %d", successCode);
+                    break;
             }
         }
 
@@ -83,13 +148,15 @@ namespace RoverCan2
             switch (successCode)
             {
                 case ESP_OK:
-                    LOG::DEBUG(LOGGER, "Twai driver started successfully");
+                    LOG::DEBUG(Logger::Nodes::CanDriver, "Twai driver started successfully");
                     _state = eState::RUNNING;
                     break;
                 case ESP_ERR_INVALID_STATE:
-                    LOG::WARN(LOGGER, "Can't install twai driver in current state %u", TO_UNDERLYING(_state));
+                    LOG::WARN(Logger::Nodes::CanDriver, "Can't install twai driver in current state %u", TO_UNDERLYING(_state));
                     break;
-                default: ASSERT("Can't start twai driver... Unknown error %d", successCode); break;
+                default:
+                    ASSERT("Can't start twai driver... Unknown error %d", successCode);
+                    break;
             }
         }
 
@@ -100,48 +167,72 @@ namespace RoverCan2
             esp_err_t statusCode = twai_receive(&message, MESSAGE_RECV_TIMEOUT);
             switch (statusCode)
             {
-                case ESP_OK: LOG::DEBUG(LOGGER, "New message received"); break;
-                case ESP_ERR_TIMEOUT: LOG::DEBUG(LOGGER, "No message available, skipping"); return;
-                case ESP_ERR_INVALID_ARG: ASSERT("Invalid arguments, implementation mistake"); break;
-                case ESP_ERR_INVALID_STATE:
-                    LOG::ERROR(LOGGER, "Can Driver has fallen into an invalid state, trying to recover...");
-                    _state = eState::UNINSTALLED;
+                case ESP_OK:
+                    LOG::DEBUG(Logger::Nodes::CanDriver, "New message received");
                     break;
+                case ESP_ERR_TIMEOUT:
+                    return;
+                case ESP_ERR_INVALID_STATE:
+                    LOG::ERROR(Logger::Nodes::CanDriver, "Can Driver has fallen into an invalid state, trying to recover...");
+                    _state = eState::UNINSTALLED;
+                    return;
+                case ESP_ERR_INVALID_ARG:
+                    ASSERT("Invalid arguments, implementation mistake");
+                    return;
             }
 
-            //     if (twai_receive(&message, pdMS_TO_TICKS(10000)) == ESP_OK)
-            // {
-            //     printf("Message received\n");
-            // }
-            // else
-            // {
-            //     printf("Failed to receive message\n");
-            //     return;
-            // }
+            if (!twaiMsgValid(message))
+            {
+                return;
+            }
 
-            // // Process received message
-            // if (message.extd)
-            // {
-            //     printf("Message is in Extended Format\n");
-            // }
-            // else
-            // {
-            //     printf("Message is in Standard Format\n");
-            // }
-            // printf("ID is %d\n", message.identifier);
-            // if (!(message.rtr))
-            // {
-            //     for (int i = 0; i < message.data_length_code; i++)
-            //     {
-            //         printf("Data byte %d = %d\n", i, message.data[i]);
-            //     }
-            // }
+            sCanMsg msg(message);
+            if (msg.msgID == RoverCan2::Constant::eMsgId::INVALID)
+            {
+                LOG::WARN(Logger::Nodes::CanDriver, "Received invalid message dropping");
+                return;
+            }
+
+            decltype(_msgBuffer)::eErrorCode status = _msgBuffer.addValue(msg);
+            switch (status)
+            {
+                case decltype(_msgBuffer)::eErrorCode::SUCCESS:
+                    break;
+                case decltype(_msgBuffer)::eErrorCode::SUCCESS_DATA_LOSS:
+                    LOG::WARN(Logger::Nodes::CanDriver, "Msg buffer full, losing data");
+                    break;
+                case decltype(_msgBuffer)::eErrorCode::ERROR:
+                    LOG::WARN(Logger::Nodes::CanDriver, "Unknown error");
+                    break;
+            }
+        }
+
+        bool twaiMsgValid(const twai_message_t& msg_)
+        {
+            if (msg_.extd)
+            {
+                LOG::WARN(Logger::Nodes::CanDriver, "Received unsupported extended frame, skipping...");
+                return false;
+            }
+            else if (msg_.rtr)
+            {
+                LOG::DEBUG(Logger::Nodes::CanDriver, "Received remote frame, skipping...");
+                return false;
+            }
+            else if (msg_.dlc_non_comp)
+            {
+                LOG::WARN(Logger::Nodes::CanDriver, "Received too long data frame, skipping...");
+                return false;
+            }
+
+            return true;
         }
 
         const gpio_num_t _ioRx;
         const gpio_num_t _ioTx;
 
         eState _state;
+        CircularBuffer<sCanMsg, 10UL> _msgBuffer;
     };
 
 #endif  // defined(ARDUINO_ESP32S3_DEV)

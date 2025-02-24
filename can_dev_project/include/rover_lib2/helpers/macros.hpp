@@ -14,4 +14,7 @@ constexpr std::underlying_type_t<ENUM_T> TO_UNDERLYING(ENUM_T e) noexcept
     ;        \
     ;
 
+#define IN
+#define OUT
+
 #endif  // MACROS_HPP

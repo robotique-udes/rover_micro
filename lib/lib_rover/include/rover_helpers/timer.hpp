@@ -22,23 +22,23 @@ namespace RoverHelpers
     ///         }
     ///     }
     /// }
-    template <typename T, T (*clockFunc)(void)>
+    template <typename TYPE, TYPE (*clockFunc)(void)>
     class Timer
     {
     private:
-        T _prevClock;
-        T _interval;
+        TYPE _prevClock;
+        TYPE _interval;
 
-        void setInterval(T interval);
+        void setInterval(TYPE interval);
 
     public:
         Timer(void);
-        Timer(T interval_);
+        Timer(TYPE interval_);
         ~Timer(void);
-        void init(T interval_);
+        void init(TYPE interval_);
         bool isDone(bool reset_ = 1);
-        void updateInterval(T newInterval_);
-        T getInterval(void);
+        void updateInterval(TYPE newInterval_);
+        TYPE getInterval(void);
         void reset(void);
     };
 }
