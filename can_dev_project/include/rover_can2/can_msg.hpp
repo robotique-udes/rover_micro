@@ -1,0 +1,71 @@
+#ifndef CAN_MSG_HPP
+#define CAN_MSG_HPP
+
+#include "rover_can2/constant.hpp"
+
+#if defined(ARDUINO_ESP32S3_DEV)
+#include "driver/twai.h"
+#include "rover_lib2/helpers/macros.hpp"
+#endif  // defined(ARDUINO_ESP32S3_DEV)
+
+#include <cstdint>
+#include <cstring>
+#include <type_traits>
+
+namespace RoverCan2
+{
+    struct CanMsg
+    {
+#if defined(ARDUINO_ESP32S3_DEV)
+        CanMsg(twai_message_t& twaiMsg_): CanMsg(twaiMsg_.identifier, twaiMsg_.data, twaiMsg_.data_length_code) {}
+#endif  // defined(ARDUINO_ESP32S3_DEV)
+
+        CanMsg(uint32_t canID_, const uint8_t* data_, uint8_t dataLength_)
+        {
+            canID = canID_;
+            dataLength = dataLength_;
+            memcpy(msgData, data_, dataLength_);
+            msgID = this->getMsgID();
+            msgContentID = this->getMsgContentID();
+        }
+
+        uint32_t canID;
+        uint8_t dataLength;
+        uint8_t msgData[8U] = {0};
+        RoverCan2::Constant::eMsgId msgID;
+        uint8_t msgContentID;
+
+      private:
+        RoverCan2::Constant::eMsgId getMsgID()
+        {
+            if (dataLength < (TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)))
+            {
+                return RoverCan2::Constant::eMsgId::INVALID;
+            }
+
+            uint8_t msgIDint = msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::MSG_ID)];
+            RoverCan2::Constant::eMsgId msgID = static_cast<RoverCan2::Constant::eMsgId>(msgIDint);
+
+            if (RoverCan2::Constant::SUPPORTED_MSGS.contains(msgID))
+            {
+                return msgID;
+            }
+            else
+            {
+                return RoverCan2::Constant::eMsgId::INVALID;
+            }
+        };
+
+        uint8_t getMsgContentID()
+        {
+            if (dataLength < (TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)))
+            {
+                return 0U;
+            }
+
+            return msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::MSG_CONTENT_ID)];
+        };
+    };
+}  // namespace RoverCan2
+
+#endif  // CAN_MSG_HPP

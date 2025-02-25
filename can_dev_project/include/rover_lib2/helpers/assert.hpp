@@ -27,14 +27,14 @@ namespace
     inline void ABORT(void)
     {
         SHUTDOWN_PWM();
-        LOG::FLUSH();
+        LOG_FLUSH();
         abort();
     }
 }  // namespace
 
 inline void ASSERT(void)
 {
-    LOG::FATAL(Logger::Nodes::ASSERTS, "Explicit assertion");
+    LOG_FATAL(Logger::Nodes::ASSERTS, "Explicit assertion");
     ABORT();
 }
 
@@ -42,7 +42,7 @@ inline void ASSERT(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    LOG::FATAL(Logger::Nodes::ASSERTS, "Explicit assertion: %s", format, args);
+    LOG_FATAL(Logger::Nodes::ASSERTS, "Explicit assertion: %s", format, args);
     va_end(args);
     ABORT();
 }
@@ -53,7 +53,7 @@ inline void ASSERT(bool condition, const char* format, ...)
     {
         va_list args;
         va_start(args, format);
-        LOG::FATAL(Logger::Nodes::ASSERTS, "Assertion failed: %s", format, args);
+        LOG_FATAL(Logger::Nodes::ASSERTS, "Assertion failed: %s", format, args);
         va_end(args);
         ABORT();
     }

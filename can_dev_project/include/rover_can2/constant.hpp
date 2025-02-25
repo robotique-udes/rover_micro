@@ -2,9 +2,12 @@
 #define __CONSTANT_HPP__
 
 #include <cstdint>
+#include "rover_lib2/helpers/static_array.hpp"
 
 namespace RoverCan2::Constant
 {
+    constexpr size_t CAN_MAX_DATA_LENGTH = 8UL;
+
     enum class eDeviceId : uint16_t
     {
         // RESERVED_FOR_MASTER = 0x000,
@@ -62,8 +65,23 @@ namespace RoverCan2::Constant
         COMPASS = 0x17,
         ARM_CMD = 0x18,
         ARM_STATUS = 0x19,
-        CAM_PAN = 0x20
+        CAM_PAN = 0x20,
+        MOTOR_CMD = 0x21
     };
+
+    constexpr StaticArray<eMsgId, 13UL> SUPPORTED_MSGS = {eMsgId::ERROR_STATE,
+                                                          eMsgId::HEARTBEAT,
+                                                          eMsgId::GPS,
+                                                          eMsgId::PROPULSION_MOTOR_CMD,
+                                                          eMsgId::PROPULSION_MOTOR_STATUS,
+                                                          eMsgId::CAM_CONTROL,
+                                                          eMsgId::LIGHT_CONTROL,
+                                                          eMsgId::SCIENCE,
+                                                          eMsgId::COMPASS,
+                                                          eMsgId::ARM_CMD,
+                                                          eMsgId::ARM_STATUS,
+                                                          eMsgId::CAM_PAN,
+                                                          eMsgId::MOTOR_CMD};
 
     enum class eDataIndex : uint8_t
     {
@@ -78,6 +96,6 @@ namespace RoverCan2::Constant
         WARNING,
         ERROR
     };
-}
+}  // namespace RoverCan2::Constant
 
-#endif // __CONSTANT_HPP__
+#endif  // __CONSTANT_HPP__

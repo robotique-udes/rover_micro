@@ -1,56 +1,51 @@
-#include "Arduino.h"
+#include "rover_can2/can_device.hpp"
+#include "rover_can2/can_driver.hpp"
+#include "rover_can2/msgs/motor_cmd.hpp"
 
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/macros.hpp"
-// #include "rover_helpers/helpers.hpp"
+#include "rover_lib2/helpers/chrono.hpp"
 
-// #include "rover_can2/can_driver.hpp"
-#include "rover_can2/can_device.hpp"
-#include "rover_can2/can_manager.hpp"
+#include "rover_lib2/helpers/static_array.hpp"
 
+#include <Arduino.h>
 #include <functional>
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 
-void CB_BMS(const float& /*msg_*/, int);
-void CB_cameraPan(const uint8_t& /*msg_*/, float a);
-void CB_compass(const std::array<uint8_t, 8UL>& /*msg_*/, const char* a);
+void CB_test(const RoverCan2::Msgs::MotorCmd& msg);
 
 void setup()
 {
     Serial.begin(115200UL);
     delay(1000);
 
-    int a = 10;
-    float b = 20;
-    const char* c = "Hello";
+    RoverCan2::CanDriver driver(GPIO_NUM_47, GPIO_NUM_48);
+    driver.init();
 
-    RoverCan2::CanDevice<RoverCan2::Constant::eDeviceId::BMS, float, decltype(a)> BMS(CB_BMS, a);
-    RoverCan2::CanDevice<RoverCan2::Constant::eDeviceId::CAMERA_PAN, uint8_t, decltype(b)> camPan(CB_cameraPan, b);
-    RoverCan2::CanDevice<RoverCan2::Constant::eDeviceId::COMPASS, std::array<uint8_t, 8UL>, decltype(c)> compass(CB_compass, c);
-
-    RoverCan2::CanManager canManager(GPIO_NUM_47, GPIO_NUM_48, BMS, camPan, compass);
-    canManager.init();
+    RoverCan2::Subscriber<RoverCan2::Msgs::MotorCmd, std::function<void(const RoverCan2::Msgs::MotorCmd&)>> msgSub(
+        [](const auto& msg)
+        {
+            CB_test(msg);
+        });
 
     for (EVER)
     {
-        canManager.update();
+        driver.update();
+
+        if (auto canMsg = driver.getMsg())
+        {
+            msgSub.parseMsg(canMsg.value());
+        }
     }
 }
 
 void loop() {}
 
-void CB_BMS(const float& /*msg_*/, int a)
+void CB_test(const RoverCan2::Msgs::MotorCmd& msg)
 {
-    LOG::INFO(Logger::Nodes::Main, "Here %i", a);
-}
-
-void CB_cameraPan(const uint8_t& /*msg_*/, float a)
-{
-    LOG::INFO(Logger::Nodes::Main, "Here %f", a);
-}
-
-void CB_compass(const std::array<uint8_t, 8UL>& /*msg_*/, const char* a)
-{
-    LOG::INFO(Logger::Nodes::Main, "Here %s", a);
+    LOG_INFO(Logger::Nodes::Main,
+              "Here! Damn ça marche...? msg.cmd: %f, msg.closeLoop: %d",
+              msg.data().cmd,
+              msg.data().closeLoop);
 }

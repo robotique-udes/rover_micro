@@ -9,6 +9,7 @@
 
 #include "rover_lib2/helpers/macros.hpp"
 #include <Stream.h>
+#include <Arduino.h>
 
 #if !defined(GLOBAL_SEVERITY_LEVEL)
 #define GLOBAL_SEVERITY_LEVEL Logger::eSeverityLevels::DEBUG_
@@ -47,7 +48,11 @@ namespace Logger
     {
         struct Node
         {
-            constexpr Node(const char* name_, eNodeState state_): name(name_), state(state_) {}
+            constexpr Node(const char* name_, eNodeState state_):
+                name(name_),
+                state(state_)
+            {
+            }
             const char* const name;
             const eNodeState state;
         };
@@ -60,92 +65,65 @@ namespace Logger
         constexpr const char* COLOR_RESET = "\033[97m";
 
         template<eSeverityLevels SEVERITY>
-        void logInternal(const Nodes::Node& node, const char* format, va_list args)
+        inline void logInternal(const Nodes::Node& node, char* fileName, int lineNb, const char* format, ...)
         {
             if (TO_UNDERLYING(SEVERITY) >= static_cast<size_t>(GLOBAL_SEVERITY_LEVEL)
                 && (TO_UNDERLYING(SEVERITY) >= static_cast<size_t>(NODE_BYPASS_SEVERITY_LEVEL)
                     || node.state == Logger::eNodeState::ON))
             {
                 const auto severityIndex = TO_UNDERLYING(SEVERITY);
-                loggerStream.printf("%s[%lu][%s][%s]: ",
+                loggerStream.printf("%s[%lu][%s]%s:%d: ",
                                     SEVERITY_COLORS[severityIndex],
                                     millis(),
                                     SEVERITY_NAMES[severityIndex],
-                                    node.name);
+                                    fileName,
+                                    lineNb);
+                va_list args;
+                va_start(args, format);
                 loggerStream.vprintf(format, args);
+                va_end(args);
                 loggerStream.printf("\n%s", COLOR_RESET);
             }
         }
     }  // namespace
 }  // namespace Logger
 
-namespace LOG
-{
-    inline void DEBUG(const Logger::Nodes::Node& node, const char* format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        Logger::logInternal<Logger::eSeverityLevels::DEBUG_>(node, format, args);
-        va_end(args);
-    }
+#define LOG_DEBUG(NODE, FMT, ...) \
+    Logger::logInternal<Logger::eSeverityLevels::DEBUG_>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
 
-    inline void INFO(const Logger::Nodes::Node& node, const char* format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        Logger::logInternal<Logger::eSeverityLevels::INFO>(node, format, args);
-        va_end(args);
-    }
+#define LOG_INFO(NODE, FMT, ...) \
+    Logger::logInternal<Logger::eSeverityLevels::INFO>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
 
-    inline void WARN(const Logger::Nodes::Node& node, const char* format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        Logger::logInternal<Logger::eSeverityLevels::WARN>(node, format, args);
-        va_end(args);
-    }
+#define LOG_WARN(NODE, FMT, ...) \
+    Logger::logInternal<Logger::eSeverityLevels::WARN>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
 
-    inline void ERROR(const Logger::Nodes::Node& node, const char* format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        Logger::logInternal<Logger::eSeverityLevels::ERROR>(node, format, args);
-        va_end(args);
-    }
+#define LOG_ERROR(NODE, FMT, ...) \
+    Logger::logInternal<Logger::eSeverityLevels::ERROR>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
 
-    inline void FATAL(const Logger::Nodes::Node& node, const char* format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        Logger::logInternal<Logger::eSeverityLevels::FATAL>(node, format, args);
-        va_end(args);
-    }
+#define LOG_FATAL(NODE, FMT, ...) \
+    Logger::logInternal<Logger::eSeverityLevels::FATAL>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
 
-    /**
-     * @brief Block execution until the Logger's TX buffer is empty
-     *
-     */
-    inline void FLUSH(void)
-    {
-        Logger::loggerStream.flush();
-    }
-}  // namespace LOG
+/**
+ * @brief Block execution until the Logger's TX buffer is empty
+ *
+ */
+#define LOG_FLUSH() Logger::loggerStream.flush();
 
-#else   // defined(VERBOSE)
-namespace LOG
-{
-    inline void DEBUG(const Logger::Nodes::NodeBase&, const char*, ...) {}
-    inline void INFO(const Logger::Nodes::NodeBase&, const char*, ...) {}
-    inline void WARN(const Logger::Nodes::NodeBase&, const char*, ...) {}
-    inline void ERROR(const Logger::Nodes::NodeBase&, const char*, ...) {}
-    inline void FATAL(const Logger::Nodes::NodeBase&, const char*, ...) {}
+#else  // defined(VERBOSE)
+#define DEFINE_LOG_NODE(name_, state_)
 
-    /**
-     * @brief Block execution until the Logger's TX buffer is empty
-     *
-     */
-    inline void FLUSH(void) {}
-}  // namespace LOG
+#define LOG_DEBUG(NODE, FMT, ...)
+#define LOG_INFO(NODE, FMT, ...)
+#define LOG_WARN(NODE, FMT, ...)
+#define LOG_ERROR(NODE, FMT, ...)
+#define LOG_FATAL(NODE, FMT, ...)
+
+/**
+ * @brief Block execution until the Logger's TX buffer is empty
+ *
+ */
+#define LOG_FLUSH()
+
 #endif  // defined(VERBOSE)
 
 #endif  // __LOG_H__

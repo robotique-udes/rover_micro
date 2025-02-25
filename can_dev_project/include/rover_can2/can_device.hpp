@@ -1,50 +1,80 @@
-#ifndef CAN_DEVICE
-#define CAN_DEVICE
+#ifndef CAN_DEVICE_HPP
+#define CAN_DEVICE_HPP
 
 #include "rover_can2/constant.hpp"
-#include "rover_can2/can_driver.hpp"
+#include "rover_can2/msgs/msg.hpp"
+
+#include "rover_lib2/rover_object.hpp"
+#include "rover_lib2/helpers/static_array.hpp"
+#include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/helpers/assert.hpp"
+
+DEFINE_LOG_NODE(CanDevice, Logger::eNodeState::OFF)
 
 namespace RoverCan2
 {
-    class CanDeviceBase
+    template<typename MSG_TYPE, typename CALLBACK_TYPE>
+    class Subscriber
     {
+        static_assert(std::is_base_of<Msgs::Msg, MSG_TYPE>::value,
+                      "Subscriber's message type must be of base class RoverCan2::Msgs::Msg");
+
       public:
-        virtual void update() = 0;
-        virtual constexpr RoverCan2::Constant::eDeviceId getID(void) = 0;
-        virtual bool loadMessage(const CanDriver::sCanMsg msg_) = 0;
-    };
-
-    template<RoverCan2::Constant::eDeviceId CAN_ID, typename MSG_TYPE, typename CONTEXT_TYPE>
-    class CanDevice : public CanDeviceBase
-    {
-      public:
-        typedef void (*callback_t)(const MSG_TYPE& msg_, CONTEXT_TYPE context_);
-
-        CanDevice(callback_t callbackFunc_, auto& context_): _callbackFunc(callbackFunc_), _context(context_) {}
-
-        void update(void) override
+        explicit Subscriber(CALLBACK_TYPE callback_):
+            _callback(callback_)
         {
-            (*_callbackFunc)(_msg, _context);
         }
 
-        constexpr RoverCan2::Constant::eDeviceId getID(void) override
+        void parseMsg(const CanMsg& msgCan_)
         {
-            return CAN_ID;
-        }
+            auto errorCode = _msg.loadMsg(msgCan_);
+            LOG_DEBUG(Logger::Nodes::CanDevice, "_msg.loadMsg(msgCan_) = %u", TO_UNDERLYING(errorCode));
 
-        bool loadMessage(const CanDriver::sCanMsg /*msg_*/)
-        {
-            // TODO: Process msg and call callback accordingly
-            (*_callbackFunc)(_msg, _context);
-
-            return false;
+            switch (errorCode)
+            {
+                case Msgs::Msg::eLoadMsgCode::SUCCESS_COMPLETE:
+                    LOG_DEBUG(Logger::Nodes::CanDevice, "Loaded last part of message, calling related callback");
+                    this->_callback(_msg);
+                    break;
+                case Msgs::Msg::eLoadMsgCode::SUCCESS_INCOMPLETE:
+                    LOG_DEBUG(Logger::Nodes::CanDevice, "Loaded a part of message, waiting on for the reset...");
+                    break;
+                case Msgs::Msg::eLoadMsgCode::NOT_CONCERNED:
+                    LOG_DEBUG(Logger::Nodes::CanDevice, "Parsed msg wasn't meant for this subscriber");
+                    break;
+                case Msgs::Msg::eLoadMsgCode::ERROR_MISSMATCH:
+                    LOG_ERROR(Logger::Nodes::CanDevice, "Missmatch between sender and receiver, dropping message");
+                    break;
+                case Msgs::Msg::eLoadMsgCode::ERROR_IMPLEMENTATION:
+                    ASSERT(false, "Message implementation is eronous, expect undefined behavior");
+                    break;
+            }
         }
 
       private:
-        callback_t _callbackFunc;
         MSG_TYPE _msg;
-        CONTEXT_TYPE& _context;
+        CALLBACK_TYPE _callback;
+    };
+
+    // Factory for deduction
+    template<typename MSG_TYPE, typename CALLBACK_TYPE>
+    Subscriber<MSG_TYPE, CALLBACK_TYPE> createSubscription(CALLBACK_TYPE&& callback)
+    {
+        return Subscriber<MSG_TYPE, CALLBACK_TYPE>(std::forward<CALLBACK_TYPE>(callback));
+    }
+
+    class CanDevice : public RoverObject
+    {
+      public:
+        CanDevice(RoverCan2::Constant::eDeviceId id_):
+            _id(id_)
+        {
+        }
+
+      private:
+        RoverCan2::Constant::eDeviceId _id;
+        // StaticArray<RoverCan2::Constant::eMsgId> _subscribedMsgId;
     };
 }  // namespace RoverCan2
 
-#endif  // CAN_DEVICE
+#endif  // CAN_DEVICE_HPP
