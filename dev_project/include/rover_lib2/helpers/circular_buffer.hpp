@@ -28,13 +28,14 @@ class CircularBuffer
     /**
      * @brief Adds a new value to the circular buffer
      *
-     * @param value Reference to value, value is copied, no need to keep it alive
+     * @param value Takes reference to value but value is copied, no need to 
+     * keep it alive
      * @return eErrorCode::SUCCESS on success, eErrorCode::SUCCESS_DATA_LOSS
      * buffer is full and the data was added by overwriting unread data.
      */
-    eErrorCode addValue(const TYPE& value)
+    eErrorCode addValue(const TYPE& value_)
     {
-        _buffer[_addCursor] = value;
+        _buffer[_addCursor] = value_;
         _addCursor = (_addCursor + 1UL) % _buffer.size();
 
         if (_size < _buffer.size())
@@ -48,7 +49,7 @@ class CircularBuffer
         }
     }
 
-    std::optional<TYPE> getValue()
+    std::optional<TYPE> getValue(void)
     {
         if (_size == 0)
         {
@@ -77,7 +78,7 @@ class CircularBuffer
         this->init();
     }
 
-    std::size_t size() const
+    std::size_t size(void) const
     {
         return _size;
     }

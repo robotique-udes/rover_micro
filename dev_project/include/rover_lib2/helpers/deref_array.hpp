@@ -5,6 +5,8 @@
 #include <iterator>
 #include <type_traits>
 
+#include "rover_lib2/helpers/assert.hpp"
+
 namespace RoverLib2
 {
     template<typename TYPE, std::size_t NB_ELEM>
@@ -14,62 +16,62 @@ namespace RoverLib2
         constexpr DerefArray() noexcept: _pData(nullptr) {}
         constexpr explicit DerefArray(TYPE& buffer) noexcept: _pData(&buffer) {}
 
-        [[nodiscard]] constexpr TYPE& at(std::size_t pos)
+        constexpr TYPE& at(std::size_t pos)
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             ASSERT(pos < NB_ELEM, "DerefArray::at: pos out of range");
             return _pData[pos];
         }
 
-        [[nodiscard]] constexpr const TYPE& at(std::size_t pos) const
+        constexpr const TYPE& at(std::size_t pos) const
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             ASSERT(pos < NB_ELEM, "DerefArray::at: pos out of range");
             return _pData[pos];
         }
 
-        [[nodiscard]] constexpr TYPE& operator[](std::size_t pos) noexcept
+        constexpr TYPE& operator[](std::size_t pos) noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData[pos];
         }
 
-        [[nodiscard]] constexpr const TYPE& operator[](std::size_t pos) const noexcept
+        constexpr const TYPE& operator[](std::size_t pos) const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData[pos];
         }
 
-        [[nodiscard]] constexpr TYPE& front() noexcept
+        constexpr TYPE& front() noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData[0];
         }
 
-        [[nodiscard]] constexpr const TYPE& front() const noexcept
+        constexpr const TYPE& front() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData[0];
         }
 
-        [[nodiscard]] constexpr TYPE& back() noexcept
+        constexpr TYPE& back() noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData[NB_ELEM - 1];
         }
 
-        [[nodiscard]] constexpr const TYPE& back() const noexcept
+        constexpr const TYPE& back() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData[NB_ELEM - 1];
         }
 
-        [[nodiscard]] TYPE* data() noexcept
+        TYPE* data() noexcept
         {
             return _pData;
         }
 
-        [[nodiscard]] constexpr const TYPE* data() const noexcept
+        constexpr const TYPE* data() const noexcept
         {
             return _pData;
         }
@@ -79,90 +81,89 @@ namespace RoverLib2
             _pData = ptr;
         }
 
-        [[nodiscard]] constexpr TYPE* begin() noexcept
+        constexpr TYPE* begin() noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData;
         }
 
-        [[nodiscard]] constexpr const TYPE* begin() const noexcept
+        constexpr const TYPE* begin() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData;
         }
 
-        [[nodiscard]] constexpr const TYPE* cbegin() const noexcept
+        constexpr const TYPE* cbegin() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData;
         }
 
-        [[nodiscard]] constexpr TYPE* end() noexcept
+        constexpr TYPE* end() noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData + NB_ELEM;
         }
 
-        [[nodiscard]] constexpr const TYPE* end() const noexcept
+        constexpr const TYPE* end() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData + NB_ELEM;
         }
 
-        [[nodiscard]] constexpr const TYPE* cend() const noexcept
+        constexpr const TYPE* cend() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return _pData + NB_ELEM;
         }
 
-        [[nodiscard]] constexpr std::reverse_iterator<TYPE*> rbegin() noexcept
+        constexpr std::reverse_iterator<TYPE*> rbegin() noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return std::reverse_iterator<TYPE*>(end());
         }
 
-        [[nodiscard]] constexpr std::reverse_iterator<const TYPE*> rbegin() const noexcept
+        constexpr std::reverse_iterator<const TYPE*> rbegin() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return std::reverse_iterator<const TYPE*>(end());
         }
 
-        [[nodiscard]] constexpr std::reverse_iterator<const TYPE*> crbegin() const noexcept
+        constexpr std::reverse_iterator<const TYPE*> crbegin() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return std::reverse_iterator<const TYPE*>(end());
         }
 
-        [[nodiscard]] constexpr std::reverse_iterator<TYPE*> rend() noexcept
+        constexpr std::reverse_iterator<TYPE*> rend() noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return std::reverse_iterator<TYPE*>(begin());
         }
 
-        [[nodiscard]] constexpr std::reverse_iterator<const TYPE*> rend() const noexcept
+        constexpr std::reverse_iterator<const TYPE*> rend() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return std::reverse_iterator<const TYPE*>(begin());
         }
 
-        [[nodiscard]] constexpr std::reverse_iterator<const TYPE*> crend() const noexcept
+        constexpr std::reverse_iterator<const TYPE*> crend() const noexcept
         {
             ASSERT(_pData != nullptr, "Data pointer is null");
             return std::reverse_iterator<const TYPE*>(begin());
         }
 
-        // Capacity
-        [[nodiscard]] constexpr bool empty() const noexcept
+        constexpr bool empty() const noexcept
         {
             return NB_ELEM == 0;
         }
 
-        [[nodiscard]] constexpr std::size_t size() const noexcept
+        constexpr std::size_t size() const noexcept
         {
             return NB_ELEM;
         }
 
-        [[nodiscard]] constexpr std::size_t max_size() const noexcept
+        constexpr std::size_t max_size() const noexcept
         {
             return NB_ELEM;
         }
@@ -181,7 +182,7 @@ namespace RoverLib2
             std::swap(_pData, other._pData);
         }
 
-        [[nodiscard]] constexpr bool valid() const noexcept
+        constexpr bool valid() const noexcept
         {
             return _pData != nullptr;
         }
@@ -200,7 +201,7 @@ namespace RoverLib2
     }  // namespace DerefArray_
 
     template<typename TYPE, std::size_t NB_ELEM>
-    [[nodiscard]] constexpr bool operator==(const DerefArray<TYPE, NB_ELEM>& lhs, const DerefArray<TYPE, NB_ELEM>& rhs)
+    constexpr bool operator==(const DerefArray<TYPE, NB_ELEM>& lhs, const DerefArray<TYPE, NB_ELEM>& rhs)
     {
         ASSERT(lhs.data() != nullptr && rhs.data() != nullptr, "Data pointer is null");
 
@@ -215,7 +216,7 @@ namespace RoverLib2
     }
 
     template<typename TYPE, std::size_t NB_ELEM>
-    [[nodiscard]] constexpr auto operator<=>(const DerefArray<TYPE, NB_ELEM>& lhs, const DerefArray<TYPE, NB_ELEM>& rhs)
+    constexpr auto operator<=>(const DerefArray<TYPE, NB_ELEM>& lhs, const DerefArray<TYPE, NB_ELEM>& rhs)
     {
         ASSERT(lhs.data() != nullptr && rhs.data() != nullptr, "Data pointer is null");
 

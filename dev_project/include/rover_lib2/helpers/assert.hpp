@@ -1,14 +1,18 @@
 #ifndef ASSERT_HPP
 #define ASSERT_HPP
 
-#if !defined(ARDUINO_ESP32S3_DEV)
-#error CPU not supported
-#endif
-
+#if defined(ARDUINO_ESP32S3_DEV)
 #include "driver/ledc.h"
 #include "rover_lib2/helpers/log.hpp"
 #include <cstdarg>
 
+#elif defined(__linux__)
+#include <cstdarg>
+#include <iostream>
+
+#endif  // defined(ARDUINO_ESP32S3_DEV)
+
+#if defined(ARDUINO_ESP32S3_DEV)
 DEFINE_LOG_NODE(ASSERTS, Logger::eNodeState::ON);
 
 namespace
@@ -58,5 +62,47 @@ inline void ASSERT(bool condition, const char* format, ...)
         ABORT();
     }
 }
+#elif defined(__linux__)  // defined(ARDUINO_ESP32S3_DEV)
+namespace
+{
+    [[noreturn]] inline void ABORT(const std::string& message)
+    {
+        /* TODO Validate Ros Node assert showing*/
+        std::cerr << "Process called abort() because: " << message << std::endl;
+        abort();
+    }
+}  // namespace
+
+inline void ASSERT(void)
+{
+    ABORT("Explicit assertion failure.");
+}
+
+inline void ASSERT(const char* format, ...)
+{
+    char buffer[256];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    ABORT(std::string("Explicit assertion: ") + buffer);
+}
+
+inline void ASSERT(bool condition, const char* format, ...)
+{
+    if (!condition)
+    {
+        char buffer[256];
+        va_list args;
+        va_start(args, format);
+        vsnprintf(buffer, sizeof(buffer), format, args);
+        va_end(args);
+
+        ABORT(std::string("Assertion failed: ") + buffer);
+    }
+}
+
+#endif  // defined(ARDUINO_ESP32S3_DEV)
 
 #endif  // ASSERT_HPP

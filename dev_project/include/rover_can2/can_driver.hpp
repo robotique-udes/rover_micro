@@ -13,7 +13,7 @@
 #include "optional"
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
-DEFINE_LOG_NODE(CanDriver, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(CanDriver, Logger::eNodeState::ON);
 
 namespace RoverCan2
 {

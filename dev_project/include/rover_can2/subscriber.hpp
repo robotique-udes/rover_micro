@@ -13,21 +13,17 @@ DEFINE_LOG_NODE(Subscriber, Logger::eNodeState::OFF)
 
 namespace RoverCan2
 {
-    template<typename MSG_TYPE>
     class SubscriberBase
     {
-        static_assert(std::is_base_of<Msgs::Msg, MSG_TYPE>::value,
-                      "Subscriber's message type must be of base class RoverCan2::Msgs::Msg");
-
       public:
-        void parseMsg(const CanMsg& msgCan_)
+        Msgs::Msg::eLoadMsgCode parseMsg(const CanMsg& msgCan_)
         {
-            Msgs::Msg::eLoadMsgCode errorCode = _msg.loadMsg(msgCan_);
-            switch (errorCode)
+            Msgs::Msg::eLoadMsgCode loadCode = this->getMsg().get().loadMsg(msgCan_);
+            switch (loadCode)
             {
                 case Msgs::Msg::eLoadMsgCode::SUCCESS_COMPLETE:
                     LOG_DEBUG(Logger::Nodes::Subscriber, "Loaded last part of message, calling related callback");
-                    this->processCallback(_msg);
+                    this->triggerCallback();
                     break;
                 case Msgs::Msg::eLoadMsgCode::SUCCESS_INCOMPLETE:
                     LOG_DEBUG(Logger::Nodes::Subscriber, "Loaded a part of message, waiting on for the reset...");
@@ -42,9 +38,33 @@ namespace RoverCan2
                     ASSERT(false, "Message implementation is eronous, expect undefined behavior");
                     break;
             }
+
+            return loadCode;
         }
 
       protected:
+        virtual std::reference_wrapper<Msgs::Msg> getMsg(void) = 0;
+        virtual void triggerCallback(void) = 0;
+    };
+
+    template<typename MSG_TYPE>
+    class SubscriberBaseT : public SubscriberBase
+    {
+        static_assert(std::is_base_of<Msgs::Msg, MSG_TYPE>::value,
+                      "Subscriber's message type must be of base class RoverCan2::Msgs::Msg");
+
+      public:
+      protected:
+        std::reference_wrapper<Msgs::Msg> getMsg(void)
+        {
+            return this->_msg;
+        }
+
+        void triggerCallback(void)
+        {
+            this->processCallback(_msg);
+        }
+
         virtual void processCallback(const MSG_TYPE msg_) = 0;
 
       private:
@@ -61,10 +81,8 @@ namespace RoverCan2
      * @tparam CLASS_TYPE
      */
     template<typename MSG_TYPE, typename CALLBACK_TYPE>
-    class SubscriberStandalone : public SubscriberBase<MSG_TYPE>
+    class SubscriberStandalone : public SubscriberBaseT<MSG_TYPE>
     {
-        static_assert(std::is_trivially_copyable_v<CALLBACK_TYPE>,
-                      "Can't provide heap allocated func ptr, use lambda type instead");
         static_assert(std::is_invocable_r<void, CALLBACK_TYPE, const MSG_TYPE&>::value,
                       "Callback must be of type: (void)(const MSG_TYPE&)");
 
@@ -81,7 +99,7 @@ namespace RoverCan2
         }
 
       private:
-        CALLBACK_TYPE _callback;
+        CALLBACK_TYPE* _callback;
     };
 
     /**
@@ -93,7 +111,7 @@ namespace RoverCan2
      * @tparam CLASS_TYPE
      */
     template<typename MSG_TYPE, typename CLASS_TYPE>
-    class SubscriberMember : public SubscriberBase<MSG_TYPE>
+    class SubscriberMember : public SubscriberBaseT<MSG_TYPE>
     {
         typedef void (CLASS_TYPE::*MemberCallback_t)(const MSG_TYPE&);
 

@@ -1,6 +1,6 @@
 #include "rover_can2/can_driver.hpp"
 #include "rover_can2/msgs/motor_cmd.hpp"
-#include "rover_can2/subscriber.hpp"
+#include "rover_can2/can_device.hpp"
 
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/macros.hpp"
@@ -13,20 +13,8 @@
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 
-void CB_test(const RoverCan2::Msgs::MotorCmd& msg);
+void CB_test(const RoverCan2::Msgs::TestMsg& msg);
 
-class CanDevice : public RoverObject
-{
-  public:
-    CanDevice(RoverCan2::Constant::eDeviceId id_):
-        _id(id_)
-    {
-    }
-
-  private:
-    RoverCan2::Constant::eDeviceId _id;
-    // StaticArray<RoverCan2::Constant::eMsgId> _subscribedMsgId;
-};
 
 class MyDevice
 {
@@ -42,18 +30,20 @@ class MyDevice
     }
 
   private:
-    void CB_motorCmd(const RoverCan2::Msgs::MotorCmd& msg_)
+    void CB_motorCmd(const RoverCan2::Msgs::TestMsg& msg_)
     {
         LOG_INFO(Logger::Nodes::Main, "Working!");
     }
 
-    RoverCan2::SubscriberMember<RoverCan2::Msgs::MotorCmd, MyDevice> _subMotorCmd;
+    RoverCan2::SubscriberMember<RoverCan2::Msgs::TestMsg, MyDevice> _subMotorCmd;
 };
 
 void setup()
 {
     Serial.begin(115200UL);
     delay(1000);
+
+    Serial.print("Test");
 
     RoverCan2::CanDriver driver(GPIO_NUM_47, GPIO_NUM_48);
     driver.init();
@@ -73,7 +63,7 @@ void setup()
 
 void loop() {}
 
-void CB_test(const RoverCan2::Msgs::MotorCmd& msg)
+void CB_test(const RoverCan2::Msgs::TestMsg& msg)
 {
     LOG_INFO(Logger::Nodes::Main,
              "Here! Damn ça marche...? msg.cmd: %f, msg.closeLoop: %d",

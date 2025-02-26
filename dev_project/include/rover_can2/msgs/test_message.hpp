@@ -1,5 +1,5 @@
-#ifndef MOTOR_CMD_HPP
-#define MOTOR_CMD_HPP
+#ifndef TEST_MSG_HPP
+#define TEST_MSG_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
@@ -14,8 +14,9 @@ DEFINE_LOG_NODE(MotorCmd, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
 {
-    class MotorCmd : public Msg
+    class TestMsg : public Msg
     {
+      public:
         enum class eMsgContentID : uint8_t
         {
             INVALID = 0x00,
@@ -24,6 +25,7 @@ namespace RoverCan2::Msgs
             eLAST,
         };
 
+      private:
         struct sMsgData
         {
             float cmd;
@@ -34,7 +36,7 @@ namespace RoverCan2::Msgs
             = {eMsgContentID::CMD, eMsgContentID::CLOSE_LOOP};
 
       public:
-        MotorCmd():
+        TestMsg():
             Msg(Constant::eMsgId::MOTOR_CMD)
         {
             _data.cmd = static_cast<decltype(_data.cmd)>(0);
@@ -103,4 +105,4 @@ namespace RoverCan2::Msgs
     };
 }  // namespace RoverCan2::Msgs
 
-#endif  // MOTOR_CMD_HPP
+#endif  // TEST_MSG_HPP

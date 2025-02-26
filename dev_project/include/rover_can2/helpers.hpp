@@ -1,12 +1,9 @@
 #ifndef HELPERS_HPP
 #define HELPERS_HPP
 
-#if defined(ARDUINO_ESP32S3_DEV)
 #include <cstdint>
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/log.hpp"
-#endif  // defined(ARDUINO_ESP32S3_DEV)
-
 #include "rover_can2/constant.hpp"
 #include "rover_can2/can_msg.hpp"
 
@@ -19,6 +16,12 @@ namespace RoverCan2::Helpers
     template<typename ROVER_MSG_CONTENT_TYPE>
     constexpr bool DATA_LENGTH_MATCHES_MSG_CONTENT(uint8_t dataLength_)
     {
+        static_assert(!std::is_pointer_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be a pointer type");
+        static_assert(!std::is_reference_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be reference type");
+        static_assert(!std::is_void_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be void type");
+        static_assert(!std::is_function_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be a func pointer type");
+        static_assert(sizeof(ROVER_MSG_CONTENT_TYPE) > 0, "Msg data must be a complete type");
+
         LOG_DEBUG(Logger::Nodes::Can_Helpers,
                   "DATA_LENGTH_MATCHES_MSG_CONTENT(dataLength_ = %u): dataLength_ == (sizeof(ROVER_MSG_CONTENT_TYPE) - "
                   "TO_UNDERLYING(Constant::eDataIndex::START_OF_DATA)) -> %u == %u - %u ?)",
