@@ -12,8 +12,6 @@
 
 DEFINE_LOG_NODE(MotorCmd, Logger::eNodeState::OFF)
 
-#warning TODO: Implement Watchdog on all value
-
 namespace RoverCan2::Msgs
 {
     class MotorCmd : public Msg

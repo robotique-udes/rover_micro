@@ -21,13 +21,12 @@ void setup()
     delay(1000);
 
     RoverCan2::CanDriver driver(GPIO_NUM_47, GPIO_NUM_48);
+    RoverCan2::CanDriver driver2(GPIO_NUM_47, GPIO_NUM_48);
+    RoverCan2::CanDriver driver3(GPIO_NUM_47, GPIO_NUM_48);
+    RoverCan2::CanDriver driver4(GPIO_NUM_47, GPIO_NUM_48);
+    RoverCan2::CanDriver driver5(GPIO_NUM_47, GPIO_NUM_48);
+    RoverCan2::CanDriver driver6(GPIO_NUM_47, GPIO_NUM_48);
     driver.init();
-
-    RoverCan2::Subscriber<RoverCan2::Msgs::MotorCmd, std::function<void(const RoverCan2::Msgs::MotorCmd&)>> msgSub(
-        [](const auto& msg)
-        {
-            CB_test(msg);
-        });
 
     for (EVER)
     {
@@ -35,7 +34,7 @@ void setup()
 
         if (auto canMsg = driver.getMsg())
         {
-            msgSub.parseMsg(canMsg.value());
+            // msgSub.parseMsg(canMsg.value());
         }
     }
 }
@@ -45,7 +44,7 @@ void loop() {}
 void CB_test(const RoverCan2::Msgs::MotorCmd& msg)
 {
     LOG_INFO(Logger::Nodes::Main,
-              "Here! Damn ça marche...? msg.cmd: %f, msg.closeLoop: %d",
-              msg.data().cmd,
-              msg.data().closeLoop);
+             "Here! Damn ça marche...? msg.cmd: %f, msg.closeLoop: %d",
+             msg.data().cmd,
+             msg.data().closeLoop);
 }

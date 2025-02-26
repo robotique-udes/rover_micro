@@ -18,6 +18,10 @@ namespace RoverCan2
     {
         static_assert(std::is_base_of<Msgs::Msg, MSG_TYPE>::value,
                       "Subscriber's message type must be of base class RoverCan2::Msgs::Msg");
+        static_assert(std::is_trivially_copyable_v<CALLBACK_TYPE>,
+                      "Can't provide heap allocated func ptr, use lambda type instead");
+        static_assert(std::is_invocable_r<void, CALLBACK_TYPE, const MSG_TYPE&>::value,
+                      "Callback must be of type: (void)(const MSG_TYPE&)");
 
       public:
         explicit Subscriber(CALLBACK_TYPE callback_):
@@ -27,9 +31,7 @@ namespace RoverCan2
 
         void parseMsg(const CanMsg& msgCan_)
         {
-            auto errorCode = _msg.loadMsg(msgCan_);
-            LOG_DEBUG(Logger::Nodes::CanDevice, "_msg.loadMsg(msgCan_) = %u", TO_UNDERLYING(errorCode));
-
+            Msgs::Msg::eLoadMsgCode errorCode = _msg.loadMsg(msgCan_);
             switch (errorCode)
             {
                 case Msgs::Msg::eLoadMsgCode::SUCCESS_COMPLETE:
