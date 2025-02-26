@@ -39,7 +39,13 @@ namespace RoverCan2::Msgs
          *    ERROR_MISSMATCH: Missmatching message definition between the one received and the local on the device
          *    ERROR_IMPLEMENTATION: Shouldn't return this error code, it mean the message definition itself is erronous
          */
-        virtual eLoadMsgCode loadMsg(const CanMsg& msg) = 0;
+        virtual eLoadMsgCode loadMsg(const CanMsg&) = 0;
+
+        /**
+         * @brief
+         *
+         */
+        virtual void sendMsg(const Constant::eDeviceId&) = 0;
 
       private:
         const RoverCan2::Constant::eMsgId _msgID;

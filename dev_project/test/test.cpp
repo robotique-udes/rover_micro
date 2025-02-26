@@ -9,7 +9,8 @@ static_assert(false, "Not implemented yet")
 #include "native/helpers/deref_array.hpp"
 
 #include "native/rover_can2/helpers.hpp"
-#include "native/rover_can2/subscriber.hpp"
+#include "native/rover_can2/subscriber_standalone.hpp"
+#include "native/rover_can2/subscriber_member.hpp"
 #include "native/rover_can2/can_device.hpp"
 
 int main(int argc, char* argv[])

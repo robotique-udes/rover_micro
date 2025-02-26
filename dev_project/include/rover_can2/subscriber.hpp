@@ -9,6 +9,8 @@
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/assert.hpp"
 
+#include <functional>
+
 DEFINE_LOG_NODE(Subscriber, Logger::eNodeState::OFF)
 
 namespace RoverCan2

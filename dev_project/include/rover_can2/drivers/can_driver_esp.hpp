@@ -1,24 +1,27 @@
-#ifndef CAN_DRIVER_HPP
-#define CAN_DRIVER_HPP
+#ifndef CAN_DRIVER_ESP_HPP
+#define CAN_DRIVER_ESP_HPP
 
-#include "rover_can2/can_msg.hpp"
+#include "rover_can2/drivers/can_driver.hpp"
 
 #if defined(ARDUINO_ESP32S3_DEV)
+#include "rover_can2/can_msg.hpp"
+#include "rover_lib2/rover_object.hpp"
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/assert.hpp"
+#include "optional"
+
 #include "rover_lib2/helpers/circular_buffer.hpp"
 
 #include "driver/gpio.h"
 #include "driver/twai.h"
-#include "optional"
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
-DEFINE_LOG_NODE(CanDriver, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(CanDriverESP32, Logger::eNodeState::ON);
 
 namespace RoverCan2
 {
 #if defined(ARDUINO_ESP32S3_DEV)
-    class CanDriver
+    class CanDriverESP : public CanDriver
     {
       public:
         static constexpr twai_timing_config_t CAN_SPEED_CONFIG = TWAI_TIMING_CONFIG_1MBITS();
@@ -26,7 +29,7 @@ namespace RoverCan2
         static constexpr twai_filter_config_t TWAI_ID_FILTER = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
         static constexpr TickType_t MESSAGE_RECV_TIMEOUT = 0U;  // Doesn't wait if no msg available
-        
+
         static constexpr size_t CAN_DATA_LENGTH = TWAI_FRAME_MAX_DLC;
         static_assert(Constant::CAN_MAX_DATA_LENGTH == CAN_DATA_LENGTH);
 
@@ -38,15 +41,20 @@ namespace RoverCan2
         };
 
       public:
-        CanDriver(gpio_num_t ioRx_, gpio_num_t ioTx_): _ioRx(ioRx_), _ioTx(ioTx_), _state(eState::UNINSTALLED) {}
+        CanDriverESP(gpio_num_t ioRx_, gpio_num_t ioTx_):
+            _ioRx(ioRx_),
+            _ioTx(ioTx_),
+            _state(eState::UNINSTALLED)
+        {
+        }
 
-        void init(void)
+        void init(void) override
         {
             this->installDriver();
             this->startDriver();
         }
 
-        void update(void)
+        void update(void) override
         {
             switch (_state)
             {
@@ -83,11 +91,11 @@ namespace RoverCan2
             switch (successCode)
             {
                 case ESP_OK:
-                    LOG_DEBUG(Logger::Nodes::CanDriver, "Twai driver installed successfully");
+                    LOG_DEBUG(Logger::Nodes::CanDriverESP32, "Twai driver installed successfully");
                     _state = eState::INSTALLED;
                     break;
                 case ESP_ERR_INVALID_STATE:
-                    LOG_WARN(Logger::Nodes::CanDriver, "Can't install twai driver in current state (%u)", TO_UNDERLYING(_state));
+                    LOG_WARN(Logger::Nodes::CanDriverESP32, "Can't install twai driver in current state (%u)", TO_UNDERLYING(_state));
                     break;
                 case ESP_ERR_INVALID_ARG:
                     ASSERT("Can't install twai driver with specified arguments");
@@ -107,11 +115,11 @@ namespace RoverCan2
             switch (successCode)
             {
                 case ESP_OK:
-                    LOG_DEBUG(Logger::Nodes::CanDriver, "Twai driver started successfully");
+                    LOG_DEBUG(Logger::Nodes::CanDriverESP32, "Twai driver started successfully");
                     _state = eState::RUNNING;
                     break;
                 case ESP_ERR_INVALID_STATE:
-                    LOG_WARN(Logger::Nodes::CanDriver, "Can't install twai driver in current state %u", TO_UNDERLYING(_state));
+                    LOG_WARN(Logger::Nodes::CanDriverESP32, "Can't install twai driver in current state %u", TO_UNDERLYING(_state));
                     break;
                 default:
                     ASSERT("Can't start twai driver... Unknown error %d", successCode);
@@ -127,12 +135,12 @@ namespace RoverCan2
             switch (statusCode)
             {
                 case ESP_OK:
-                    LOG_DEBUG(Logger::Nodes::CanDriver, "New message received");
+                    LOG_DEBUG(Logger::Nodes::CanDriverESP32, "New message received");
                     break;
                 case ESP_ERR_TIMEOUT:
                     return;
                 case ESP_ERR_INVALID_STATE:
-                    LOG_ERROR(Logger::Nodes::CanDriver, "Can Driver has fallen into an invalid state, trying to recover...");
+                    LOG_ERROR(Logger::Nodes::CanDriverESP32, "Can Driver has fallen into an invalid state, trying to recover...");
                     _state = eState::UNINSTALLED;
                     return;
                 case ESP_ERR_INVALID_ARG:
@@ -148,7 +156,7 @@ namespace RoverCan2
             CanMsg msg(message);
             if (msg.msgID == RoverCan2::Constant::eMsgId::INVALID)
             {
-                LOG_WARN(Logger::Nodes::CanDriver, "Received invalid message dropping");
+                LOG_WARN(Logger::Nodes::CanDriverESP32, "Received invalid message dropping");
                 return;
             }
 
@@ -158,10 +166,10 @@ namespace RoverCan2
                 case decltype(_msgBuffer)::eErrorCode::SUCCESS:
                     break;
                 case decltype(_msgBuffer)::eErrorCode::SUCCESS_DATA_LOSS:
-                    LOG_WARN(Logger::Nodes::CanDriver, "Msg buffer full, losing data");
+                    LOG_WARN(Logger::Nodes::CanDriverESP32, "Msg buffer full, losing data");
                     break;
                 case decltype(_msgBuffer)::eErrorCode::ERROR:
-                    LOG_WARN(Logger::Nodes::CanDriver, "Unknown error");
+                    LOG_WARN(Logger::Nodes::CanDriverESP32, "Unknown error");
                     break;
             }
         }
@@ -170,17 +178,17 @@ namespace RoverCan2
         {
             if (msg_.extd)
             {
-                LOG_WARN(Logger::Nodes::CanDriver, "Received unsupported extended frame, skipping...");
+                LOG_WARN(Logger::Nodes::CanDriverESP32, "Received unsupported extended frame, skipping...");
                 return false;
             }
             else if (msg_.rtr)
             {
-                LOG_DEBUG(Logger::Nodes::CanDriver, "Received remote frame, skipping...");
+                LOG_DEBUG(Logger::Nodes::CanDriverESP32, "Received remote frame, skipping...");
                 return false;
             }
             else if (msg_.dlc_non_comp)
             {
-                LOG_WARN(Logger::Nodes::CanDriver, "Received too long data frame, skipping...");
+                LOG_WARN(Logger::Nodes::CanDriverESP32, "Received too long data frame, skipping...");
                 return false;
             }
 
@@ -193,9 +201,7 @@ namespace RoverCan2
         eState _state;
         CircularBuffer<CanMsg, 10UL> _msgBuffer;
     };
-
 #endif  // defined(ARDUINO_ESP32S3_DEV)
-
 }  // namespace RoverCan2
 
-#endif  // CAN_DRIVER_HPP
+#endif  // CAN_DRIVER_ESP_HPP

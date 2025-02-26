@@ -2,6 +2,7 @@
 #define CAN_DEVICE_HPP
 
 #include "rover_can2/subscriber.hpp"
+#include "rover_can2/drivers/can_driver.hpp"
 
 #include <array>
 #include <optional>
@@ -14,12 +15,13 @@ namespace RoverCan2
       public:
         CanDevice(RoverCan2::Constant::eDeviceId id_, std::array<std::reference_wrapper<SubscriberBase>, SUB_NB> subs_):
             _id(id_),
-            _subs(subs_)
+            _subs(subs_),
+            _canDriver(std::nullopt)
         {
         }
 
-        void init(void) override {}
-        void update(void) override {}
+        virtual void init(void) override {}
+        virtual void update(void) override {}
 
         bool parseMsg(const CanMsg& msgCan_)
         {
@@ -46,6 +48,23 @@ namespace RoverCan2
             return hadErrors;
         }
 
+        /**
+         * @brief Attach a can driver to the device for message sending
+         *
+         * @attention [WARNING] Has to be called before trying to send message
+         * otherwise they won't be sent
+         * @param driver_
+         */
+        void attachDriver(const RoverCan2::CanDriver& driver_)
+        {
+            _canDriver = driver_;
+        }
+
+        void sendMessage(const RoverCan2::Msgs::Msg& msg_)
+        {
+            msg_.
+        }
+
       private:
         constexpr RoverCan2::Constant::eDeviceId getCanId(void)
         {
@@ -54,6 +73,7 @@ namespace RoverCan2
 
         const RoverCan2::Constant::eDeviceId _id;
         const std::array<std::reference_wrapper<SubscriberBase>, SUB_NB> _subs;
+        std::optional<std::reference_wrapper<RoverCan2::CanDriver>> _canDriver;
     };
 }  // namespace RoverCan2
 

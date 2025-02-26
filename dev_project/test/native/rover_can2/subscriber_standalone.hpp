@@ -27,7 +27,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Callback_On_Last_Elem)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
-    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::MOTOR_CMD), 0x02, 0x00};
+    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG), 0x02, 0x00};
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::COMPASS, data, 3U);
 
     TestSubscriber::g_callbackSuccess = false;
@@ -41,7 +41,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, No_Callback_On_Not_Last_Elem)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
-    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::MOTOR_CMD), 0x01, 0x00, 0x00, 0x00, 0x00};
+    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG), 0x01, 0x00, 0x00, 0x00, 0x00};
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::COMPASS, data, 6U);
 
     TestSubscriber::g_callbackSuccess = false;
@@ -55,7 +55,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Msg)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
-    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::MOTOR_CMD)};
+    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG)};
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::COMPASS, data, 0U);
 
     TestSubscriber::g_callbackSuccess = false;
@@ -69,7 +69,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Length)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
-    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::MOTOR_CMD)};
+    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG)};
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::COMPASS, data, 2U);
 
     TestSubscriber::g_callbackSuccess = false;
@@ -83,7 +83,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_MsgContentID)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
-    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::MOTOR_CMD), 0x05};
+    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG), 0x05};
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::COMPASS, data, 2U);
 
     TestSubscriber::g_callbackSuccess = false;

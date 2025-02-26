@@ -10,78 +10,81 @@ namespace RoverCan2::Constant
 
     enum class eDeviceId : uint16_t
     {
-        // RESERVED_FOR_MASTER = 0x000,
+        // clang-format off
+    _RESERVED_MASTER = 0x020,
         MASTER_COMPUTER_UNIT = 0x020,
-        BMS = 0x021,
+        BATTERY = 0x021,
         PDB_CONTROLLER = 0x022,
+        DDB_CONTROLLER = 0x023,
 
-        // PROPULSION
+    _RESERVED_PROPULSION = 0x100,
         FRONTLEFT_MOTOR = 0x101,
         FRONTRIGHT_MOTOR = 0x102,
-
         REARLEFT_MOTOR = 0x105,
         REARRIGHT_MOTOR = 0x106,
 
-        // ARM
+    _RESERVED_ARM = 0x200,
         JL_CONTROLLER = 0x201,
-        J0_CONTROLLER = 0x202,
+        JR_CONTROLLER = 0x202,
         J1_CONTROLLER = 0x203,
         J2_CONTROLLER = 0x204,
         GRIPPER_TILT_CONTROLLER = 0x205,
         GRIPPER_ROT_CONTROLLER = 0x206,
         GRIPPER_CLOSE_CONTROLLER = 0x207,
+        GRIPPER_LASER = 0x208,
+        GRIPPER_DISTANCE = 0x209,
 
-        // Science
-        SCIENCE = 0x301,
+    _RESERVED_GREEN_AUXILIARY = 0x300,
+        GPS = 0x301,
+        GNSS = 0x302,
+        COMPASS = 0x303,
+        LIGHTS_MAIN = 0x304,
+        LIGHTS_IR = 0x305,
 
-        // Accessory
-        GPS = 0x401,
-        LIGHTS = 0x402,
-        INFRARED_LIGHTS = 0x403,
-        COMPASS = 0x404,
-        CAMERA_A2 = 0x411,
-        CAMERA_R1M_1 = 0x412,
-        CAMERA_R1M_2 = 0x413,
-        CAMERA_R1M_3 = 0x414,
-        CAMERA_PAN = 0x415,
-        SPEAKERS = 0x421,
+    _FREE_AUXILIARY = 0x400,
+        CAMERA_ROVER_FPV = 0x401,
+        CAMERA_ROVER_ANTENNA = 0x402,
+        CAMERA_ROVER_FRONT = 0x403,
+        CAMERA_ROVER_SCIENCE = 0x404,
+        CAMERA_ARM_CENTER = 0x405,
+        CAMERA_ARM_SIDE = 0x406,
+        SPEAKERS = 0x407,
 
-        // Free Spaces
+    _RESERVED_INTERNAL = 0x7F0,
+        INVALID,
+        NOT_SET = INVALID,
+
+        TEST_DEVICE = 0x7FF
+
+        // clang-format on
     };
 
     enum class eMsgId : uint8_t
     {
-        NOT_USED = 0x00,
+        // clang-format off
+    _RESERVED = 0x00,
         INVALID = 0x00,
-        ERROR_STATE = 0x01,
-        HEARTBEAT = 0x02,
-        GPS = 0x10,
-        PROPULSION_MOTOR_CMD = 0x11,
-        PROPULSION_MOTOR_STATUS = 0x12,
-        CAM_CONTROL = 0x13,
-        CAM_CONTROL_A2 = 0x14,
-        LIGHT_CONTROL = 0x15,
-        SCIENCE = 0x16,
-        COMPASS = 0x17,
-        ARM_CMD = 0x18,
-        ARM_STATUS = 0x19,
-        CAM_PAN = 0x20,
-        MOTOR_CMD = 0x21
+
+        TEST_MSG = 0x01,
+
+    _FREE = 0x10,
+        ERROR_STATE,
+        HEARTBEAT,
+        GPS,
+        PROPULSION_MOTOR_CMD,
+        PROPULSION_MOTOR_STATUS,
+        CAM_CONTROL,
+        CAM_CONTROL_A2,
+        LIGHT_CONTROL,
+        SCIENCE,
+        COMPASS,
+        ARM_CMD,
+        ARM_STATUS,
+        CAM_PAN,
+        // clang-format on
     };
 
-    constexpr StaticArray<eMsgId, 13UL> SUPPORTED_MSGS = {eMsgId::ERROR_STATE,
-                                                          eMsgId::HEARTBEAT,
-                                                          eMsgId::GPS,
-                                                          eMsgId::PROPULSION_MOTOR_CMD,
-                                                          eMsgId::PROPULSION_MOTOR_STATUS,
-                                                          eMsgId::CAM_CONTROL,
-                                                          eMsgId::LIGHT_CONTROL,
-                                                          eMsgId::SCIENCE,
-                                                          eMsgId::COMPASS,
-                                                          eMsgId::ARM_CMD,
-                                                          eMsgId::ARM_STATUS,
-                                                          eMsgId::CAM_PAN,
-                                                          eMsgId::MOTOR_CMD};
+    constexpr StaticArray<eMsgId, 1UL> SUPPORTED_MSGS = {eMsgId::TEST_MSG};
 
     enum class eDataIndex : uint8_t
     {

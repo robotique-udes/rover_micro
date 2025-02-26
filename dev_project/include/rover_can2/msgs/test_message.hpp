@@ -19,7 +19,7 @@ namespace RoverCan2::Msgs
       public:
         enum class eMsgContentID : uint8_t
         {
-            INVALID = 0x00,
+            eSTART,
             CMD,
             CLOSE_LOOP,
             eLAST,
@@ -37,7 +37,7 @@ namespace RoverCan2::Msgs
 
       public:
         TestMsg():
-            Msg(Constant::eMsgId::MOTOR_CMD)
+            Msg(Constant::eMsgId::TEST_MSG)
         {
             _data.cmd = static_cast<decltype(_data.cmd)>(0);
             _data.closeLoop = static_cast<decltype(_data.closeLoop)>(0);
@@ -93,6 +93,11 @@ namespace RoverCan2::Msgs
             {
                 return eLoadMsgCode::SUCCESS_INCOMPLETE;
             }
+        }
+
+        void sendMsg(const Constant::eDeviceId& senderID_) override
+        {
+                // CanMsg msg(senderID_, )
         }
 
         const sMsgData& data(void) const
