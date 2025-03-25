@@ -1,13 +1,23 @@
 #ifndef ROVER_OBJECT_HPP
 #define ROVER_OBJECT_HPP
 
+template<typename Impl_T>
 class RoverObject
 {
-  public:
+  private:
     RoverObject() = default;
+    friend Impl_T;
 
-    virtual void init(void) = 0;
-    virtual void update(void) = 0;
+  public:
+    void init(void)
+    {
+        static_cast<Impl_T*>(this)->init();
+    }
+
+    void update(void)
+    {
+        static_cast<Impl_T*>(this)->update();
+    }
 };
 
-#endif  // ROVER_OBJECT_HPP
+#endif  // ROVER_OBJECT_T_HPP

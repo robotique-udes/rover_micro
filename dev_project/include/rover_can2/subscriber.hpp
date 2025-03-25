@@ -33,6 +33,9 @@ namespace RoverCan2
                 case Msgs::Msg::eLoadMsgCode::NOT_CONCERNED:
                     LOG_DEBUG(Logger::Nodes::Subscriber, "Parsed msg wasn't meant for this subscriber");
                     break;
+                case Msgs::Msg::eLoadMsgCode::ERROR_INVALID_MSG:
+                    LOG_WARN(Logger::Nodes::Subscriber, "Received invalid message, possible transport layer error");
+                    break;
                 case Msgs::Msg::eLoadMsgCode::ERROR_MISSMATCH:
                     LOG_ERROR(Logger::Nodes::Subscriber, "Missmatch between sender and receiver, dropping message");
                     break;

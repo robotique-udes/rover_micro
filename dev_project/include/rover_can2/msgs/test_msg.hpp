@@ -45,7 +45,12 @@ namespace RoverCan2::Msgs
 
         eLoadMsgCode loadMsg(const CanMsg& msg) override
         {
-            if (!(msg.msgID == this->getMsgId()))
+            if (msg.msgID == Constant::eMsgId::INVALID)
+            {
+                return eLoadMsgCode::ERROR_INVALID_MSG;
+            }
+
+            if (msg.msgID != this->getMsgId())
             {
                 return eLoadMsgCode::NOT_CONCERNED;
             }
@@ -95,12 +100,12 @@ namespace RoverCan2::Msgs
             }
         }
 
-        void sendMsg(const Constant::eDeviceId& senderID_) override
-        {
-                // CanMsg msg(senderID_, )
+        void sendMsg(const Constant::eDeviceId& /*senderID_*/) override{
+#warning TODO / Remove
+            // CanMsg msg(senderID_, )
         }
 
-        const sMsgData& data(void) const
+        sMsgData& data(void)
         {
             return _data;
         }

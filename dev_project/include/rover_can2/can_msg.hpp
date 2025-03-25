@@ -26,15 +26,26 @@ namespace RoverCan2
         CanMsg(RoverCan2::Constant::eDeviceId canID_, const uint8_t* data_, uint8_t dataLength_)
         {
             canID = canID_;
-            dataLength = dataLength_;
-            memcpy(msgData, data_, dataLength_);
-            msgID = this->getMsgID();
-            msgContentID = this->getMsgContentID();
+
+            if (dataLength_ > msgData.size())
+            {
+                dataLength = msgData.size();
+                std::memset(msgData.data(), 0, msgData.size());
+                msgID = Constant::eMsgId::INVALID;
+                msgContentID = 0U;
+            }
+            else
+            {
+                dataLength = dataLength_;
+                std::memcpy(msgData.data(), data_, dataLength_);
+                msgID = this->getMsgID();
+                msgContentID = this->getMsgContentID();
+            }
         }
 
         RoverCan2::Constant::eDeviceId canID;
         uint8_t dataLength;
-        uint8_t msgData[8U] = {0};
+        std::array<uint8_t, 8> msgData = {};
         RoverCan2::Constant::eMsgId msgID;
         uint8_t msgContentID;
 

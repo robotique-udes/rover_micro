@@ -10,6 +10,10 @@ constexpr std::underlying_type_t<ENUM_T> TO_UNDERLYING(ENUM_T e) noexcept
     return static_cast<std::underlying_type_t<ENUM_T>>(e);
 }
 
+#if !defined(ARDUINO_ESP32S3_DEV) 
+#define __FILENAME__ (__builtin_strrchr( "/" __FILE__, '/') + 1)
+#endif // !defined(ARDUINO_ESP32S3_DEV) 
+
 #define EVER \
     ;        \
     ;

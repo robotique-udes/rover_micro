@@ -1,15 +1,7 @@
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef LOG_HPP
+#define LOG_HPP
 
 #if defined(VERBOSE)
-
-#if !defined(ARDUINO_ESP32S3_DEV)
-#error CPU not supported
-#endif
-
-#include "rover_lib2/helpers/macros.hpp"
-#include <Stream.h>
-#include <Arduino.h>
 
 #if !defined(GLOBAL_SEVERITY_LEVEL)
 #define GLOBAL_SEVERITY_LEVEL Logger::eSeverityLevels::DEBUG_
@@ -19,6 +11,17 @@
 #define NODE_BYPASS_SEVERITY_LEVEL Logger::eSeverityLevels::INFO
 #endif
 
+#if defined(ARDUINO_ESP32S3_DEV)
+#include <Stream.h>
+#include <Arduino.h>
+#elif defined(__linux__)
+#include <cstdarg>
+#include "rover_lib2/helpers/time.hpp"
+// #include "rover_lib2/helpers/"
+#endif  // defined(ARDUINO_ESP32S3_DEV)
+
+#include "rover_lib2/helpers/macros.hpp"
+
 #define DEFINE_LOG_NODE(name_, state_)                              \
     namespace Logger::Nodes                                         \
     {                                                               \
@@ -27,7 +30,9 @@
 
 namespace Logger
 {
+#if defined(ARDUINO_ESP32S3_DEV)
     Stream& loggerStream __attribute__((weak)) = Serial;
+#endif  // defined(ARDUINO_ESP32S3_DEV)
 
     enum class eSeverityLevels : uint8_t
     {
@@ -72,6 +77,7 @@ namespace Logger
                     || node.state == Logger::eNodeState::ON))
             {
                 const auto severityIndex = TO_UNDERLYING(SEVERITY);
+#if defined(ARDUINO_ESP32S3_DEV)
                 loggerStream.printf("%s[%lu][%s]%s:%d: ",
                                     SEVERITY_COLORS[severityIndex],
                                     millis(),
@@ -83,6 +89,20 @@ namespace Logger
                 loggerStream.vprintf(format, args);
                 va_end(args);
                 loggerStream.printf("\n%s", COLOR_RESET);
+
+#elif defined(__linux__)
+                printf("%s[%lu][%s]%s:%d: ",
+                       SEVERITY_COLORS[severityIndex],
+                       millis(),
+                       SEVERITY_NAMES[severityIndex],
+                       fileName,
+                       lineNb);
+                va_list args;
+                va_start(args, format);
+                vprintf(format, args);
+                va_end(args);
+                printf("\n%s", COLOR_RESET);
+#endif  // defined(ARDUINO_ESP32S3_DEV)
             }
         }
     }  // namespace
@@ -110,6 +130,9 @@ namespace Logger
 #define LOG_FLUSH() Logger::loggerStream.flush();
 
 #else  // defined(VERBOSE)
+
+/* @brief usage example: DEFINE_LOG_NODE(<UNIQUE_NAME>, Logger::eNodeState::<VALUE>);
+ */
 #define DEFINE_LOG_NODE(name_, state_)
 
 #define LOG_DEBUG(NODE, FMT, ...)
@@ -126,4 +149,4 @@ namespace Logger
 
 #endif  // defined(VERBOSE)
 
-#endif  // __LOG_H__
+#endif  // LOG_HPP

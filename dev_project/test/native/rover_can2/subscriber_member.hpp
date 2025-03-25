@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "rover_can2/subscriber.hpp"
 
-#include "rover_can2/msgs/test_message.hpp"
+#include "rover_can2/msgs/test_msg.hpp"
 
 // =============================================================================
 // Helpers

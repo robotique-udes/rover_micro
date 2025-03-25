@@ -2,53 +2,90 @@
 #define CAN_MANAGER_HPP
 
 #include "rover_can2/can_device.hpp"
-#include "rover_can2/can_driver.hpp"
+#include "rover_lib2/helpers/log.hpp"
 
-#include "rover_lib2/rover_object.hpp"
+#include <array>
+#include <tuple>
 
-#include <functional>
+DEFINE_LOG_NODE(CanManager, Logger::eNodeState::OFF);
 
 namespace RoverCan2
 {
-    template<size_t CAN_DEVICE_NB>
-    class CanManager : public RoverObject
+
+    template<typename CanDriverT, typename... DevicesT>
+    class CanManager : public RoverObject<CanManager<CanDriverT, DevicesT...>>
     {
+        static_assert(std::is_base_of_v<CanDriverBase<CanDriverT>, CanDriverT>, "CanDriverT must be of type CanDriverBase");
+        static_assert((std::is_base_of_v<CanDeviceT, std::remove_reference_t<DevicesT>> && ...),
+                      "All DevicesT... must be of type CanDevice");
+
+        static constexpr uint8_t MAX_MSG_PARSE_PER_UPDATE = 5U;
+
       public:
-        template<typename... Devices>
-        CanManager(gpio_num_t ioRx, gpio_num_t ioTx, Devices&&... devices):
-            _canDriver(ioRx, ioTx),
-            _canDevices{std::ref(devices)...}
+        CanManager(CanDriverT& driver_, DevicesT&&... devices_):
+            _driver(driver_),
+            _canDevices(std::forward<DevicesT>(devices_)...)
         {
-            static_assert(sizeof...(Devices) == CAN_DEVICE_NB, "Number of devices must match template parameter");
         }
 
-        void init() override
+        void init(void)
         {
-            _canDriver.init();
+            _driver.init();
         }
 
-        void update() override
+        void update(void)
         {
-            _canDriver.update();
-            if (auto msg = _canDriver.getMsg())
+            _driver.update();
+
+            std::optional<CanMsg> msgOpt = std::nullopt;
+            for (uint8_t i = 0U; i < MAX_MSG_PARSE_PER_UPDATE; i++)
             {
-                for (std::reference_wrapper<CanDeviceBase> device : _canDevices)
+                msgOpt = _driver.getMsg();
+                if (!msgOpt.has_value())
                 {
-                    if (msg.value().canID == TO_UNDERLYING(device.get().getID()))
-                    {
-                        device.get().loadMessage(msg.value());
-                    }
+                    break;
                 }
+
+                this->parseMsgAllDevices(msgOpt.value());
             }
         }
 
       private:
-        CanDriver _canDriver;
-        std::array<std::reference_wrapper<CanDeviceBase>, CAN_DEVICE_NB> _canDevices;
+        CanDriverT& _driver;
+        std::tuple<DevicesT...> _canDevices;
+
+        bool parseMsgAllDevices(const CanMsg& msg_)
+        {
+            bool allSuccess = true;
+
+            std::apply(
+                [&](auto&... devices_)
+                {
+                    ((allSuccess &= parseMsgSingleDevices(devices_, msg_)), ...);
+                },
+                _canDevices);
+
+            return allSuccess;
+        }
+
+        template<typename deviceT>
+        bool parseMsgSingleDevices(deviceT& device_, const CanMsg& msg_)
+        {
+            bool success = false;
+            success = device_.parseMsg(msg_);
+            if (!success)
+            {
+                LOG_WARN(Logger::Nodes::CanManager,
+                         "Error from CanDevice of ID: %u, while load message of type: %u",
+                         device_.getCanId(),
+                         TO_UNDERLYING(msg_.msgID));
+            }
+            return success;
+        }
     };
 
-    template<typename... CanDevices>
-    CanManager(gpio_num_t, gpio_num_t, CanDevices&&...) -> CanManager<sizeof...(CanDevices)>;
+    template<typename CanDriverT, typename... DevicesT>
+    CanManager(CanDriverT canDriver_, DevicesT&&...) -> CanManager<CanDriverT, DevicesT...>;
 
 }  // namespace RoverCan2
 

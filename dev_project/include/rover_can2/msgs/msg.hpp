@@ -15,7 +15,8 @@ namespace RoverCan2::Msgs
             SUCCESS_INCOMPLETE,
             NOT_CONCERNED,
             ERROR_MISSMATCH,
-            ERROR_IMPLEMENTATION
+            ERROR_IMPLEMENTATION,
+            ERROR_INVALID_MSG
         };
 
         Msg(RoverCan2::Constant::eMsgId msgId_):

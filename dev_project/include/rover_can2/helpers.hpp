@@ -9,7 +9,7 @@
 
 #include <optional>
 
-DEFINE_LOG_NODE(Can_Helpers, Logger::eNodeState::OFF)
+DEFINE_LOG_NODE(CanHelpers, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Helpers
 {
@@ -22,7 +22,7 @@ namespace RoverCan2::Helpers
         static_assert(!std::is_function_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be a func pointer type");
         static_assert(sizeof(ROVER_MSG_CONTENT_TYPE) > 0, "Msg data must be a complete type");
 
-        LOG_DEBUG(Logger::Nodes::Can_Helpers,
+        LOG_DEBUG(Logger::Nodes::CanHelpers,
                   "DATA_LENGTH_MATCHES_MSG_CONTENT(dataLength_ = %u): dataLength_ == (sizeof(ROVER_MSG_CONTENT_TYPE) - "
                   "TO_UNDERLYING(Constant::eDataIndex::START_OF_DATA)) -> %u == %u - %u ?)",
                   dataLength_,
@@ -40,7 +40,7 @@ namespace RoverCan2::Helpers
 
         if (!DATA_LENGTH_MATCHES_MSG_CONTENT<ROVER_MSG_CONTENT_TYPE>(canMsg_.dataLength))
         {
-            LOG_DEBUG(Logger::Nodes::Can_Helpers, "DATA_LENGTH_MATCHES_MSG_CONTENT Failed");
+            LOG_DEBUG(Logger::Nodes::CanHelpers, "DATA_LENGTH_MATCHES_MSG_CONTENT Failed");
             return false;
         }
         else

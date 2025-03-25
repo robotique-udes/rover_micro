@@ -1,9 +1,9 @@
 #ifndef CAN_DRIVER_ESP_HPP
 #define CAN_DRIVER_ESP_HPP
 
-#include "rover_can2/drivers/can_driver.hpp"
 
 #if defined(ARDUINO_ESP32S3_DEV)
+#include "rover_can2/drivers/can_driver_base.hpp"
 #include "rover_can2/can_msg.hpp"
 #include "rover_lib2/rover_object.hpp"
 #include "rover_lib2/helpers/log.hpp"
@@ -14,13 +14,11 @@
 
 #include "driver/gpio.h"
 #include "driver/twai.h"
-#endif  // defined(ARDUINO_ESP32S3_DEV)
 
 DEFINE_LOG_NODE(CanDriverESP32, Logger::eNodeState::ON);
 
 namespace RoverCan2
 {
-#if defined(ARDUINO_ESP32S3_DEV)
     class CanDriverESP : public CanDriver
     {
       public:
@@ -95,7 +93,9 @@ namespace RoverCan2
                     _state = eState::INSTALLED;
                     break;
                 case ESP_ERR_INVALID_STATE:
-                    LOG_WARN(Logger::Nodes::CanDriverESP32, "Can't install twai driver in current state (%u)", TO_UNDERLYING(_state));
+                    LOG_WARN(Logger::Nodes::CanDriverESP32,
+                             "Can't install twai driver in current state (%u)",
+                             TO_UNDERLYING(_state));
                     break;
                 case ESP_ERR_INVALID_ARG:
                     ASSERT("Can't install twai driver with specified arguments");
@@ -119,7 +119,9 @@ namespace RoverCan2
                     _state = eState::RUNNING;
                     break;
                 case ESP_ERR_INVALID_STATE:
-                    LOG_WARN(Logger::Nodes::CanDriverESP32, "Can't install twai driver in current state %u", TO_UNDERLYING(_state));
+                    LOG_WARN(Logger::Nodes::CanDriverESP32,
+                             "Can't install twai driver in current state %u",
+                             TO_UNDERLYING(_state));
                     break;
                 default:
                     ASSERT("Can't start twai driver... Unknown error %d", successCode);
