@@ -51,6 +51,22 @@ namespace RoverCan2::Helpers
         }
     }
 
+    template<typename ROVER_MSG_CONTENT_TYPE>
+    constexpr void ROVER_MSG_CONTENT_TO_CAN_MSG(RoverCan2::Constant::eMsgId msgId_,
+                                                uint8_t msgContentID_,
+                                                const ROVER_MSG_CONTENT_TYPE& msgContent_,
+                                                CanMsg& canMsg_)
+    {
+        static_assert(sizeof(ROVER_MSG_CONTENT_TYPE) <= (RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                         - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)));
+
+        canMsg_.setMsgID(msgId_);
+        canMsg_.dataLength = sizeof(ROVER_MSG_CONTENT_TYPE) + TO_UNDERLYING(Constant::eDataIndex::START_OF_DATA);
+        canMsg_.setMsgContentID(msgContentID_);
+
+        std::memcpy(&(canMsg_.msgData[TO_UNDERLYING(Constant::eDataIndex::START_OF_DATA)]), &msgContent_, sizeof(msgContent_));
+    }
+
     template<typename ROVER_MSG_ENUM_TYPE>
     constexpr bool MSG_CONTENT_IS_LAST_ELEM(const CanMsg& canMsg_)
     {

@@ -10,28 +10,35 @@ using namespace RoverCan2;
 class CanDriverMock : public CanDriverBase<CanDriverMock>
 {
   public:
-    void init(void)
+    void __init(void)
     {
         isInited = true;
     }
 
-    void update(void)
+    void __update(void)
     {
         hasUpdated = true;
         // Must be done manually in tests
     }
 
-    size_t getAvailableMessagesNb(void) const
+    size_t _getAvailableMessagesNb(void) const
     {
-        return _newMsgsBuffer.size();
+        return newMsgsBuffer.size();
     }
 
-    std::optional<CanMsg> getMsg(void)
+    std::optional<CanMsg> _getMsg(void)
     {
-        return _newMsgsBuffer.getValue();
+        return newMsgsBuffer.getValue();
     }
 
-    CircularBuffer<CanMsg, 10> _newMsgsBuffer;
+    bool sendMsg(const CanMsg& msg_)
+    {
+        msgSentBuffer.addValue(msg_);
+        return true;
+    }
+
+    CircularBuffer<CanMsg, 100> msgSentBuffer;
+    CircularBuffer<CanMsg, 10> newMsgsBuffer;
     bool isInited = false;
     bool hasUpdated = false;
 };

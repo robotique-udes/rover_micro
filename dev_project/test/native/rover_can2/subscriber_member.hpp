@@ -11,7 +11,7 @@ class TestHelperClass
   public:
     void simulateMsgReception(void)
     {
-        uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG), 0x02, 0x00};
+        uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG), 0x01, 0x00};
         RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::COMPASS, data, 3U);
 
         _sub.parseMsg(msg);

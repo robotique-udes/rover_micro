@@ -43,10 +43,16 @@ namespace RoverCan2::Msgs
         virtual eLoadMsgCode loadMsg(const CanMsg&) = 0;
 
         /**
-         * @brief
+         * @brief Return the message as a CanMsg
          *
          */
-        virtual void sendMsg(const Constant::eDeviceId&) = 0;
+        virtual std::optional<CanMsg> getCanMsg(const uint8_t msgContentId_) const = 0;
+
+        /**
+         * @brief Return the message as a CanMsg
+         *
+         */
+        virtual uint8_t getMsgContentCount(void) const = 0;
 
       private:
         const RoverCan2::Constant::eMsgId _msgID;

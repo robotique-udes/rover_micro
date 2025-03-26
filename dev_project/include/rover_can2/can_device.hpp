@@ -32,7 +32,7 @@ namespace RoverCan2
         bool parseMsg(const CanMsg& msgCan_)
         {
             bool success = true;
-            if (msgCan_.canID != this->getCanId())
+            if (msgCan_.getCanID() != this->getCanId())
             {
                 // Not concerned but no error either
                 return success;

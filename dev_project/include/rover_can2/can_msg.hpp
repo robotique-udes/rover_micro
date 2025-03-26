@@ -2,6 +2,7 @@
 #define CAN_MSG_HPP
 
 #include "rover_can2/constant.hpp"
+#include "rover_can2/helpers.hpp"
 
 #if defined(ARDUINO_ESP32S3_DEV)
 #include "driver/twai.h"
@@ -25,32 +26,59 @@ namespace RoverCan2
 
         CanMsg(RoverCan2::Constant::eDeviceId canID_, const uint8_t* data_, uint8_t dataLength_)
         {
-            canID = canID_;
+            _canID = canID_;
 
-            if (dataLength_ > msgData.size())
+            if (!data_ || dataLength_ > msgData.size())
             {
                 dataLength = msgData.size();
                 std::memset(msgData.data(), 0, msgData.size());
-                msgID = Constant::eMsgId::INVALID;
-                msgContentID = 0U;
+                _msgID = Constant::eMsgId::INVALID;
+                _msgContentID = 0U;
             }
             else
             {
                 dataLength = dataLength_;
                 std::memcpy(msgData.data(), data_, dataLength_);
-                msgID = this->getMsgID();
-                msgContentID = this->getMsgContentID();
+                _msgID = this->getMsgID();
+                _msgContentID = this->getMsgContentID();
             }
         }
 
-        RoverCan2::Constant::eDeviceId canID;
-        uint8_t dataLength;
-        std::array<uint8_t, 8> msgData = {};
-        RoverCan2::Constant::eMsgId msgID;
-        uint8_t msgContentID;
+        CanMsg()
+        {
+            CanMsg(Constant::eDeviceId::NOT_SET, nullptr, 0U);
+        }
 
-      private:
-        RoverCan2::Constant::eMsgId getMsgID()
+        /**
+         * @brief
+         * @attention Manually setting field can lead to badly constructed msgs.
+         *  Prefer using a Msg::getCanMsg() instead.
+         *
+         * @param canID_
+         */
+        void setCanID(Constant::eDeviceId canID_)
+        {
+            _canID = canID_;
+        }
+
+        Constant::eDeviceId getCanID(void) const
+        {
+            return _canID;
+        }
+
+        /**
+         * @brief
+         * @attention Manually setting field can lead to badly constructed msgs.
+         *  Prefer using a Msg::getCanMsg() instead.
+         *
+         * @param msgId_
+         */
+        void setMsgID(RoverCan2::Constant::eMsgId msgId_)
+        {
+            msgData[TO_UNDERLYING(Constant::eDataIndex::MSG_ID)] = TO_UNDERLYING(msgId_);
+        };
+
+        RoverCan2::Constant::eMsgId getMsgID() const
         {
             if (dataLength < (TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)))
             {
@@ -70,7 +98,19 @@ namespace RoverCan2
             }
         };
 
-        uint8_t getMsgContentID()
+        /**
+         * @brief
+         * @attention Manually setting field can lead to badly constructed msgs.
+         *  Prefer using a Msg::getCanMsg() instead.
+         *
+         * @param ID_
+         */
+        void setMsgContentID(uint8_t ID_)
+        {
+            msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::MSG_CONTENT_ID)] = ID_;
+        };
+
+        uint8_t getMsgContentID() const
         {
             if (dataLength < (TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)))
             {
@@ -79,6 +119,14 @@ namespace RoverCan2
 
             return msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::MSG_CONTENT_ID)];
         };
+
+        uint8_t dataLength;
+        std::array<uint8_t, 8> msgData = {};
+
+      private:
+        RoverCan2::Constant::eDeviceId _canID;
+        RoverCan2::Constant::eMsgId _msgID;
+        uint8_t _msgContentID;
     };
 }  // namespace RoverCan2
 

@@ -11,12 +11,12 @@ class RoverObject
   public:
     void init(void)
     {
-        static_cast<Impl_T*>(this)->init();
+        static_cast<Impl_T*>(this)->_init();
     }
 
     void update(void)
     {
-        static_cast<Impl_T*>(this)->update();
+        static_cast<Impl_T*>(this)->_update();
     }
 };
 

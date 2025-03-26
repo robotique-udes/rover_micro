@@ -2,7 +2,7 @@
 
 #include "rover_can2/can_manager.hpp"
 
-#include "rover_can2/msgs/msg.hpp"
+#include "rover_can2/msgs/test_msg.hpp"
 
 // =============================================================================
 // Helpers
@@ -72,7 +72,7 @@ TEST(SUITE_NAME_CanManager, Update)
     GTEST_ASSERT_TRUE(canDriver.hasUpdated == true);
 }
 
-TEST(SUITE_NAME_CanManager, MsgHandling)
+TEST(SUITE_NAME_CanManager, MsgRecvHandling)
 {
     TestCanManager::CanDriverMock canDriver;
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
@@ -90,7 +90,7 @@ TEST(SUITE_NAME_CanManager, MsgHandling)
            TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CLOSE_LOOP),
            0x01};
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data.data(), data.size());
-    canDriver._newMsgsBuffer.addValue(msg);
+    canDriver.newMsgsBuffer.addValue(msg);
 
     GTEST_ASSERT_TRUE(TestCanManager::g_callbackCounter == 0);
 
@@ -100,7 +100,7 @@ TEST(SUITE_NAME_CanManager, MsgHandling)
     GTEST_ASSERT_TRUE(TestCanManager::g_callbackCounter == 1);
 }
 
-TEST(SUITE_NAME_CanManager, MsgHandlingInfiniteLoop)
+TEST(SUITE_NAME_CanManager, MsgRecvHandlingInfiniteLoop)
 {
     TestCanManager::CanDriverMock canDriver;
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
@@ -121,7 +121,7 @@ TEST(SUITE_NAME_CanManager, MsgHandlingInfiniteLoop)
 
     for (size_t i = 0; i < 1'000; i++)
     {
-        canDriver._newMsgsBuffer.addValue(msg);
+        canDriver.newMsgsBuffer.addValue(msg);
     }
 
     GTEST_ASSERT_TRUE(TestCanManager::g_callbackCounter == 0);
@@ -132,4 +132,83 @@ TEST(SUITE_NAME_CanManager, MsgHandlingInfiniteLoop)
     // have triggered has this is the hardcoded max loop value. This test make sure
     // infinitloop is improbable
     GTEST_ASSERT_TRUE(TestCanManager::g_callbackCounter == 5);
+}
+
+TEST(SUITE_NAME_CanManager, MsgSending)
+{
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    TestCanManager::CanDriverMock canDriver;
+    RoverCan2::CanManager canManager(canDriver, device);
+    canManager.init();
+    canManager.update();
+
+    RoverCan2::Msgs::TestMsg msg;
+    msg.data().closeLoop = false;
+    msg.data().cmd = 69.0F;
+
+    canManager.sendMsg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, msg);
+
+    GTEST_ASSERT_TRUE(canDriver.msgSentBuffer.size() == 2U);
+
+    auto msgOpt = canDriver.msgSentBuffer.getValue();
+    GTEST_ASSERT_TRUE(msgOpt.has_value());
+    GTEST_ASSERT_TRUE(msgOpt.value().getCanID() == RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgID() == RoverCan2::Constant::eMsgId::TEST_MSG);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgContentID() == TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CMD));
+
+    msgOpt = canDriver.msgSentBuffer.getValue();
+    GTEST_ASSERT_TRUE(msgOpt.has_value());
+    GTEST_ASSERT_TRUE(msgOpt.value().getCanID() == RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgID() == RoverCan2::Constant::eMsgId::TEST_MSG);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgContentID() == TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CLOSE_LOOP));
+
+    msgOpt = canDriver.msgSentBuffer.getValue();
+    GTEST_ASSERT_TRUE(!msgOpt.has_value());
+}
+
+TEST(SUITE_NAME_CanManager, MsgSendingInvalidSenderID)
+{
+    TestCanManager::CanDriverMock canDriver;
+    RoverCan2::CanManager canManager(canDriver);
+    canManager.init();
+    canManager.update();
+
+    RoverCan2::Msgs::TestMsg msg;
+    msg.data().closeLoop = false;
+    msg.data().cmd = 69.0F;
+
+    canManager.sendMsg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, msg);
+
+    GTEST_ASSERT_TRUE(canDriver.msgSentBuffer.size() == 0U);
+}
+
+TEST(SUITE_NAME_CanManager, MsgSendingInvalidSenderIDBypass)
+{
+    TestCanManager::CanDriverMock canDriver;
+    RoverCan2::CanManager canManager(canDriver);
+    canManager.init();
+    canManager.update();
+
+    RoverCan2::Msgs::TestMsg msg;
+    msg.data().closeLoop = false;
+    msg.data().cmd = 69.0F;
+
+    canManager.sendMsg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, msg, true);
+
+    GTEST_ASSERT_TRUE(canDriver.msgSentBuffer.size() == 2U);
+
+    auto msgOpt = canDriver.msgSentBuffer.getValue();
+    GTEST_ASSERT_TRUE(msgOpt.has_value());
+    GTEST_ASSERT_TRUE(msgOpt.value().getCanID() == RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgID() == RoverCan2::Constant::eMsgId::TEST_MSG);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgContentID() == TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CMD));
+
+    msgOpt = canDriver.msgSentBuffer.getValue();
+    GTEST_ASSERT_TRUE(msgOpt.has_value());
+    GTEST_ASSERT_TRUE(msgOpt.value().getCanID() == RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgID() == RoverCan2::Constant::eMsgId::TEST_MSG);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgContentID() == TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CLOSE_LOOP));
+
+    msgOpt = canDriver.msgSentBuffer.getValue();
+    GTEST_ASSERT_TRUE(!msgOpt.has_value());
 }

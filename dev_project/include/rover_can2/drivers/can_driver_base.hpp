@@ -15,19 +15,29 @@ namespace RoverCan2
         CanDriverBase() = default;
 
       public:
-        std::optional<CanMsg> sendMsg(const CanMsg& msg_)
+        void _init(void)
         {
-            return static_cast<Impl_T*>(this)->sendMsg(msg_);
+            static_cast<Impl_T*>(this)->__init();
+        }
+
+        void _update(void)
+        {
+            static_cast<Impl_T*>(this)->__update();
+        }
+
+        bool sendMsg(const CanMsg& msg_)
+        {
+            return static_cast<Impl_T*>(this)->_sendMsg(msg_);
         }
 
         std::optional<CanMsg> getMsg(void)
         {
-            return static_cast<Impl_T*>(this)->getMsg();
+            return static_cast<Impl_T*>(this)->_getMsg();
         }
 
         size_t getAvailableMessagesNb(void) const
         {
-            return static_cast<Impl_T*>(this)->getAvailableMessagesNb();
+            return static_cast<Impl_T*>(this)->_getAvailableMessagesNb();
         }
     };
 }  // namespace RoverCan2
