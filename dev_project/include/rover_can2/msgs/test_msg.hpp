@@ -4,7 +4,7 @@
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
 
-DEFINE_LOG_NODE(MotorCmd, Logger::eNodeState::OFF)
+DEFINE_LOG_NODE(TestMsg_msg, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
 {
@@ -62,7 +62,7 @@ namespace RoverCan2::Msgs
         eMsgContentID msgContentId = static_cast<eMsgContentID>(msg.getMsgContentID());
         if (!VALID_MSG_IDS.contains(msgContentId))
         {
-            LOG_DEBUG(Logger::Nodes::MotorCmd,
+            LOG_DEBUG(Logger::Nodes::TestMsg_msg,
                       "Missmatch between received message and local message definition. Received msgContentId: (%u), "
                       "expected lower than (%u) and none zero",
                       TO_UNDERLYING(msgContentId),
@@ -75,16 +75,18 @@ namespace RoverCan2::Msgs
         {
             case eMsgContentID::CMD:
                 success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg, _data.cmd);
-                LOG_DEBUG(Logger::Nodes::MotorCmd,
+                LOG_DEBUG(Logger::Nodes::TestMsg_msg,
                           "switch (msgContentId) case eMsgContentID::CMD: %s",
                           success ? "success" : "failed");
                 break;
+
             case eMsgContentID::CLOSE_LOOP:
                 success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg, _data.closeLoop);
-                LOG_DEBUG(Logger::Nodes::MotorCmd,
-                          "switch (msgContentId) case case eMsgContentID::CLOSE_LOOP: %s",
+                LOG_DEBUG(Logger::Nodes::TestMsg_msg,
+                          "switch (msgContentId) case eMsgContentID::CLOSE_LOOP: %s",
                           success ? "success" : "failed");
                 break;
+
             default:
                 return eLoadMsgCode::ERROR_IMPLEMENTATION;
         }
@@ -116,12 +118,14 @@ namespace RoverCan2::Msgs
         CanMsg msg_;
         switch (static_cast<eMsgContentID>(msgContentId_))
         {
-            case eMsgContentID::CLOSE_LOOP:
-                Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.closeLoop, msg_);
-                break;
             case eMsgContentID::CMD:
                 Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.cmd, msg_);
                 break;
+
+            case eMsgContentID::CLOSE_LOOP:
+                Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.closeLoop, msg_);
+                break;
+
             case eMsgContentID::eLAST:
                 return std::nullopt;
         }
