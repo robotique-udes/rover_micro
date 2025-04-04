@@ -4,18 +4,19 @@
 static_assert(false, "Not implemented yet")
 
 #elif defined(TEST_NATIVE)
-// #include "native/helpers/chrono.hpp"
-// #include "native/helpers/circular_buffer.hpp"
-// #include "native/helpers/deref_array.hpp"
-// #include "native/helpers/watchdog.hpp"
+#include "native/helpers/chrono.hpp"
+#include "native/helpers/circular_buffer.hpp"
+#include "native/helpers/deref_array.hpp"
+#include "native/helpers/watchdog.hpp"
 
-// #include "native/rover_can2/helpers.hpp"
-// #include "native/rover_can2/msg.hpp"
-// #include "native/rover_can2/subscriber_standalone.hpp"
-// #include "native/rover_can2/subscriber_member.hpp"
-// #include "native/rover_can2/can_device.hpp"
-// #include "native/rover_can2/can_device_member.hpp"
-// #include "native/rover_can2/can_manager.hpp"
+#include "native/rover_can2/helpers.hpp"
+#include "native/rover_can2/msg.hpp"
+#include "native/rover_can2/subscriber_standalone.hpp"
+#include "native/rover_can2/subscriber_member.hpp"
+#include "native/rover_can2/publisher.hpp"
+#include "native/rover_can2/can_device.hpp"
+#include "native/rover_can2/can_device_member.hpp"
+#include "native/rover_can2/can_manager.hpp"
 #include "native/rover_can2/integration_tests.hpp"
 
 #warning TODO: Implement Logger and Assert ErrorState Reporting

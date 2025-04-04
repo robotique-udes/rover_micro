@@ -18,8 +18,15 @@ namespace RoverCan2::Msgs
         ERROR_INVALID_MSG
     };
 
+    // Shadow for type validation
+    class MsgBaseT
+    {
+      protected:
+        MsgBaseT() = default;
+    };
+
     template<typename ImplT>
-    class Msg
+    class Msg : public MsgBaseT
     {
         friend ImplT;
 

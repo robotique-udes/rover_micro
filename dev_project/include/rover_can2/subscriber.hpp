@@ -10,10 +10,18 @@ DEFINE_LOG_NODE(Subscriber, Logger::eNodeState::OFF)
 
 namespace RoverCan2
 {
-
-    template<typename ImplT, typename MsgT>
+    // Shadow class for simpler type validation
     class SubscriberBaseT
     {
+      protected:
+        SubscriberBaseT() = default;
+    };
+
+    template<typename ImplT, typename MsgT>
+    class SubscriberBase : public SubscriberBaseT
+    {
+        VALIDATE_BASE_TYPE(Msgs::MsgBaseT, MsgT);
+
         friend ImplT;
 
       public:
@@ -50,7 +58,7 @@ namespace RoverCan2
         }
 
       protected:
-        SubscriberBaseT() = default;
+        SubscriberBase() = default;
 
         MsgT& getMsg(void)
         {
@@ -75,11 +83,12 @@ namespace RoverCan2
      * @tparam CallerT
      */
     template<typename MsgT, typename CallbackT>
-    class SubscriberStandalone : public SubscriberBaseT<SubscriberStandalone<MsgT, CallbackT>, MsgT>
+    class SubscriberStandalone : public SubscriberBase<SubscriberStandalone<MsgT, CallbackT>, MsgT>
     {
+        VALIDATE_BASE_TYPE(Msgs::MsgBaseT, MsgT);
         static_assert(std::is_invocable_r<void, CallbackT, const MsgT&>::value, "Callback must be of type: (void)(const MsgT&)");
 
-        friend SubscriberBaseT<SubscriberStandalone<MsgT, CallbackT>, MsgT>;
+        friend SubscriberBase<SubscriberStandalone<MsgT, CallbackT>, MsgT>;
 
       public:
         explicit SubscriberStandalone(CallbackT callback_):
@@ -106,11 +115,12 @@ namespace RoverCan2
      * @tparam CallerT
      */
     template<typename MsgT, typename CallerT>
-    class SubscriberMember : public SubscriberBaseT<SubscriberMember<MsgT, CallerT>, MsgT>
+    class SubscriberMember : public SubscriberBase<SubscriberMember<MsgT, CallerT>, MsgT>
     {
-        typedef void (CallerT::*MemberCallback_t)(const MsgT&);
+        VALIDATE_BASE_TYPE(Msgs::MsgBaseT, MsgT);
+        friend SubscriberBase<SubscriberMember<MsgT, CallerT>, MsgT>;
 
-        friend SubscriberBaseT<SubscriberMember<MsgT, CallerT>, MsgT>;
+        typedef void (CallerT::*MemberCallback_t)(const MsgT&);
 
       public:
         explicit SubscriberMember(CallerT& context_, MemberCallback_t callback_):

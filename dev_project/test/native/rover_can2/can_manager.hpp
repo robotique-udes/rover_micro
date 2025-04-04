@@ -269,3 +269,45 @@ TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReportingWithDevices)
     uint8_t nbOfMessageExpected = 3U * msg.getMsgContentCount();
     GTEST_ASSERT_TRUE(canDriver.msgSentBuffer.size() == nbOfMessageExpected);
 }
+
+TEST(SUITE_ROVER_CAN2_CanManager, ManagerDeviceManagementIntegrationTest)
+{
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub1;
+
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
+        TestCanManager::CB_Helper);
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub1(
+        TestCanManager::CB_Helper);
+
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1, sub0, sub1);
+
+    RoverCan2::Drivers::CanDriverMock driver;
+    RoverCan2::CanManager manager(driver, device);
+    manager.init();
+
+    // Send msg
+    RoverCan2::Msgs::TestMsg sendMsg;
+    sendMsg.data().cmd = 69.0F;
+    sendMsg.data().closeLoop = true;
+    pub0.queueMsg(sendMsg);
+    pub0.queueMsg(sendMsg);
+    pub1.queueMsg(sendMsg);
+
+    // Simulated Msg Reception
+    std::array<uint8_t, sizeof(bool) + TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)> data
+        = {/*MsgID=TEST_MSG*/ TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG),
+           /*MSG_CONTENT_ID=CMD*/ TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CLOSE_LOOP),
+           /* DATA 0 = true */ 0x01};
+    RoverCan2::CanMsg recvMsg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data.data(), data.size());
+    driver.newMsgsBuffer.addValue(recvMsg);
+    driver.newMsgsBuffer.addValue(recvMsg);
+    driver.newMsgsBuffer.addValue(recvMsg);
+
+    TestCanManager::g_callbackCounter = 0UL;
+    GTEST_ASSERT_TRUE(TestCanManager::g_callbackCounter == 0UL);
+    GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == 0);
+    manager.update();
+    GTEST_ASSERT_TRUE(TestCanManager::g_callbackCounter == 3 * (TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
+    GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == 3 * (TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
+}

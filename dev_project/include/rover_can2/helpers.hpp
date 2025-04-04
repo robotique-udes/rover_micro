@@ -14,10 +14,10 @@ namespace RoverCan2::Helpers
     template<typename ROVER_MSG_CONTENT_TYPE>
     constexpr bool DATA_LENGTH_MATCHES_MSG_CONTENT(uint8_t dataLength_)
     {
-        static_assert(!std::is_pointer_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be a pointer type");
-        static_assert(!std::is_reference_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be reference type");
-        static_assert(!std::is_void_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be void type");
-        static_assert(!std::is_function_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be a func pointer type");
+        static_assert(!std::is_pointer_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be a pointer type");
+        static_assert(!std::is_reference_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be reference type");
+        static_assert(!std::is_void_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be void type");
+        static_assert(!std::is_function_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be a func pointer type");
 
         LOG_DEBUG(Logger::Nodes::CanHelpers,
                   "DATA_LENGTH_MATCHES_MSG_CONTENT(dataLength_ = %u): dataLength_ == (sizeof(ROVER_MSG_CONTENT_TYPE) - "
@@ -32,6 +32,11 @@ namespace RoverCan2::Helpers
     template<typename ROVER_MSG_CONTENT_TYPE>
     constexpr bool CAN_MSG_TO_ROVER_MSG_CONTENT(const CanMsg& canMsg_, ROVER_MSG_CONTENT_TYPE& msgContent_)
     {
+        static_assert(!std::is_pointer_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be a pointer type");
+        static_assert(!std::is_reference_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be reference type");
+        static_assert(!std::is_void_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be void type");
+        static_assert(!std::is_function_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be a func pointer type");
+
         static_assert(sizeof(ROVER_MSG_CONTENT_TYPE) <= (RoverCan2::Constant::CAN_MAX_DATA_LENGTH
                                                          - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)));
 
@@ -59,6 +64,11 @@ namespace RoverCan2::Helpers
                                                 const ROVER_MSG_CONTENT_TYPE& msgContent_,
                                                 CanMsg& canMsg_)
     {
+        static_assert(!std::is_pointer_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be a pointer type");
+        static_assert(!std::is_reference_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be reference type");
+        static_assert(!std::is_void_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be void type");
+        static_assert(!std::is_function_v<ROVER_MSG_CONTENT_TYPE>, "Msg data can't be a func pointer type");
+
         static_assert(sizeof(ROVER_MSG_CONTENT_TYPE) <= (RoverCan2::Constant::CAN_MAX_DATA_LENGTH
                                                          - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)));
 
@@ -72,6 +82,8 @@ namespace RoverCan2::Helpers
     template<typename ROVER_MSG_ENUM_TYPE>
     constexpr bool MSG_CONTENT_IS_LAST_ELEM(const CanMsg& canMsg_)
     {
+        static_assert(std::is_enum_v<ROVER_MSG_ENUM_TYPE>, "Template argument most be of enum type");
+
         return canMsg_.msgData[(size_t)RoverCan2::Constant::eDataIndex::MSG_CONTENT_ID]
                == ((size_t)ROVER_MSG_ENUM_TYPE::eLAST - 1);
     }

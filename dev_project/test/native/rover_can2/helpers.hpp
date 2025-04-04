@@ -37,8 +37,6 @@ TEST(SUITE_ROVER_CAN2_Helpers, ROVER_MSG_CONTENT_TO_CAN_MSG)
 
 TEST(SUITE_ROVER_CAN2_Helpers, CAN_MSG_TO_ROVER_MSG_CONTENT)
 {
-    bool closedLoop = true;
-
     RoverCan2::Msgs::TestMsg testMsg;
     testMsg.data().closeLoop = true;
 

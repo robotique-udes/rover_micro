@@ -2,6 +2,8 @@
 
 #include "rover_can2/can_device.hpp"
 #include "rover_can2/msgs/test_msg.hpp"
+#include "rover_can2/publisher.hpp"
+#include "rover_can2/drivers/can_driver_mock.hpp"
 
 // #error REDO WITHOUT DRIVER IMPL
 
@@ -28,6 +30,11 @@ namespace TestCanDevice
 // Suite
 // =============================================================================
 TEST(SUITE_ROVER_CAN2_CanDevice, Construction)
+{
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, SubsInDevice)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub0(TestCanDevice::CB_Helper);
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub1(TestCanDevice::CB_Helper);
@@ -149,4 +156,86 @@ TEST(SUITE_ROVER_CAN2_CanDevice, ValidMsgRecv_ValidData)
     GTEST_ASSERT_TRUE(TestCanDevice::testValue == false);
     GTEST_ASSERT_TRUE(device.parseMsg(msg) == true);
     GTEST_ASSERT_TRUE(TestCanDevice::testValue == true);
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, PubsInsideDevice)
+{
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub1;
+
+    RoverCan2::Drivers::CanDriverMock driver;
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1);
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, PubFromDevice)
+{
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub1;
+
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1);
+
+    RoverCan2::Drivers::CanDriverMock driver;
+    RoverCan2::CanManager manager(driver, device);
+    manager.init();
+
+    RoverCan2::Msgs::TestMsg msg;
+    msg.data().cmd = 69.0F;
+    msg.data().closeLoop = true;
+    pub0.queueMsg(msg);
+
+    msg.data().cmd = 110.0F;
+    msg.data().closeLoop = true;
+    pub1.queueMsg(msg);
+
+    GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == 0);
+    device.sendPubQueuedMsgs(manager);
+    GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == (2 * TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, PubAndSubInDevice)
+{
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub1;
+
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub0(TestCanDevice::CB_Helper);
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub1(TestCanDevice::CB_Helper);
+
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1, sub0, sub1);
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, PubAndSubInDeviceIntegrationTest)
+{
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub1;
+
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub0(TestCanDevice::CB_Helper);
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub1(TestCanDevice::CB_Helper);
+
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1, sub0, sub1);
+
+    RoverCan2::Drivers::CanDriverMock driver;
+    RoverCan2::CanManager manager(driver, device);
+    manager.init();
+    
+    // Send msg
+    RoverCan2::Msgs::TestMsg sendMsg;
+    sendMsg.data().cmd = 69.0F;
+    sendMsg.data().closeLoop = true;
+    pub0.queueMsg(sendMsg);
+
+    // Simulated Msg Reception
+    std::array<uint8_t, sizeof(bool) + TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)> data
+        = {/*MsgID=TEST_MSG*/ TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG),
+           /*MSG_CONTENT_ID=CMD*/ TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CLOSE_LOOP),
+           /* DATA 0 = true */ 0x01};
+    RoverCan2::CanMsg recvMsg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data.data(), data.size());
+
+    TestCanDevice::g_callbackCounter = 0UL;
+    GTEST_ASSERT_TRUE(TestCanDevice::g_callbackCounter == 0UL);
+    GTEST_ASSERT_TRUE(device.parseMsg(recvMsg) == true);
+    GTEST_ASSERT_TRUE(TestCanDevice::g_callbackCounter == 2UL);
+
+    GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == 0);
+    device.sendPubQueuedMsgs(manager);
+    GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == (TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
 }

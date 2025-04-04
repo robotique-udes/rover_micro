@@ -17,10 +17,19 @@ DEFINE_LOG_NODE(CanManager, Logger::eNodeState::OFF);
 
 namespace RoverCan2
 {
-    template<typename CanDriverT, typename... DevicesT>
-    class CanManager : public RoverObject<CanManager<CanDriverT, DevicesT...>>
+    // Allows shadow type validation
+    class CanManagerT
     {
-        static_assert(std::is_base_of_v<Drivers::CanDriverBase<CanDriverT>, CanDriverT>, "CanDriverT must be of type CanDriverBase");
+      protected:
+        CanManagerT() = default;
+    };
+    template<typename CanDriverT, typename... DevicesT>
+    class CanManager : public RoverObject<CanManager<CanDriverT, DevicesT...>>,
+                       CanManagerT
+    {
+        VALIDATE_BASE_TYPE(Drivers::CanDriverBaseT, CanDriverT);
+        VALIDATE_BASE_TYPE_PACK(CanDeviceT, DevicesT);
+
         static_assert((std::is_base_of_v<CanDeviceT, std::remove_reference_t<DevicesT>> && ...),
                       "All DevicesT... must be of type CanDevice");
 
@@ -47,6 +56,8 @@ namespace RoverCan2
         void _update(void)
         {
             _driver.update();
+
+            this->publishAllQueuedMsgs();
 
             std::optional<CanMsg> msgOpt = std::nullopt;
             for (uint8_t i = 0U; i < MAX_MSG_PARSE_PER_UPDATE; i++)
@@ -160,6 +171,16 @@ namespace RoverCan2
             msg.data().error = HealthState::getInstance().getInError();
 
             this->sendMsg(device_.getCanId(), msg);
+        }
+
+        void publishAllQueuedMsgs(void)
+        {
+            std::apply(
+                [&](DevicesT&... devices_)
+                {
+                    ((devices_.sendPubQueuedMsgs(*this)), ...);
+                },
+                _canDevices);
         }
 
         CanDriverT& _driver;

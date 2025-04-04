@@ -7,8 +7,16 @@
 
 namespace RoverCan2::Drivers
 {
+    // Allows template shadowing for type validation
+    class CanDriverBaseT
+    {
+      protected:
+        CanDriverBaseT() = default;
+    };
+
     template<typename Impl_T>
-    class CanDriverBase : public RoverObject<CanDriverBase<Impl_T>>
+    class CanDriverBase : public RoverObject<CanDriverBase<Impl_T>>,
+                          CanDriverBaseT
     {
       private:
         friend Impl_T;

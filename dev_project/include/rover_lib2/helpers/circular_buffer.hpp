@@ -9,8 +9,7 @@
 
 DEFINE_LOG_NODE(CircularBuffer, Logger::eNodeState::ON);
 
-template<typename TYPE, std::size_t SIZE>
-class CircularBuffer
+class CircularBufferT
 {
   public:
     enum class eErrorCode
@@ -20,6 +19,14 @@ class CircularBuffer
         ERROR
     };
 
+  protected:
+    CircularBufferT() = default;
+};
+
+template<typename TYPE, std::size_t SIZE>
+class CircularBuffer : public CircularBufferT
+{
+  public:
     CircularBuffer()
     {
         this->init();
@@ -28,14 +35,14 @@ class CircularBuffer
     /**
      * @brief Adds a new value to the circular buffer
      *
-     * @param value Takes reference to value but value is copied, no need to 
+     * @param value Takes reference to value but value is copied, no need to
      * keep it alive
      * @return eErrorCode::SUCCESS on success, eErrorCode::SUCCESS_DATA_LOSS
      * buffer is full and the data was added by overwriting unread data.
      */
     eErrorCode addValue(const TYPE& value_)
     {
-        _buffer[_addCursor] = value_;
+        _buffer[_addCursor].emplace(value_);
         _addCursor = (_addCursor + 1UL) % _buffer.size();
 
         if (_size < _buffer.size())
