@@ -5,7 +5,7 @@
 #include "rover_can2/can_msg.hpp"
 #include <optional>
 
-namespace RoverCan2
+namespace RoverCan2::Drivers
 {
     template<typename Impl_T>
     class CanDriverBase : public RoverObject<CanDriverBase<Impl_T>>
@@ -40,6 +40,6 @@ namespace RoverCan2
             return static_cast<Impl_T*>(this)->_getAvailableMessagesNb();
         }
     };
-}  // namespace RoverCan2
+}  // namespace RoverCan2::Drivers
 
 #endif  // CAN_DRIVER_HPP

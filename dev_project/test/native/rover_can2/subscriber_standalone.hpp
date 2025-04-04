@@ -10,10 +10,12 @@
 namespace TestSubscriber
 {
     bool g_callbackSuccess = false;
+    bool boolTestValue = false;
 
-    void CB_Helper(const RoverCan2::Msgs::TestMsg&)
+    void CB_Helper(const RoverCan2::Msgs::TestMsg& msg_)
     {
         g_callbackSuccess = true;
+        boolTestValue = msg_.getData().closeLoop;
     }
 }  // namespace TestSubscriber
 // =============================================================================
@@ -32,10 +34,10 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Callback_On_Last_Elem)
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data, 3U);
 
     TestSubscriber::g_callbackSuccess = false;
-    RoverCan2::Msgs::Msg::eLoadMsgCode parseCode = sub.parseMsg(msg);
+    RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == true);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::Msg::eLoadMsgCode::SUCCESS_COMPLETE);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::SUCCESS_COMPLETE);
 }
 
 TEST(SUITE_ROVER_CAN2_Subscriber, No_Callback_On_Not_Last_Elem)
@@ -46,10 +48,10 @@ TEST(SUITE_ROVER_CAN2_Subscriber, No_Callback_On_Not_Last_Elem)
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data, 6U);
 
     TestSubscriber::g_callbackSuccess = false;
-    RoverCan2::Msgs::Msg::eLoadMsgCode parseCode = sub.parseMsg(msg);
+    RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == false);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::Msg::eLoadMsgCode::SUCCESS_INCOMPLETE);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::SUCCESS_INCOMPLETE);
 }
 
 TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Not_Concerned_Msg)
@@ -60,10 +62,10 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Not_Concerned_Msg)
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data, 2U);
 
     TestSubscriber::g_callbackSuccess = false;
-    RoverCan2::Msgs::Msg::eLoadMsgCode parseCode = sub.parseMsg(msg);
+    RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == false);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::Msg::eLoadMsgCode::NOT_CONCERNED);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::NOT_CONCERNED);
 }
 
 TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Msg)
@@ -74,10 +76,10 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Msg)
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data, sizeof(data));
 
     TestSubscriber::g_callbackSuccess = false;
-    RoverCan2::Msgs::Msg::eLoadMsgCode parseCode = sub.parseMsg(msg);
+    RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == false);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::Msg::eLoadMsgCode::ERROR_INVALID_MSG);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_INVALID_MSG);
 }
 
 TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Length)
@@ -88,10 +90,10 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Length)
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data, 2U);
 
     TestSubscriber::g_callbackSuccess = false;
-    RoverCan2::Msgs::Msg::eLoadMsgCode parseCode = sub.parseMsg(msg);
+    RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == false);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::Msg::eLoadMsgCode::ERROR_MISSMATCH);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_MISSMATCH);
 }
 
 TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_MsgContentID)
@@ -102,8 +104,23 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_MsgContentID)
     RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data, 2U);
 
     TestSubscriber::g_callbackSuccess = false;
-    RoverCan2::Msgs::Msg::eLoadMsgCode parseCode = sub.parseMsg(msg);
+    RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == false);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::Msg::eLoadMsgCode::ERROR_MISSMATCH);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_MISSMATCH);
+}
+
+TEST(SUITE_ROVER_CAN2_Subscriber, Callback_Value_Valid)
+{
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
+
+    uint8_t data[8] = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG), 0x01, 0x01};
+    RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data, 3U);
+
+    TestSubscriber::boolTestValue = false;
+
+    ASSERT_TRUE(TestSubscriber::boolTestValue == false);
+    RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::SUCCESS_COMPLETE);
+    ASSERT_TRUE(TestSubscriber::boolTestValue == true);
 }

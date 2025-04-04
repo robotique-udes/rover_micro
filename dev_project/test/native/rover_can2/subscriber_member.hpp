@@ -29,7 +29,7 @@ class TestHelperClass
     }
 
     RoverCan2::SubscriberMember<RoverCan2::Msgs::TestMsg, TestHelperClass> _sub
-        = RoverCan2::SubscriberMember<RoverCan2::Msgs::TestMsg, TestHelperClass>(this, &TestHelperClass::CB_TestMessage);
+        = RoverCan2::SubscriberMember<RoverCan2::Msgs::TestMsg, TestHelperClass>(*this, &TestHelperClass::CB_TestMessage);
 
     size_t _callbackCalledCtn = 0;
 };

@@ -7,8 +7,6 @@
 #include "rover_can2/constant.hpp"
 #include "rover_can2/can_msg.hpp"
 
-#include <optional>
-
 DEFINE_LOG_NODE(CanHelpers, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Helpers
@@ -20,7 +18,6 @@ namespace RoverCan2::Helpers
         static_assert(!std::is_reference_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be reference type");
         static_assert(!std::is_void_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be void type");
         static_assert(!std::is_function_v<ROVER_MSG_CONTENT_TYPE>, "Msg data should never be a func pointer type");
-        static_assert(sizeof(ROVER_MSG_CONTENT_TYPE) > 0, "Msg data must be a complete type");
 
         LOG_DEBUG(Logger::Nodes::CanHelpers,
                   "DATA_LENGTH_MATCHES_MSG_CONTENT(dataLength_ = %u): dataLength_ == (sizeof(ROVER_MSG_CONTENT_TYPE) - "
@@ -43,12 +40,17 @@ namespace RoverCan2::Helpers
             LOG_DEBUG(Logger::Nodes::CanHelpers, "DATA_LENGTH_MATCHES_MSG_CONTENT Failed");
             return false;
         }
-        else
+
+        auto dataStartIndex = TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA);
+
+        std::array<std::byte, sizeof(ROVER_MSG_CONTENT_TYPE)> bytes{};
+        for (size_t i = 0; i < sizeof(ROVER_MSG_CONTENT_TYPE); ++i)
         {
-            msgContent_ = static_cast<ROVER_MSG_CONTENT_TYPE>(
-                canMsg_.msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)]);
-            return true;
+            bytes[i] = static_cast<std::byte>(canMsg_.msgData[dataStartIndex + i]);
         }
+        msgContent_ = std::bit_cast<ROVER_MSG_CONTENT_TYPE>(bytes);
+
+        return true;
     }
 
     template<typename ROVER_MSG_CONTENT_TYPE>

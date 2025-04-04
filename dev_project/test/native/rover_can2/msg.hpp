@@ -14,18 +14,18 @@ namespace TestMsg
 // Suite
 // =============================================================================
 
-TEST(SUITE_NAME_Msg, Construction)
+TEST(SUITE_ROVER_CAN2_Msg, Construction)
 {
     RoverCan2::Msgs::TestMsg msg;
 }
 
-TEST(SUITE_NAME_Msg, IdReporting)
+TEST(SUITE_ROVER_CAN2_Msg, IdReporting)
 {
     RoverCan2::Msgs::TestMsg msg;
     GTEST_ASSERT_TRUE(msg.getMsgId() == RoverCan2::Constant::eMsgId::TEST_MSG);
 }
 
-TEST(SUITE_NAME_Msg, InitToZero)
+TEST(SUITE_ROVER_CAN2_Msg, InitToZero)
 {
     RoverCan2::Msgs::TestMsg msg;
     GTEST_ASSERT_TRUE(msg.getMsgId() == RoverCan2::Constant::eMsgId::TEST_MSG);
@@ -34,7 +34,7 @@ TEST(SUITE_NAME_Msg, InitToZero)
     GTEST_ASSERT_TRUE(msg.data().cmd == 0.0F);
 }
 
-TEST(SUITE_NAME_Msg, MsgLoading)
+TEST(SUITE_ROVER_CAN2_Msg, MsgLoading)
 {
     bool closeLoop = true;
     std::array<uint8_t, 8U> data = {TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG),
@@ -44,14 +44,14 @@ TEST(SUITE_NAME_Msg, MsgLoading)
     RoverCan2::CanMsg canMsg(RoverCan2::Constant::eDeviceId::NOT_SET, data.data(), 3U);
 
     RoverCan2::Msgs::TestMsg msg;
-    GTEST_ASSERT_TRUE(msg.loadMsg(canMsg) == RoverCan2::Msgs::Msg::eLoadMsgCode::SUCCESS_COMPLETE);
+    GTEST_ASSERT_TRUE(msg.loadMsg(canMsg) == RoverCan2::Msgs::eLoadMsgCode::SUCCESS_COMPLETE);
     GTEST_ASSERT_TRUE(msg.getMsgId() == RoverCan2::Constant::eMsgId::TEST_MSG);
     GTEST_ASSERT_TRUE(msg.getMsgContentCount() == TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST));
     GTEST_ASSERT_TRUE(msg.data().closeLoop == true);
     GTEST_ASSERT_TRUE(msg.data().cmd == 0.0F);
 }
 
-TEST(SUITE_NAME_Msg, MsgBuilding)
+TEST(SUITE_ROVER_CAN2_Msg, MsgBuilding)
 {
     RoverCan2::Msgs::TestMsg msg;
     msg.data().closeLoop = true;
@@ -65,7 +65,7 @@ TEST(SUITE_NAME_Msg, MsgBuilding)
                       == true);
 }
 
-TEST(SUITE_NAME_Msg, MsgBuilding_ZeroInit)
+TEST(SUITE_ROVER_CAN2_Msg, MsgBuilding_ZeroInit)
 {
     RoverCan2::Msgs::TestMsg msg;
     msg.data().closeLoop = true;
@@ -78,7 +78,7 @@ TEST(SUITE_NAME_Msg, MsgBuilding_ZeroInit)
                       == 0.0F);
 }
 
-TEST(SUITE_NAME_Msg, MsgBuilding_InvalidID)
+TEST(SUITE_ROVER_CAN2_Msg, MsgBuilding_InvalidID)
 {
     RoverCan2::Msgs::TestMsg msg;
     msg.data().closeLoop = true;

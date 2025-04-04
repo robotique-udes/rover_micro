@@ -4,26 +4,26 @@
 #include "rover_can2/constant.hpp"
 #include "rover_can2/can_msg.hpp"
 
+#include <optional>
+
 namespace RoverCan2::Msgs
 {
+    enum class eLoadMsgCode
+    {
+        SUCCESS_COMPLETE,
+        SUCCESS_INCOMPLETE,
+        NOT_CONCERNED,
+        ERROR_MISSMATCH,
+        ERROR_IMPLEMENTATION,
+        ERROR_INVALID_MSG
+    };
+
+    template<typename ImplT>
     class Msg
     {
+        friend ImplT;
+
       public:
-        enum class eLoadMsgCode
-        {
-            SUCCESS_COMPLETE,
-            SUCCESS_INCOMPLETE,
-            NOT_CONCERNED,
-            ERROR_MISSMATCH,
-            ERROR_IMPLEMENTATION,
-            ERROR_INVALID_MSG
-        };
-
-        Msg(RoverCan2::Constant::eMsgId msgId_):
-            _msgID(msgId_)
-        {
-        }
-
         constexpr RoverCan2::Constant::eMsgId getMsgId() const
         {
             return _msgID;
@@ -40,21 +40,35 @@ namespace RoverCan2::Msgs
          *    ERROR_MISSMATCH: Missmatching message definition between the one received and the local on the device
          *    ERROR_IMPLEMENTATION: Shouldn't return this error code, it mean the message definition itself is erronous
          */
-        virtual eLoadMsgCode loadMsg(const CanMsg&) = 0;
+        eLoadMsgCode loadMsg(const CanMsg& canMsg_)
+        {
+            return static_cast<ImplT*>(this)->_loadMsg(canMsg_);
+        }
 
         /**
          * @brief Return the message as a CanMsg
          *
          */
-        virtual std::optional<CanMsg> getCanMsg(const uint8_t msgContentId_) const = 0;
+        std::optional<CanMsg> getCanMsg(const uint8_t msgContentId_) const
+        {
+            return static_cast<const ImplT*>(this)->_getCanMsg(msgContentId_);
+        }
 
         /**
-         * @brief Return the message as a CanMsg
+         * @brief Return the nb of elements in message
          *
          */
-        virtual uint8_t getMsgContentCount(void) const = 0;
+        uint8_t getMsgContentCount(void) const
+        {
+            return static_cast<const ImplT*>(this)->_getMsgContentCount();
+        }
 
       private:
+        Msg(RoverCan2::Constant::eMsgId msgId_):
+            _msgID(msgId_)
+        {
+        }
+
         const RoverCan2::Constant::eMsgId _msgID;
     };
 }  // namespace RoverCan2::Msgs

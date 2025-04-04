@@ -1,12 +1,13 @@
 #ifndef CAN_DEVICE_HPP
 #define CAN_DEVICE_HPP
 
-#include "rover_lib2/rover_object.hpp"
-#include "rover_can2/subscriber.hpp"
-#include "rover_can2/drivers/can_driver_base.hpp"
+#include "rover_can2/constant.hpp"
+#include "rover_can2/msgs/msg.hpp"
 
-#include <array>
-#include <optional>
+#include <tuple>
+#include <type_traits>
+
+#warning TODO: Check all template args for type validation -> Maybe macro for assert?
 
 namespace RoverCan2
 {
@@ -17,15 +18,15 @@ namespace RoverCan2
         CanDeviceT() = default;
     };
 
-    template<typename... Subs>
+    template<typename... SubsT>
     class CanDevice : public CanDeviceT
     {
         static constexpr size_t MAX_MSG_PARSED_PER_LOOP = 10U;
 
       public:
-        explicit CanDevice(RoverCan2::Constant::eDeviceId id_, Subs&&... subs_):
+        explicit CanDevice(RoverCan2::Constant::eDeviceId id_, SubsT&&... subs_):
             _id(id_),
-            _subs{std::reference_wrapper<SubscriberBase>(subs_)...}
+            _subs(std::forward<SubsT>(subs_)...)
         {
         }
 
@@ -38,32 +39,14 @@ namespace RoverCan2
                 return success;
             }
 
-            for (auto& sub : _subs)
-            {
-                Msgs::Msg::eLoadMsgCode loadCode = sub.get().parseMsg(msgCan_);
-                switch (loadCode)
+            std::apply(
+                [&](SubsT&... sub)
                 {
-                    case Msgs::Msg::eLoadMsgCode::SUCCESS_COMPLETE:
-                        break;
-                    case Msgs::Msg::eLoadMsgCode::SUCCESS_INCOMPLETE:
-                        break;
-                    case Msgs::Msg::eLoadMsgCode::NOT_CONCERNED:
-                        break;
-                    case Msgs::Msg::eLoadMsgCode::ERROR_INVALID_MSG:
-                        [[fallthrough]];
-                    case Msgs::Msg::eLoadMsgCode::ERROR_MISSMATCH:
-                        [[fallthrough]];
-                    case Msgs::Msg::eLoadMsgCode::ERROR_IMPLEMENTATION:
-                        success = false;
-                        break;
-                }
-            }
-            return success;
-        }
+                    ((success &= this->loadMsgSub(sub, msgCan_)), ...);
+                },
+                _subs);
 
-        void sendMessage(const RoverCan2::Msgs::Msg& msg_) 
-        {
-            
+            return success;
         }
 
         constexpr RoverCan2::Constant::eDeviceId getCanId(void) const
@@ -72,12 +55,37 @@ namespace RoverCan2
         }
 
       private:
+        template<typename SubT>
+        bool loadMsgSub(SubT& sub_, const CanMsg& msgCan_)
+        {
+            bool success = true;
+            Msgs::eLoadMsgCode loadCode = sub_.parseMsg(msgCan_);
+            switch (loadCode)
+            {
+                case Msgs::eLoadMsgCode::SUCCESS_COMPLETE:
+                    break;
+                case Msgs::eLoadMsgCode::SUCCESS_INCOMPLETE:
+                    break;
+                case Msgs::eLoadMsgCode::NOT_CONCERNED:
+                    break;
+                case Msgs::eLoadMsgCode::ERROR_INVALID_MSG:
+                    [[fallthrough]];
+                case Msgs::eLoadMsgCode::ERROR_MISSMATCH:
+                    [[fallthrough]];
+                case Msgs::eLoadMsgCode::ERROR_IMPLEMENTATION:
+                    success = false;
+                    break;
+            }
+
+            return success;
+        }
+
         const RoverCan2::Constant::eDeviceId _id;
-        const std::array<std::reference_wrapper<SubscriberBase>, sizeof...(Subs)> _subs;
+        std::tuple<SubsT...> _subs;
     };
 
-    template<typename... Subs>
-    CanDevice(RoverCan2::Constant::eDeviceId id_, Subs&&...) -> CanDevice<Subs...>;
+    template<typename... SubsT>
+    CanDevice(RoverCan2::Constant::eDeviceId id_, SubsT&&...) -> CanDevice<SubsT...>;
 
 }  // namespace RoverCan2
 

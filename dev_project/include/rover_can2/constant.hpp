@@ -85,7 +85,7 @@ namespace RoverCan2::Constant
         // clang-format on
     };
 
-    constexpr StaticArray<eMsgId, 2UL> SUPPORTED_MSGS = {eMsgId::TEST_MSG, eMsgId::TEST_MSG_2};
+    constexpr StaticArray<eMsgId, 3UL> SUPPORTED_MSGS = {eMsgId::TEST_MSG, eMsgId::TEST_MSG_2, eMsgId::ERROR_STATE};
 
     enum class eDataIndex : uint8_t
     {

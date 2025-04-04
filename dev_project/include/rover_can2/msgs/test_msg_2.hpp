@@ -8,7 +8,7 @@ DEFINE_LOG_NODE(TestMsg2_msg, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
 {
-    class TestMsg2 : public Msg
+    class TestMsg2 : public Msg<TestMsg2>
     {
       public:
         enum class eMsgContentID : uint8_t
@@ -31,9 +31,9 @@ namespace RoverCan2::Msgs
       public:
         TestMsg2();
 
-        eLoadMsgCode loadMsg(const CanMsg& msg) override;
-        std::optional<CanMsg> getCanMsg(const uint8_t msgContentId_) const override;
-        uint8_t getMsgContentCount(void) const override;
+        eLoadMsgCode _loadMsg(const CanMsg& msg_);
+        std::optional<CanMsg> _getCanMsg(const uint8_t msgContentId_) const;
+        uint8_t _getMsgContentCount(void) const;
         sMsgData& data(void);
 
       private:
@@ -47,19 +47,19 @@ namespace RoverCan2::Msgs
         _data.closeLoop = static_cast<decltype(_data.closeLoop)>(0);
     }
 
-    TestMsg2::eLoadMsgCode TestMsg2::loadMsg(const CanMsg& msg)
+    eLoadMsgCode TestMsg2::_loadMsg(const CanMsg& msg_)
     {
-        if (msg.getMsgID() == Constant::eMsgId::INVALID)
+        if (msg_.getMsgID() == Constant::eMsgId::INVALID)
         {
             return eLoadMsgCode::ERROR_INVALID_MSG;
         }
 
-        if (msg.getMsgID() != this->getMsgId())
+        if (msg_.getMsgID() != this->getMsgId())
         {
             return eLoadMsgCode::NOT_CONCERNED;
         }
 
-        eMsgContentID msgContentId = static_cast<eMsgContentID>(msg.getMsgContentID());
+        eMsgContentID msgContentId = static_cast<eMsgContentID>(msg_.getMsgContentID());
         if (!VALID_MSG_IDS.contains(msgContentId))
         {
             LOG_DEBUG(Logger::Nodes::TestMsg2_msg,
@@ -74,14 +74,14 @@ namespace RoverCan2::Msgs
         switch (msgContentId)
         {
             case eMsgContentID::CMD:
-                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg, _data.cmd);
+                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.cmd);
                 LOG_DEBUG(Logger::Nodes::TestMsg2_msg,
                           "switch (msgContentId) case eMsgContentID::CMD: %s",
                           success ? "success" : "failed");
                 break;
 
             case eMsgContentID::CLOSE_LOOP:
-                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg, _data.closeLoop);
+                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.closeLoop);
                 LOG_DEBUG(Logger::Nodes::TestMsg2_msg,
                           "switch (msgContentId) case eMsgContentID::CLOSE_LOOP: %s",
                           success ? "success" : "failed");
@@ -96,7 +96,7 @@ namespace RoverCan2::Msgs
             return eLoadMsgCode::ERROR_MISSMATCH;
         }
 
-        if (Helpers::MSG_CONTENT_IS_LAST_ELEM<eMsgContentID>(msg))
+        if (Helpers::MSG_CONTENT_IS_LAST_ELEM<eMsgContentID>(msg_))
         {
             return eLoadMsgCode::SUCCESS_COMPLETE;
         }
@@ -106,7 +106,7 @@ namespace RoverCan2::Msgs
         }
     }
 
-    std::optional<CanMsg> TestMsg2::getCanMsg(const uint8_t msgContentId_) const
+    std::optional<CanMsg> TestMsg2::_getCanMsg(const uint8_t msgContentId_) const
     {
         eMsgContentID msgContentID = static_cast<eMsgContentID>(msgContentId_);
 
@@ -133,7 +133,7 @@ namespace RoverCan2::Msgs
         return msg_;
     }
 
-    uint8_t TestMsg2::getMsgContentCount(void) const
+    uint8_t TestMsg2::_getMsgContentCount(void) const
     {
         return TO_UNDERLYING(eMsgContentID::eLAST);
     }

@@ -82,7 +82,7 @@ def generate_cpp_header(input_file_path):
             loadMsg_switch_case_gen += \
 f"""\
 {12*' '}case eMsgContentID::{member_name_capital_snake_case}:
-{16*' '}success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg, _data.{member_name});
+{16*' '}success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.{member_name});
 {16*' '}LOG_DEBUG(Logger::Nodes::{logNodeName},
 {26*' '}"switch (msgContentId) case eMsgContentID::{member_name_capital_snake_case}: %s",
 {26*' '}success ? "success" : "failed");
@@ -116,7 +116,7 @@ DEFINE_LOG_NODE({logNodeName}, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
 {{
-    class {class_name} : public Msg
+    class {class_name} : public Msg<{class_name}>
     {{
       public:
         enum class eMsgContentID : uint8_t
@@ -137,10 +137,11 @@ namespace RoverCan2::Msgs
       public:
         {class_name}();
 
-        eLoadMsgCode loadMsg(const CanMsg& msg) override;
-        std::optional<CanMsg> getCanMsg(const uint8_t msgContentId_) const override;
-        uint8_t getMsgContentCount(void) const override;
+        eLoadMsgCode _loadMsg(const CanMsg& msg_);
+        std::optional<CanMsg> _getCanMsg(const uint8_t msgContentId_) const;
+        uint8_t _getMsgContentCount(void) const;
         sMsgData& data(void);
+        const sMsgData& getData(void) const;
 
       private:
         sMsgData _data;
@@ -152,19 +153,19 @@ namespace RoverCan2::Msgs
 {constructor_init_to_zero}
     }}
 
-    {class_name}::eLoadMsgCode {class_name}::loadMsg(const CanMsg& msg)
+    eLoadMsgCode {class_name}::_loadMsg(const CanMsg& msg_)
     {{
-        if (msg.getMsgID() == Constant::eMsgId::INVALID)
+        if (msg_.getMsgID() == Constant::eMsgId::INVALID)
         {{
             return eLoadMsgCode::ERROR_INVALID_MSG;
         }}
 
-        if (msg.getMsgID() != this->getMsgId())
+        if (msg_.getMsgID() != this->getMsgId())
         {{
             return eLoadMsgCode::NOT_CONCERNED;
         }}
 
-        eMsgContentID msgContentId = static_cast<eMsgContentID>(msg.getMsgContentID());
+        eMsgContentID msgContentId = static_cast<eMsgContentID>(msg_.getMsgContentID());
         if (!VALID_MSG_IDS.contains(msgContentId))
         {{
             LOG_DEBUG(Logger::Nodes::{logNodeName},
@@ -188,7 +189,7 @@ namespace RoverCan2::Msgs
             return eLoadMsgCode::ERROR_MISSMATCH;
         }}
 
-        if (Helpers::MSG_CONTENT_IS_LAST_ELEM<eMsgContentID>(msg))
+        if (Helpers::MSG_CONTENT_IS_LAST_ELEM<eMsgContentID>(msg_))
         {{
             return eLoadMsgCode::SUCCESS_COMPLETE;
         }}
@@ -198,7 +199,7 @@ namespace RoverCan2::Msgs
         }}
     }}
 
-    std::optional<CanMsg> {class_name}::getCanMsg(const uint8_t msgContentId_) const
+    std::optional<CanMsg> {class_name}::_getCanMsg(const uint8_t msgContentId_) const
     {{
         eMsgContentID msgContentID = static_cast<eMsgContentID>(msgContentId_);
 
@@ -218,7 +219,7 @@ namespace RoverCan2::Msgs
         return msg_;
     }}
 
-    uint8_t {class_name}::getMsgContentCount(void) const
+    uint8_t {class_name}::_getMsgContentCount(void) const
     {{
         return TO_UNDERLYING(eMsgContentID::eLAST);
     }}
@@ -226,6 +227,11 @@ namespace RoverCan2::Msgs
     {class_name}::sMsgData& {class_name}::data(void)
     {{
         return _data;
+    }}
+    
+    const {class_name}::sMsgData& {class_name}::getData(void) const
+    {{
+        return static_cast<const {class_name}::sMsgData&>(_data);
     }}
 }}  // namespace RoverCan2::Msgs
 
@@ -238,7 +244,7 @@ namespace RoverCan2::Msgs
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python script.py input_file.txt")
+        print("Usage: ./msg_generator.py pathToCustomMsgFile.txt")
         sys.exit(1)
 
     input_file = sys.argv[1]

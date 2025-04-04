@@ -15,6 +15,8 @@
 #include "driver/gpio.h"
 #include "driver/twai.h"
 
+#warning TODO Modify for CRTP
+
 DEFINE_LOG_NODE(CanDriverESP32, Logger::eNodeState::ON);
 
 namespace RoverCan2

@@ -10,9 +10,11 @@
 // =============================================================================
 namespace TestCanDevice
 {
+    bool testValue = false;
     size_t g_callbackCounter = 0UL;
-    void CB_Helper(const RoverCan2::Msgs::TestMsg&)
+    void CB_Helper(const RoverCan2::Msgs::TestMsg& msg_)
     {
+        testValue = msg_.getData().closeLoop;
         g_callbackCounter++;
     }
 
@@ -87,7 +89,8 @@ TEST(SUITE_ROVER_CAN2_CanDevice, ValidMsgRecvMultipleSubs)
 TEST(SUITE_ROVER_CAN2_CanDevice, NotConcernedMsgRecv)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub1(TestCanDevice::CB_Helper);
-    // RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub1(TestCanDevice::CB_Helper);
+    // RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)>
+    // sub1(TestCanDevice::CB_Helper);
     RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub1);
 
     // Manually building a CAN test message and adding it to the buffer to simulate the reception of a message by the driver
@@ -125,4 +128,25 @@ TEST(SUITE_ROVER_CAN2_CanDevice, InvalidMsg)
     GTEST_ASSERT_TRUE(device.parseMsg(msg) == false);
 
     GTEST_ASSERT_TRUE(TestCanDevice::g_callbackCounter == 0);
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, ValidMsgRecv_ValidData)
+{
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanDevice::CB_Helper)> sub1(TestCanDevice::CB_Helper);
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub1);
+
+    // Manually building a CAN test message to simulate the reception of a message
+    // This message is the last MSG_CONTENT_ID of the "TEST_MESSAGE" which should trigger a callback if a subscriber of this type
+    // exist
+    std::array<uint8_t, sizeof(bool) + TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)> data
+        = {/*MsgID=TEST_MSG*/ TO_UNDERLYING(RoverCan2::Constant::eMsgId::TEST_MSG),
+           /*MSG_CONTENT_ID=CMD*/ TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CLOSE_LOOP),
+           /* DATA 0 = true */ 0x01};
+
+    RoverCan2::CanMsg msg(RoverCan2::Constant::eDeviceId::TEST_DEVICE, data.data(), data.size());
+    // Simulate the reception of a msg
+    TestCanDevice::testValue = false;
+    GTEST_ASSERT_TRUE(TestCanDevice::testValue == false);
+    GTEST_ASSERT_TRUE(device.parseMsg(msg) == true);
+    GTEST_ASSERT_TRUE(TestCanDevice::testValue == true);
 }

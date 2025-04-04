@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "rover_can2/helpers.hpp"
 
+#include "rover_can2/msgs/test_msg.hpp"
+
 // =============================================================================
 // Suite
 // =============================================================================
@@ -31,4 +33,32 @@ TEST(SUITE_ROVER_CAN2_Helpers, ROVER_MSG_CONTENT_TO_CAN_MSG)
     GTEST_ASSERT_TRUE(msg_.getMsgContentID() == 0x01);
     GTEST_ASSERT_TRUE(msg_.dataLength == sizeof(bool) + TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA));
     GTEST_ASSERT_TRUE(static_cast<bool>(msg_.msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)]) == true);
+}
+
+TEST(SUITE_ROVER_CAN2_Helpers, CAN_MSG_TO_ROVER_MSG_CONTENT)
+{
+    bool closedLoop = true;
+
+    RoverCan2::Msgs::TestMsg testMsg;
+    testMsg.data().closeLoop = true;
+
+    RoverCan2::CanMsg msg_ = testMsg.getCanMsg(testMsg.getMsgContentCount() - 1U).value();
+
+    testMsg.data().closeLoop = false;
+    RoverCan2::Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, testMsg.data().closeLoop);
+
+    GTEST_ASSERT_TRUE(testMsg.data().closeLoop == true);
+}
+
+TEST(SUITE_ROVER_CAN2_Helpers, CAN_MSG_TO_ROVER_MSG_CONTENT_FLOAT)
+{
+    RoverCan2::Msgs::TestMsg testMsg;
+    testMsg.data().cmd = 69.0F;
+
+    RoverCan2::CanMsg msg_ = testMsg.getCanMsg(TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CMD)).value();
+
+    testMsg.data().closeLoop = false;
+    RoverCan2::Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, testMsg.data().cmd);
+
+    GTEST_ASSERT_TRUE(testMsg.data().cmd == 69.0F);
 }

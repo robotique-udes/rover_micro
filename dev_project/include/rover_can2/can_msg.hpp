@@ -2,15 +2,13 @@
 #define CAN_MSG_HPP
 
 #include "rover_can2/constant.hpp"
-#include "rover_can2/helpers.hpp"
 
 #if defined(ARDUINO_ESP32S3_DEV)
-#include "driver/twai.h"
+#include "hal/twai_types.h"
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
 #include <cstdint>
 #include <cstring>
-#include <type_traits>
 #include "rover_lib2/helpers/macros.hpp"
 
 namespace RoverCan2

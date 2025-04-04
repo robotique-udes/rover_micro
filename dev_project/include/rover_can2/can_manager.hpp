@@ -1,12 +1,17 @@
 #ifndef CAN_MANAGER_HPP
 #define CAN_MANAGER_HPP
 
+#include "rover_can2/msgs/error_state.hpp"
+#include "rover_can2/subscriber.hpp"
+
+#include "rover_can2/drivers/can_driver_base.hpp"
 #include "rover_can2/can_device.hpp"
 #include "rover_lib2/helpers/log.hpp"
-#include "rover_lib2/helpers/watchdog.hpp"
+#include "rover_lib2/rover_object.hpp"
+#include "rover_lib2/helpers/health_state.hpp"
 
-#include <array>
 #include <tuple>
+#include <optional>
 
 DEFINE_LOG_NODE(CanManager, Logger::eNodeState::OFF);
 
@@ -15,19 +20,22 @@ namespace RoverCan2
     template<typename CanDriverT, typename... DevicesT>
     class CanManager : public RoverObject<CanManager<CanDriverT, DevicesT...>>
     {
-        static_assert(std::is_base_of_v<CanDriverBase<CanDriverT>, CanDriverT>, "CanDriverT must be of type CanDriverBase");
+        static_assert(std::is_base_of_v<Drivers::CanDriverBase<CanDriverT>, CanDriverT>, "CanDriverT must be of type CanDriverBase");
         static_assert((std::is_base_of_v<CanDeviceT, std::remove_reference_t<DevicesT>> && ...),
                       "All DevicesT... must be of type CanDevice");
 
-        static constexpr uint8_t MAX_MSG_PARSE_PER_UPDATE = 5U;
+        static constexpr uint8_t MAX_MSG_PARSE_PER_UPDATE = 10U;
         static constexpr unsigned long MASTER_HEARTBEAT_FREQUENCY_HZ = 10UL;
-        static constexpr unsigned long MASTER_WATCHDOG_PERIOD_MS = 1'000UL * 1UL / (MASTER_HEARTBEAT_FREQUENCY_HZ / 2UL);
+        static constexpr Constant::eDeviceId ERROR_STATE_HANDLER_ID = Constant::eDeviceId::MASTER_COMPUTER_UNIT;
 
       public:
         CanManager(CanDriverT& driver_, DevicesT&&... devices_):
-            _driver(driver_),
             _canDevices(std::forward<DevicesT>(devices_)...),
-            watchdog(MASTER_WATCHDOG_PERIOD_MS)
+            _driver(driver_),
+            _dev_Master(ERROR_STATE_HANDLER_ID,
+                        SubscriberMember<Msgs::ErrorState, CanManager<CanDriverT, DevicesT...>>{
+                            *this,
+                            &CanManager<CanDriverT, DevicesT...>::CB_ErrorStateFromMaster})
         {
         }
 
@@ -49,16 +57,16 @@ namespace RoverCan2
                     break;
                 }
 
-                if (msgOpt.value().getCanID() == Constant::eDeviceId::MASTER_COMPUTER_UNIT)
-                {
-                }
-
                 this->parseMsgAllDevices(msgOpt.value());
             }
         }
 
-        bool sendMsg(Constant::eDeviceId senderId_, const Msgs::Msg& msg_, bool sendEvenIfDeviceIdInvalid_ = false)
+        template<typename MsgT>
+        bool sendMsg(Constant::eDeviceId senderId_, const MsgT& msg_, bool sendEvenIfDeviceIdInvalid_ = false)
         {
+            static_assert(std::is_base_of_v<Msgs::Msg<MsgT>, MsgT>,
+                          "MsgT template argument must be CRTP child type of Msgs::Msg");
+
             if (!sendEvenIfDeviceIdInvalid_)
             {
                 bool senderIdValid = false;
@@ -98,6 +106,9 @@ namespace RoverCan2
             return success;
         }
 
+      protected:
+        std::tuple<DevicesT...> _canDevices;
+
       private:
         bool parseMsgAllDevices(const CanMsg& msg_)
         {
@@ -109,6 +120,8 @@ namespace RoverCan2
                     ((allSuccess &= parseMsgSingleDevices(devices_, msg_)), ...);
                 },
                 _canDevices);
+
+            allSuccess &= parseMsgSingleDevices(_dev_Master, msg_);
 
             return allSuccess;
         }
@@ -128,22 +141,29 @@ namespace RoverCan2
             return success;
         }
 
-        void processMsgFromMaster(const CanMsg& msg_)
+        void CB_ErrorStateFromMaster(const Msgs::ErrorState& /*msg_*/)
         {
-            switch (msg_._msgID)
-            {
-                case Constant::eMsgId::ERROR_STATE:
-#warning TODO
-                    break;
-                case Constant::eMsgId::HEARTBEAT:
-#warning TODO
-                    break;
-            }
+            std::apply(
+                [&](DevicesT&... device)
+                {
+                    ((this->sendDeviceErrorState(device)), ...);
+                },
+                _canDevices);
+        }
+
+        template<typename DeviceT>
+        void sendDeviceErrorState(DeviceT& device_)
+        {
+            static_assert(std::is_base_of_v<CanDeviceT, DeviceT>, "Template parameter must be of type CanDeviceT");
+
+            Msgs::ErrorState msg;
+            msg.data().error = HealthState::getInstance().getInError();
+
+            this->sendMsg(device_.getCanId(), msg);
         }
 
         CanDriverT& _driver;
-        std::tuple<DevicesT...> _canDevices;
-        Watchdog<unsigned long, millis> watchdog;
+        CanDevice<SubscriberMember<Msgs::ErrorState, CanManager<CanDriverT, DevicesT...>>> _dev_Master;
     };
 
     template<typename CanDriverT, typename... DevicesT>
