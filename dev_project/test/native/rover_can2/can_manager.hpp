@@ -272,8 +272,8 @@ TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReportingWithDevices)
 
 TEST(SUITE_ROVER_CAN2_CanManager, ManagerDeviceManagementIntegrationTest)
 {
-    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
-    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub1;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg, 10UL> pub0;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg, 10UL> pub1;
 
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
         TestCanManager::CB_Helper);

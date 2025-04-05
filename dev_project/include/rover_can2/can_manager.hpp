@@ -57,8 +57,6 @@ namespace RoverCan2
         {
             _driver.update();
 
-            this->publishAllQueuedMsgs();
-
             std::optional<CanMsg> msgOpt = std::nullopt;
             for (uint8_t i = 0U; i < MAX_MSG_PARSE_PER_UPDATE; i++)
             {
@@ -70,6 +68,8 @@ namespace RoverCan2
 
                 this->parseMsgAllDevices(msgOpt.value());
             }
+
+            this->publishAllQueuedMsgs();
         }
 
         template<typename MsgT>
@@ -178,7 +178,7 @@ namespace RoverCan2
             std::apply(
                 [&](DevicesT&... devices_)
                 {
-                    ((devices_.sendPubQueuedMsgs(*this)), ...);
+                    ((devices_.sendPubsQueuedMsgs(*this)), ...);
                 },
                 _canDevices);
         }

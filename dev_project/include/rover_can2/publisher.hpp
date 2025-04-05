@@ -17,16 +17,22 @@ namespace RoverCan2
         PublisherBaseT() = default;
     };
 
-    template<typename MsgT, size_t MSG_QUEUE_SIZE = 10UL>
-    class Publisher : public PublisherBaseT
+    // Neccessary to allow the extraction of the MsgT type without the being dependent of the queue size
+    template<typename MsgT>
+    class PublisherBase : public PublisherBaseT
+    {
+      protected:
+        PublisherBase() = default;
+    };
+
+    template<typename MsgT, size_t MSG_QUEUE_SIZE = 1UL>
+    class Publisher : public PublisherBase<MsgT>
     {
         VALIDATE_BASE_TYPE(Msgs::MsgBaseT, MsgT);
 
         static constexpr size_t MAX_MSG_TRANSMISSION_PER_CALL = MSG_QUEUE_SIZE;
 
       public:
-        Publisher() {}
-
         /**
          * @brief Queue a msg for transmission
          *

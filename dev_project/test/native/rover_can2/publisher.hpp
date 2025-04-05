@@ -45,7 +45,7 @@ TEST(SUITE_NAME_Publisher, SimplePublish)
 
 TEST(SUITE_NAME_Publisher, MultiplePublish)
 {
-    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg, 10UL> pub;
 
     RoverCan2::Drivers::CanDriverMock driver;
     RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);

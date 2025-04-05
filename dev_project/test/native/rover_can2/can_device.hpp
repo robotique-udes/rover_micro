@@ -188,8 +188,64 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubFromDevice)
     pub1.queueMsg(msg);
 
     GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == 0);
-    device.sendPubQueuedMsgs(manager);
+    device.sendPubsQueuedMsgs(manager);
     GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == (2 * TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, PubSendMsgFromDevice)
+{
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
+
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0);
+
+    RoverCan2::Drivers::CanDriverMock driver;
+    RoverCan2::CanManager manager(driver, device);
+    manager.init();
+
+    RoverCan2::Msgs::TestMsg msg;
+    msg.data().cmd = 69.0F;
+    msg.data().closeLoop = true;
+
+    RoverCan2::CanDeviceT::eReturnValue retval = device.sendMsg(msg);
+    GTEST_ASSERT_TRUE(retval == RoverCan2::CanDeviceT::eReturnValue::SUCCESS);
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, MultiplePubSendMsgFromDevice)
+{
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub0;
+    RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub1;
+
+    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1);
+
+    RoverCan2::Drivers::CanDriverMock driver;
+    RoverCan2::CanManager manager(driver, device);
+    manager.init();
+
+    RoverCan2::Msgs::TestMsg msg;
+    msg.data().cmd = 69.0F;
+    msg.data().closeLoop = true;
+
+    RoverCan2::CanDeviceT::eReturnValue retval = device.sendMsg(msg);
+    GTEST_ASSERT_TRUE(retval == RoverCan2::CanDeviceT::eReturnValue::SUCCESS);
+
+    manager.update();
+    GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == (2UL * TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
+}
+
+TEST(SUITE_ROVER_CAN2_CanDevice, SendMsgFromDeviceNoPub)
+{
+    RoverCan2::CanDevice<> device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+
+    RoverCan2::Drivers::CanDriverMock driver;
+    RoverCan2::CanManager manager(driver, device);
+    manager.init();
+
+    RoverCan2::Msgs::TestMsg msg;
+    msg.data().cmd = 69.0F;
+    msg.data().closeLoop = true;
+
+    RoverCan2::CanDeviceT::eReturnValue retval = device.sendMsg(msg);
+    GTEST_ASSERT_TRUE(retval == RoverCan2::CanDeviceT::eReturnValue::NOT_CONCERNED);
 }
 
 TEST(SUITE_ROVER_CAN2_CanDevice, PubAndSubInDevice)
@@ -216,7 +272,7 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubAndSubInDeviceIntegrationTest)
     RoverCan2::Drivers::CanDriverMock driver;
     RoverCan2::CanManager manager(driver, device);
     manager.init();
-    
+
     // Send msg
     RoverCan2::Msgs::TestMsg sendMsg;
     sendMsg.data().cmd = 69.0F;
@@ -236,6 +292,6 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubAndSubInDeviceIntegrationTest)
     GTEST_ASSERT_TRUE(TestCanDevice::g_callbackCounter == 2UL);
 
     GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == 0);
-    device.sendPubQueuedMsgs(manager);
+    device.sendPubsQueuedMsgs(manager);
     GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == (TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
 }

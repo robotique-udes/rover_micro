@@ -14,6 +14,14 @@ namespace RoverCan2
     // Allows template shadowing for type validation
     class CanDeviceT
     {
+      public:
+        enum class eReturnValue
+        {
+            NOT_CONCERNED,
+            SUCCESS,
+            FAILED,
+        };
+
       protected:
         CanDeviceT() = default;
     };
@@ -55,8 +63,39 @@ namespace RoverCan2
             return success;
         }
 
+        template<typename MsgT>
+        eReturnValue sendMsg(const MsgT& msg_)
+        {
+            VALIDATE_BASE_TYPE(Msgs::MsgBaseT, MsgT);
+
+            if constexpr (sizeof...(Pubs_SubsT) == 0)
+            {
+                return eReturnValue::NOT_CONCERNED;
+            }
+            else
+            {
+                eReturnValue retval = eReturnValue::NOT_CONCERNED;
+                auto handleFuncResult = [&](eReturnValue newResult_)
+                {
+                    if (TO_UNDERLYING(newResult_) > TO_UNDERLYING(retval))
+                    {
+                        retval = newResult_;
+                    }
+                };
+
+                std::apply(
+                    [&](Pubs_SubsT&... pub_sub_)
+                    {
+                        (handleFuncResult(this->sendPubMsg(pub_sub_, msg_)), ...);
+                    },
+                    _pubs_subs);
+
+                return retval;
+            }
+        }
+
         template<typename ManagerT>
-        bool sendPubQueuedMsgs(ManagerT& manager_)
+        bool sendPubsQueuedMsgs(ManagerT& manager_)
         {
             VALIDATE_BASE_TYPE(CanManagerT, ManagerT);
 
@@ -64,7 +103,7 @@ namespace RoverCan2
             std::apply(
                 [&](Pubs_SubsT&... pub_)
                 {
-                    ((allSuccess &= this->sendPubMsg(manager_, pub_)), ...);
+                    ((allSuccess &= this->sendPubQueuedMsg(manager_, pub_)), ...);
                 },
                 _pubs_subs);
 
@@ -108,7 +147,7 @@ namespace RoverCan2
         }
 
         template<typename ManagerT, typename PubT>
-        bool sendPubMsg(ManagerT& manager_, PubT& pub_)
+        bool sendPubQueuedMsg(ManagerT& manager_, PubT& pub_)
         {
             VALIDATE_BASE_TYPE(CanManagerT, ManagerT);
 
@@ -118,6 +157,27 @@ namespace RoverCan2
             }
 
             return true;  // Not concerned
+        }
+
+        template<typename PubSubT, typename MsgT>
+        eReturnValue sendPubMsg(PubSubT& pub_, const MsgT& msg_)
+        {
+            VALIDATE_BASE_TYPE(Msgs::MsgBaseT, MsgT);
+
+            if constexpr (std::is_base_of_v<PublisherBase<MsgT>, std::remove_reference_t<decltype(pub_)>>)
+            {
+                CircularBufferT::eErrorCode retVal = pub_.queueMsg(msg_);
+                if (retVal == CircularBufferT::eErrorCode::SUCCESS || retVal == CircularBufferT::eErrorCode::SUCCESS_DATA_LOSS)
+                {
+                    return eReturnValue::SUCCESS;
+                }
+                else
+                {
+                    return eReturnValue::FAILED;
+                }
+            }
+
+            return eReturnValue::NOT_CONCERNED;
         }
 
         const RoverCan2::Constant::eDeviceId _id;
