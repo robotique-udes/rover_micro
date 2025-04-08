@@ -7,22 +7,24 @@
 #include "hal/twai_types.h"
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
-#include <cstdint>
 #include <cstring>
-#include "rover_lib2/helpers/macros.hpp"
 
 namespace RoverCan2
 {
+    /**
+     * @brief Structure to hold platform independant can msgs, follows the rover protocol. Only internal use
+     * @attention [WARNING] Internal use only
+     */
     struct CanMsg
     {
 #if defined(ARDUINO_ESP32S3_DEV)
         CanMsg(twai_message_t& twaiMsg_):
-            CanMsg(static_cast<RoverCan2::Constant::eDeviceId>(twaiMsg_.identifier), twaiMsg_.data, twaiMsg_.data_length_code)
-        {
-        }
+            CanMsg(static_cast<RoverCan2::Constant::eDeviceId>(twaiMsg_.identifier), twaiMsg_.data, twaiMsg_.data_length_code){
+#warning TODO: Test
+            }
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
-        CanMsg(RoverCan2::Constant::eDeviceId canID_, const uint8_t* data_, uint8_t dataLength_)
+            CanMsg(RoverCan2::Constant::eDeviceId canID_, const uint8_t* data_, uint8_t dataLength_)
         {
             _canID = canID_;
 
@@ -30,14 +32,12 @@ namespace RoverCan2
             {
                 dataLength = msgData.size();
                 std::memset(msgData.data(), 0, msgData.size());
-                _msgID = Constant::eMsgId::INVALID;
                 _msgContentID = 0U;
             }
             else
             {
                 dataLength = dataLength_;
                 std::memcpy(msgData.data(), data_, dataLength_);
-                _msgID = this->getMsgID();
                 _msgContentID = this->getMsgContentID();
             }
         }
@@ -123,7 +123,6 @@ namespace RoverCan2
 
       private:
         RoverCan2::Constant::eDeviceId _canID;
-        RoverCan2::Constant::eMsgId _msgID;
         uint8_t _msgContentID;
     };
 }  // namespace RoverCan2

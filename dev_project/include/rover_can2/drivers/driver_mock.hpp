@@ -1,13 +1,13 @@
 #ifndef CAN_DRIVER_MOCK_HPP
 #define CAN_DRIVER_MOCK_HPP
 
-#include "rover_can2/drivers/can_driver_base.hpp"
+#include "rover_can2/drivers/driver_base.hpp"
 #include "rover_can2/msgs/test_msg.hpp"
 #include "rover_lib2/helpers/circular_buffer.hpp"
 
 namespace RoverCan2::Drivers
 {
-    class CanDriverMock : public CanDriverBase<CanDriverMock>
+    class DriverMock : public DriverBase<DriverMock>
     {
       public:
         void __init(void)

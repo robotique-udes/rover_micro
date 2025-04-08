@@ -8,7 +8,7 @@
 void setup()
 {
     Serial.begin(115200);
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
     // RoverCan2::Managers::SlaveCanManager<RoverCan2::Drivers::CanDriverMock> canManager(canDriver);
 
     for (EVER)

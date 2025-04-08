@@ -7,11 +7,11 @@
  */
 #include <gtest/gtest.h>
 
-#include "rover_can2/can_device.hpp"
-#include "rover_can2/can_manager.hpp"
+#include "rover_can2/device.hpp"
+#include "rover_can2/manager.hpp"
 #include "rover_can2/subscriber.hpp"
 #include "rover_can2/publisher.hpp"
-#include "rover_can2/drivers/can_driver_mock.hpp"
+#include "rover_can2/drivers/driver_mock.hpp"
 
 #include "rover_can2/msgs/test_msg.hpp"
 
@@ -25,15 +25,15 @@ namespace TestIntegrationTests
     bool closedLoopValue = false;
     float targetSpeedValue = 0.0F;
 
-    class TestSystem : public RoverCan2::CanDevice<RoverCan2::SubscriberMember<RoverCan2::Msgs::TestMsg, TestSystem>,
-                                                   RoverCan2::Publisher<RoverCan2::Msgs::TestMsg2, 1>>,
+    class TestSystem : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::TestMsg, TestSystem>,
+                                                RoverCan2::Publisher<RoverCan2::Msgs::TestMsg2, 1>>,
                        public RoverObject<TestSystem>
     {
       public:
         TestSystem():
-            CanDevice(RoverCan2::Constant::eDeviceId::TEST_DEVICE,
-                      RoverCan2::SubscriberMember{*this, &TestSystem::CB_testMsgs},
-                      RoverCan2::Publisher<RoverCan2::Msgs::TestMsg2, 1>())
+            Device(RoverCan2::Constant::eDeviceId::TEST_DEVICE,
+                   RoverCan2::SubscriberMember{*this, &TestSystem::CB_testMsgs},
+                   RoverCan2::Publisher<RoverCan2::Msgs::TestMsg2, 1>())
         {
         }
 
@@ -62,14 +62,16 @@ namespace TestIntegrationTests
 
 TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgReception)
 {
+    HealthState::getInstance().setInError(false); // Disabling error state reporting to get accurate sentMsg buffer
+
     // Inits
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
 
     TestIntegrationTests::TestSystem system;
     system.init();
     system.update();
 
-    RoverCan2::CanManager canManager(canDriver, system);
+    RoverCan2::Manager canManager(canDriver, system);
     canManager.init();
 
     // Simulating one msgs comming in:
@@ -95,13 +97,13 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgReception)
 TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSending)
 {
     // Inits
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
 
     TestIntegrationTests::TestSystem system;
     system.init();
     system.update();
 
-    RoverCan2::CanManager canManager(canDriver, system);
+    RoverCan2::Manager canManager(canDriver, system);
     canManager.init();
 
     RoverCan2::Msgs::TestMsg2 msg;
@@ -115,13 +117,13 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSending)
 TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSendingQueue)
 {
     // Inits
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
 
     TestIntegrationTests::TestSystem system;
     system.init();
     system.update();
 
-    RoverCan2::CanManager canManager(canDriver, system);
+    RoverCan2::Manager canManager(canDriver, system);
     canManager.init();
 
     // Simulating one msgs comming in:
@@ -139,13 +141,13 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSendingQueue)
 TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgRecvAndSendFromCB)
 {
     // Inits
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
 
     TestIntegrationTests::TestSystem system;
     system.init();
     system.update();
 
-    RoverCan2::CanManager canManager(canDriver, system);
+    RoverCan2::Manager canManager(canDriver, system);
     canManager.init();
 
     // Simulating one msgs comming in:

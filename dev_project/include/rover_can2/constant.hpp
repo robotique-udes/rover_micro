@@ -2,11 +2,12 @@
 #define __CONSTANT_HPP__
 
 #include <cstdint>
-#include "rover_lib2/helpers/static_array.hpp"
+#include "rover_lib2/helpers/compile_time_array.hpp"
 
 namespace RoverCan2::Constant
 {
     constexpr size_t CAN_MAX_DATA_LENGTH = 8UL;
+    constexpr float MASTER_HEARTBEAT_RATE_HZ = 10.0F;
 
     enum class eDeviceId : uint16_t
     {
@@ -85,8 +86,17 @@ namespace RoverCan2::Constant
         // clang-format on
     };
 
-    constexpr StaticArray<eMsgId, 3UL> SUPPORTED_MSGS = {eMsgId::TEST_MSG, eMsgId::TEST_MSG_2, eMsgId::ERROR_STATE};
+    /**
+     * @brief Array holding all valid and implemented msgs used on the network.
+     *
+     */
+    constexpr CompileTimeArray<eMsgId, 3UL> SUPPORTED_MSGS = {eMsgId::TEST_MSG, eMsgId::TEST_MSG_2, eMsgId::ERROR_STATE};
 
+    /**
+     * @brief
+     * @attention [WARNING] Internal use only
+     *
+     */
     enum class eDataIndex : uint8_t
     {
         MSG_ID = 0x00,
@@ -94,12 +104,6 @@ namespace RoverCan2::Constant
         START_OF_DATA = 0x02
     };
 
-    enum class eInternalErrorCode : uint8_t
-    {
-        OK,
-        WARNING,
-        ERROR
-    };
 }  // namespace RoverCan2::Constant
 
 #endif  // __CONSTANT_HPP__

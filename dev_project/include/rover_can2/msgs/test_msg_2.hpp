@@ -25,7 +25,7 @@ namespace RoverCan2::Msgs
             bool closeLoop;
         };
 
-        static constexpr StaticArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
+        static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
             = {eMsgContentID::CMD, eMsgContentID::CLOSE_LOOP};
 
       public:

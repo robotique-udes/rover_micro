@@ -23,7 +23,13 @@ class CircularBufferT
     CircularBufferT() = default;
 };
 
-template<typename TYPE, std::size_t SIZE>
+/**
+ * @brief FIFO Circular buffer
+ *
+ * @tparam DataT Any data type with a copy constructor
+ * @tparam SIZE Nb of element in buffer
+ */
+template<typename DataT, std::size_t SIZE>
 class CircularBuffer : public CircularBufferT
 {
   public:
@@ -40,7 +46,7 @@ class CircularBuffer : public CircularBufferT
      * @return eErrorCode::SUCCESS on success, eErrorCode::SUCCESS_DATA_LOSS
      * buffer is full and the data was added by overwriting unread data.
      */
-    eErrorCode addValue(const TYPE& value_)
+    eErrorCode addValue(const DataT& value_)
     {
         _buffer[_addCursor].emplace(value_);
         _addCursor = (_addCursor + 1UL) % _buffer.size();
@@ -56,7 +62,12 @@ class CircularBuffer : public CircularBufferT
         }
     }
 
-    std::optional<TYPE> getValue(void)
+    /**
+     * @brief Return and remove the FIFO element in the buffer or std::nullopt if there's no more data in the buffer
+     *
+     * @return std::optional<DataT>
+     */
+    std::optional<DataT> getValue(void)
     {
         if (_size == 0)
         {
@@ -64,7 +75,7 @@ class CircularBuffer : public CircularBufferT
         }
 
         std::size_t getCursor = (_addCursor - _size + _buffer.size()) % _buffer.size();
-        std::optional<TYPE> value = _buffer[getCursor];
+        std::optional<DataT> value = _buffer[getCursor];
 
         _buffer[getCursor] = std::nullopt;
         _size--;
@@ -85,6 +96,11 @@ class CircularBuffer : public CircularBufferT
         this->init();
     }
 
+    /**
+     * @brief Return number of element currently in buffer
+     *
+     * @return std::size_t
+     */
     std::size_t size(void) const
     {
         return _size;
@@ -97,7 +113,7 @@ class CircularBuffer : public CircularBufferT
         _size = 0UL;
     }
 
-    std::array<std::optional<TYPE>, SIZE> _buffer;
+    std::array<std::optional<DataT>, SIZE> _buffer;
     std::size_t _addCursor = 0UL;
     std::size_t _size = 0UL;
 };

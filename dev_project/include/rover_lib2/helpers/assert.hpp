@@ -30,6 +30,7 @@ namespace
 
     inline void ABORT(void)
     {
+
         SHUTDOWN_PWM();
         LOG_FLUSH();
         abort();

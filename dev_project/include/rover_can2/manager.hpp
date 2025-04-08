@@ -1,14 +1,16 @@
-#ifndef CAN_MANAGER_HPP
-#define CAN_MANAGER_HPP
+#ifndef MANAGER_HPP
+#define MANAGER_HPP
 
 #include "rover_can2/msgs/error_state.hpp"
-#include "rover_can2/subscriber.hpp"
 
-#include "rover_can2/drivers/can_driver_base.hpp"
-#include "rover_can2/can_device.hpp"
-#include "rover_lib2/helpers/log.hpp"
+#include "rover_can2/drivers/driver_base.hpp"
+#include "rover_can2/device.hpp"
+#include "rover_can2/constant.hpp"
+
 #include "rover_lib2/rover_object.hpp"
 #include "rover_lib2/helpers/health_state.hpp"
+
+#include "rover_lib2/helpers/loop_timer.hpp"
 
 #include <tuple>
 #include <optional>
@@ -17,34 +19,35 @@ DEFINE_LOG_NODE(CanManager, Logger::eNodeState::OFF);
 
 namespace RoverCan2
 {
-    // Allows shadow type validation
-    class CanManagerT
+    /**
+     * @brief Base Manager class. Allows template abstraction for type validation
+     */
+    class ManagerT
     {
       protected:
-        CanManagerT() = default;
+        ManagerT() = default;
     };
-    template<typename CanDriverT, typename... DevicesT>
-    class CanManager : public RoverObject<CanManager<CanDriverT, DevicesT...>>,
-                       CanManagerT
-    {
-        VALIDATE_BASE_TYPE(Drivers::CanDriverBaseT, CanDriverT);
-        VALIDATE_BASE_TYPE_PACK(CanDeviceT, DevicesT);
 
-        static_assert((std::is_base_of_v<CanDeviceT, std::remove_reference_t<DevicesT>> && ...),
-                      "All DevicesT... must be of type CanDevice");
+    template<typename DriverT, typename... DevicesT>
+    class Manager : public RoverObject<Manager<DriverT, DevicesT...>>,
+                    ManagerT
+    {
+        VALIDATE_BASE_TYPE(Drivers::DriverBaseT, DriverT);
+        VALIDATE_BASE_TYPE_PACK(DeviceT, DevicesT);
 
         static constexpr uint8_t MAX_MSG_PARSE_PER_UPDATE = 10U;
-        static constexpr unsigned long MASTER_HEARTBEAT_FREQUENCY_HZ = 10UL;
         static constexpr Constant::eDeviceId ERROR_STATE_HANDLER_ID = Constant::eDeviceId::MASTER_COMPUTER_UNIT;
+        static constexpr unsigned long ERROR_STATE_REPORTING_PERIOD_S = 2'000UL;
 
       public:
-        CanManager(CanDriverT& driver_, DevicesT&&... devices_):
-            _canDevices(std::forward<DevicesT>(devices_)...),
+        Manager(DriverT& driver_, DevicesT&&... devices_):
             _driver(driver_),
+            _canDevices(std::forward<DevicesT>(devices_)...),
             _dev_Master(ERROR_STATE_HANDLER_ID,
-                        SubscriberMember<Msgs::ErrorState, CanManager<CanDriverT, DevicesT...>>{
+                        SubscriberMember<Msgs::ErrorState, Manager<DriverT, DevicesT...>>{
                             *this,
-                            &CanManager<CanDriverT, DevicesT...>::CB_ErrorStateFromMaster})
+                            &Manager<DriverT, DevicesT...>::CB_ErrorStateFromMaster}),
+            _errorStateReportingLoop(ERROR_STATE_REPORTING_PERIOD_S)
         {
         }
 
@@ -56,6 +59,11 @@ namespace RoverCan2
         void _update(void)
         {
             _driver.update();
+
+            if (_errorStateReportingLoop.isReady() && HealthState::getInstance().getInError())
+            {
+                this->reportErrorStateToMaster();
+            }
 
             std::optional<CanMsg> msgOpt = std::nullopt;
             for (uint8_t i = 0U; i < MAX_MSG_PARSE_PER_UPDATE; i++)
@@ -72,6 +80,14 @@ namespace RoverCan2
             this->publishAllQueuedMsgs();
         }
 
+        /**
+         * @brief Sends a message on the CAN network. Unless "sendEvenIfDeviceIdInvalid_" is set, a DeviceT must be "registered"
+         * with the passed "senderId_" for the call to succeed.
+         * @tparam MsgT Type of Msg which will be sent
+         * @param senderId_
+         * @param msg_
+         * @param sendEvenIfDeviceIdInvalid_
+         */
         template<typename MsgT>
         bool sendMsg(Constant::eDeviceId senderId_, const MsgT& msg_, bool sendEvenIfDeviceIdInvalid_ = false)
         {
@@ -98,7 +114,7 @@ namespace RoverCan2
                 }
             }
 
-            bool success = false;
+            bool success = true;
             uint8_t nbOfMsgToSend = msg_.getMsgContentCount();
             for (uint8_t i = 0U; i < nbOfMsgToSend; i++)
             {
@@ -116,9 +132,6 @@ namespace RoverCan2
 
             return success;
         }
-
-      protected:
-        std::tuple<DevicesT...> _canDevices;
 
       private:
         bool parseMsgAllDevices(const CanMsg& msg_)
@@ -154,6 +167,11 @@ namespace RoverCan2
 
         void CB_ErrorStateFromMaster(const Msgs::ErrorState& /*msg_*/)
         {
+            this->reportErrorStateToMaster();
+        }
+
+        void reportErrorStateToMaster(void)
+        {
             std::apply(
                 [&](DevicesT&... device)
                 {
@@ -165,12 +183,17 @@ namespace RoverCan2
         template<typename DeviceT>
         void sendDeviceErrorState(DeviceT& device_)
         {
-            static_assert(std::is_base_of_v<CanDeviceT, DeviceT>, "Template parameter must be of type CanDeviceT");
+            static_assert(std::is_base_of_v<DeviceT, DeviceT>, "Template parameter must be of type CanDeviceT");
 
             Msgs::ErrorState msg;
             msg.data().error = HealthState::getInstance().getInError();
 
-            this->sendMsg(device_.getCanId(), msg);
+            if (!this->sendMsg(device_.getCanId(), msg, true))
+            {
+                LOG_WARN(Logger::Nodes::CanManager,
+                         "Unable to send error state msg for device id: %u",
+                         TO_UNDERLYING(device_.getCanId()));
+            }
         }
 
         void publishAllQueuedMsgs(void)
@@ -183,13 +206,14 @@ namespace RoverCan2
                 _canDevices);
         }
 
-        CanDriverT& _driver;
-        CanDevice<SubscriberMember<Msgs::ErrorState, CanManager<CanDriverT, DevicesT...>>> _dev_Master;
+        DriverT& _driver;
+        std::tuple<DevicesT...> _canDevices;
+        Device<SubscriberMember<Msgs::ErrorState, Manager<DriverT, DevicesT...>>> _dev_Master;
+        LoopTimer<unsigned long, millis> _errorStateReportingLoop;
     };
 
-    template<typename CanDriverT, typename... DevicesT>
-    CanManager(CanDriverT canDriver_, DevicesT&&...) -> CanManager<CanDriverT, DevicesT...>;
-
+    template<typename DriverT, typename... DevicesT>
+    Manager(DriverT canDriver_, DevicesT&&...) -> Manager<DriverT, DevicesT...>;
 }  // namespace RoverCan2
 
-#endif  // CAN_MANAGER_HPP
+#endif  // MANAGER_HPP

@@ -11,6 +11,10 @@ DEFINE_LOG_NODE(CanHelpers, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Helpers
 {
+    /**
+     * @brief
+     * @attention [WARNING] Internal use only
+     */
     template<typename ROVER_MSG_CONTENT_TYPE>
     constexpr bool DATA_LENGTH_MATCHES_MSG_CONTENT(uint8_t dataLength_)
     {
@@ -29,6 +33,10 @@ namespace RoverCan2::Helpers
         return dataLength_ == (sizeof(ROVER_MSG_CONTENT_TYPE) + TO_UNDERLYING(Constant::eDataIndex::START_OF_DATA));
     }
 
+    /**
+     * @brief
+     * @attention [WARNING] Internal use only
+     */
     template<typename ROVER_MSG_CONTENT_TYPE>
     constexpr bool CAN_MSG_TO_ROVER_MSG_CONTENT(const CanMsg& canMsg_, ROVER_MSG_CONTENT_TYPE& msgContent_)
     {
@@ -58,6 +66,10 @@ namespace RoverCan2::Helpers
         return true;
     }
 
+    /**
+     * @brief
+     * @attention [WARNING] Internal use only
+     */
     template<typename ROVER_MSG_CONTENT_TYPE>
     constexpr void ROVER_MSG_CONTENT_TO_CAN_MSG(RoverCan2::Constant::eMsgId msgId_,
                                                 uint8_t msgContentID_,
@@ -79,6 +91,10 @@ namespace RoverCan2::Helpers
         std::memcpy(&(canMsg_.msgData[TO_UNDERLYING(Constant::eDataIndex::START_OF_DATA)]), &msgContent_, sizeof(msgContent_));
     }
 
+    /**
+     * @brief
+     * @attention [WARNING] Internal use only
+     */
     template<typename ROVER_MSG_ENUM_TYPE>
     constexpr bool MSG_CONTENT_IS_LAST_ELEM(const CanMsg& canMsg_)
     {

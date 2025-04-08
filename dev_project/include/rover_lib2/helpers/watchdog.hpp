@@ -24,7 +24,7 @@ class Watchdog
     }
 
   private:
-    RoverLib2::Chrono<ClockFuncReturnT, ClockFunc> chrono;
+    Chrono<ClockFuncReturnT, ClockFunc> chrono;
     const ClockFuncReturnT _interval;
 };
 

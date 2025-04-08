@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "rover_can2/can_manager.hpp"
-#include "rover_can2/drivers/can_driver_mock.hpp"
+#include "rover_can2/manager.hpp"
+#include "rover_can2/drivers/driver_mock.hpp"
 #include "rover_can2/msgs/test_msg.hpp"
 #include "rover_can2/msgs/error_state.hpp"
 
@@ -28,12 +28,12 @@ namespace TestCanManager
 
 TEST(SUITE_ROVER_CAN2_CanManager, Construction)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
         TestCanManager::CB_Helper);
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
 
-    RoverCan2::CanManager canManager(canDriver, device);
+    RoverCan2::Manager canManager(canDriver, device);
 }
 
 /**
@@ -42,12 +42,12 @@ TEST(SUITE_ROVER_CAN2_CanManager, Construction)
  */
 TEST(SUITE_ROVER_CAN2_CanManager, Init)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
         TestCanManager::CB_Helper);
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
 
-    RoverCan2::CanManager canManager(canDriver, device);
+    RoverCan2::Manager canManager(canDriver, device);
     canManager.init();
 
     GTEST_ASSERT_TRUE(canDriver.isInited == true);
@@ -59,12 +59,12 @@ TEST(SUITE_ROVER_CAN2_CanManager, Init)
  */
 TEST(SUITE_ROVER_CAN2_CanManager, Update)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
         TestCanManager::CB_Helper);
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
 
-    RoverCan2::CanManager canManager(canDriver, device);
+    RoverCan2::Manager canManager(canDriver, device);
     canManager.init();
     canManager.update();
 
@@ -73,13 +73,13 @@ TEST(SUITE_ROVER_CAN2_CanManager, Update)
 
 TEST(SUITE_ROVER_CAN2_CanManager, MsgRecvHandling)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
         TestCanManager::CB_Helper);
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
 
     TestCanManager::g_callbackCounter = 0U;
-    RoverCan2::CanManager canManager(canDriver, device);
+    RoverCan2::Manager canManager(canDriver, device);
     canManager.init();
     canManager.update();
 
@@ -101,13 +101,13 @@ TEST(SUITE_ROVER_CAN2_CanManager, MsgRecvHandling)
 
 TEST(SUITE_ROVER_CAN2_CanManager, MsgRecvHandlingInfiniteLoop)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
+    RoverCan2::Drivers::DriverMock canDriver;
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
         TestCanManager::CB_Helper);
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
 
     TestCanManager::g_callbackCounter = 0U;
-    RoverCan2::CanManager canManager(canDriver, device);
+    RoverCan2::Manager canManager(canDriver, device);
     canManager.init();
     canManager.update();
 
@@ -135,9 +135,9 @@ TEST(SUITE_ROVER_CAN2_CanManager, MsgRecvHandlingInfiniteLoop)
 
 TEST(SUITE_ROVER_CAN2_CanManager, MsgSending)
 {
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
-    RoverCan2::Drivers::CanDriverMock canDriver;
-    RoverCan2::CanManager canManager(canDriver, device);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    RoverCan2::Drivers::DriverMock canDriver;
+    RoverCan2::Manager canManager(canDriver, device);
     canManager.init();
     canManager.update();
 
@@ -167,8 +167,8 @@ TEST(SUITE_ROVER_CAN2_CanManager, MsgSending)
 
 TEST(SUITE_ROVER_CAN2_CanManager, MsgSendingInvalidSenderID)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
-    RoverCan2::CanManager canManager(canDriver);
+    RoverCan2::Drivers::DriverMock canDriver;
+    RoverCan2::Manager canManager(canDriver);
     canManager.init();
     canManager.update();
 
@@ -183,8 +183,8 @@ TEST(SUITE_ROVER_CAN2_CanManager, MsgSendingInvalidSenderID)
 
 TEST(SUITE_ROVER_CAN2_CanManager, MsgSendingInvalidSenderIDBypass)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
-    RoverCan2::CanManager canManager(canDriver);
+    RoverCan2::Drivers::DriverMock canDriver;
+    RoverCan2::Manager canManager(canDriver);
     canManager.init();
     canManager.update();
 
@@ -214,8 +214,8 @@ TEST(SUITE_ROVER_CAN2_CanManager, MsgSendingInvalidSenderIDBypass)
 
 TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReportingNoDevices)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
-    RoverCan2::CanManager canManager(canDriver);
+    RoverCan2::Drivers::DriverMock canDriver;
+    RoverCan2::Manager canManager(canDriver);
     canManager.init();
     canManager.update();
 
@@ -230,10 +230,10 @@ TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReportingNoDevices)
 
 TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReceivedFromNonMaster)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
-    RoverCan2::CanDevice<> device1(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    RoverCan2::Drivers::DriverMock canDriver;
+    RoverCan2::Device<> device1(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
 
-    RoverCan2::CanManager canManager(canDriver, device1);
+    RoverCan2::Manager canManager(canDriver, device1);
     canManager.init();
     canManager.update();
 
@@ -248,12 +248,12 @@ TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReceivedFromNonMaster)
 
 TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReportingWithDevices)
 {
-    RoverCan2::Drivers::CanDriverMock canDriver;
-    RoverCan2::CanDevice<> device1(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
-    RoverCan2::CanDevice<> device2(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
-    RoverCan2::CanDevice<> device3(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    RoverCan2::Drivers::DriverMock canDriver;
+    RoverCan2::Device<> device1(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    RoverCan2::Device<> device2(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    RoverCan2::Device<> device3(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
 
-    RoverCan2::CanManager canManager(canDriver, device1, device2, device3);
+    RoverCan2::Manager canManager(canDriver, device1, device2, device3);
     canManager.init();
     canManager.update();
 
@@ -280,10 +280,10 @@ TEST(SUITE_ROVER_CAN2_CanManager, ManagerDeviceManagementIntegrationTest)
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub1(
         TestCanManager::CB_Helper);
 
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1, sub0, sub1);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1, sub0, sub1);
 
-    RoverCan2::Drivers::CanDriverMock driver;
-    RoverCan2::CanManager manager(driver, device);
+    RoverCan2::Drivers::DriverMock driver;
+    RoverCan2::Manager manager(driver, device);
     manager.init();
 
     // Send msg
@@ -310,4 +310,24 @@ TEST(SUITE_ROVER_CAN2_CanManager, ManagerDeviceManagementIntegrationTest)
     manager.update();
     GTEST_ASSERT_TRUE(TestCanManager::g_callbackCounter == 3 * (TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
     GTEST_ASSERT_TRUE(driver.msgSentBuffer.size() == 3 * (TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::eLAST)));
+}
+
+TEST(SUITE_ROVER_CAN2_CanManager, ManagerHealthStateReporting)
+{
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+
+    RoverCan2::Drivers::DriverMock driver;
+    RoverCan2::Manager manager(driver, device);
+    manager.init();
+    HealthState::getInstance().setInError();
+
+    // Error state should be repported each 2 seconds
+    // std::this_thread::sleep_for(std::chrono::seconds(2));
+    manager.update();
+
+    auto msgOpt = driver.msgSentBuffer.getValue();
+    GTEST_ASSERT_TRUE(msgOpt.has_value());  // Msg was appended
+
+    GTEST_ASSERT_TRUE(msgOpt.value().getCanID() == RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    GTEST_ASSERT_TRUE(msgOpt.value().getMsgID() == RoverCan2::Constant::eMsgId::ERROR_STATE);
 }

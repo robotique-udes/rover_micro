@@ -9,15 +9,23 @@
 
 namespace RoverCan2
 {
-    class CanManagerT;
+    // Forward declarations
+    class ManagerT;
 
+    /**
+     * @brief Base Publisher class. Allows template abstraction for type validation
+     */
     class PublisherBaseT
     {
       protected:
         PublisherBaseT() = default;
     };
 
-    // Neccessary to allow the extraction of the MsgT type without the being dependent of the queue size
+    /**
+     * Allows MSG_QUEUE_SIZE template abstraction for type validation while keeping MsgT
+     *
+     * @tparam MsgT
+     */
     template<typename MsgT>
     class PublisherBase : public PublisherBaseT
     {
@@ -25,6 +33,13 @@ namespace RoverCan2
         PublisherBase() = default;
     };
 
+    /**
+     * @brief Registering a publisher to a DeviceT will allow the corresponding device to send msg of that type
+     *
+     * @tparam MsgT Type of msg which the subscriber can send
+     * @tparam MSG_QUEUE_SIZE Sent msgs are bufferized, increasing this lowers the chance of data loss if a msgs wasn't sent
+     * before a 2nd call to queueMsg() but slows down code execution, increase bandwidth usage and memory usage.
+     */
     template<typename MsgT, size_t MSG_QUEUE_SIZE = 1UL>
     class Publisher : public PublisherBase<MsgT>
     {
@@ -45,18 +60,16 @@ namespace RoverCan2
         }
 
         /**
-         * @brief Called by the manager in its update loop, can be used directly by user
+         * @brief Called by the manager in its update loop, can be used directly by user but isn't recommended
          *
          * @tparam ManagerT
          * @param senderId_
          * @param manager_
-         * @return true
-         * @return false
          */
         template<typename ManagerT>
         bool sendQueuedMsgs(Constant::eDeviceId senderId_, ManagerT& manager_)
         {
-            VALIDATE_BASE_TYPE(CanManagerT, ManagerT);
+            VALIDATE_BASE_TYPE(ManagerT, ManagerT);
 
             bool allSuccess = true;
             for (size_t i = 0; i < MAX_MSG_TRANSMISSION_PER_CALL; i++)

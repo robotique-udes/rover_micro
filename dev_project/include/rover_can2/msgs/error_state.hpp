@@ -23,7 +23,7 @@ namespace RoverCan2::Msgs
             bool error;
         };
 
-        static constexpr StaticArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
+        static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
             = {eMsgContentID::ERROR};
 
       public:

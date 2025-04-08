@@ -11,8 +11,11 @@
 
 namespace RoverCan2
 {
-    // Allows template shadowing for type validation
-    class CanDeviceT
+    /**
+     * @brief Base Device class. Allows template abstraction for type validation
+     *
+     */
+    class DeviceT
     {
       public:
         enum class eReturnValue
@@ -23,11 +26,17 @@ namespace RoverCan2
         };
 
       protected:
-        CanDeviceT() = default;
+        DeviceT() = default;
     };
 
+    /**
+     * @brief Class which links multiples pubs and subs to ultimatly be a Device on the canbus network. Users should extends
+     * this class to creates custom device the same way a rclcpp::node works in ROS2.
+     *
+     * @tparam Pubs_SubsT
+     */
     template<typename... Pubs_SubsT>
-    class CanDevice : public CanDeviceT
+    class Device : public DeviceT
     {
         // clang-format off
         static_assert((... && (std::is_base_of_v<SubscriberBaseT, std::remove_reference_t<Pubs_SubsT>> 
@@ -38,12 +47,16 @@ namespace RoverCan2
         static constexpr size_t MAX_MSG_PARSED_PER_LOOP = 10U;
 
       public:
-        explicit CanDevice(RoverCan2::Constant::eDeviceId id_, Pubs_SubsT&&... subs_):
+        explicit Device(RoverCan2::Constant::eDeviceId id_, Pubs_SubsT&&... subs_):
             _id(id_),
             _pubs_subs(std::forward<Pubs_SubsT>(subs_)...)
         {
         }
 
+        /**
+         * @brief Tries to load a CanMsg into matching subscribers
+         * @attention [WARNING] Internal use only
+         */
         bool parseMsg(const CanMsg& msgCan_)
         {
             bool success = true;
@@ -63,6 +76,13 @@ namespace RoverCan2
             return success;
         }
 
+        /**
+         * @brief Queues the passed msg into a matching publisher's send buffer. The msg will be sent during the next call
+         * to sendPubsQueuedMsgs().
+         * @attention It's suggested to let the Manager call the sendPubsQueuedMsgs in it's update() loop instead of doing it
+         * manually. The manager needs to be passed to the function anyway.
+         * @attention [WARNING] Internal use only
+         */
         template<typename MsgT>
         eReturnValue sendMsg(const MsgT& msg_)
         {
@@ -94,10 +114,15 @@ namespace RoverCan2
             }
         }
 
+        /**
+         * @brief Sends all the device's publishers queued msgs.
+         * @attention It's suggested to let the Manager call this method in it's update() loop instead of doing it
+         * manually.
+         */
         template<typename ManagerT>
         bool sendPubsQueuedMsgs(ManagerT& manager_)
         {
-            VALIDATE_BASE_TYPE(CanManagerT, ManagerT);
+            VALIDATE_BASE_TYPE(ManagerT, ManagerT);
 
             bool allSuccess = true;
             std::apply(
@@ -110,6 +135,11 @@ namespace RoverCan2
             return allSuccess;
         }
 
+        /**
+         * @brief Return the current device CAN ID
+         *
+         * @return constexpr RoverCan2::Constant::eDeviceId
+         */
         constexpr RoverCan2::Constant::eDeviceId getCanId(void) const
         {
             return _id;
@@ -149,7 +179,7 @@ namespace RoverCan2
         template<typename ManagerT, typename PubT>
         bool sendPubQueuedMsg(ManagerT& manager_, PubT& pub_)
         {
-            VALIDATE_BASE_TYPE(CanManagerT, ManagerT);
+            VALIDATE_BASE_TYPE(ManagerT, ManagerT);
 
             if constexpr (std::is_base_of_v<PublisherBaseT, std::remove_reference_t<decltype(pub_)>>)
             {
@@ -185,7 +215,7 @@ namespace RoverCan2
     };
 
     template<typename... Pubs_SubsT>
-    CanDevice(RoverCan2::Constant::eDeviceId id_, Pubs_SubsT&&...) -> CanDevice<Pubs_SubsT...>;
+    Device(RoverCan2::Constant::eDeviceId id_, Pubs_SubsT&&...) -> Device<Pubs_SubsT...>;
 
 }  // namespace RoverCan2
 

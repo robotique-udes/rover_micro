@@ -24,14 +24,14 @@ TEST(SUITE_HELPER_Chrono, Construction)
 {
     increase_millis();
     increase_millis();
-    RoverLib2::Chrono<uint64_t, mock_millis> chrono;
+    Chrono<uint64_t, mock_millis> chrono;
 
     ASSERT_EQ(chrono.getTime(), static_cast<uint64_t>(0));
 }
 
 TEST(SUITE_HELPER_Chrono, Accumulate_When_Not_Started)
 {
-    RoverLib2::Chrono<uint64_t, mock_millis> chrono;
+    Chrono<uint64_t, mock_millis> chrono;
 
     increase_millis();
     increase_millis();
@@ -40,7 +40,7 @@ TEST(SUITE_HELPER_Chrono, Accumulate_When_Not_Started)
 
 TEST(SUITE_HELPER_Chrono, Start_Resets_Chrono)
 {
-    RoverLib2::Chrono<uint64_t, mock_millis> chrono;
+    Chrono<uint64_t, mock_millis> chrono;
     increase_millis();
     increase_millis();
 
@@ -54,7 +54,7 @@ TEST(SUITE_HELPER_Chrono, Start_Resets_Chrono)
 
 TEST(SUITE_HELPER_Chrono, Pause_Works)
 {
-    RoverLib2::Chrono<uint64_t, mock_millis> chrono;
+    Chrono<uint64_t, mock_millis> chrono;
 
     increase_millis();
     increase_millis();
@@ -66,7 +66,7 @@ TEST(SUITE_HELPER_Chrono, Pause_Works)
 
 TEST(SUITE_HELPER_Chrono, Pause_Resume_Works)
 {
-    RoverLib2::Chrono<uint64_t, mock_millis> chrono;
+    Chrono<uint64_t, mock_millis> chrono;
     increase_millis();
     increase_millis();
 
@@ -83,7 +83,7 @@ TEST(SUITE_HELPER_Chrono, Pause_Resume_Works)
 
 TEST(SUITE_HELPER_Chrono, Restart_Works)
 {
-    RoverLib2::Chrono<uint64_t, mock_millis> chrono;
+    Chrono<uint64_t, mock_millis> chrono;
     increase_millis();
     increase_millis();
 

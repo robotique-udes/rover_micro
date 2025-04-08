@@ -131,7 +131,7 @@ namespace RoverCan2::Msgs
 {struct_sMsgData_members}
         }};
 
-        static constexpr StaticArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
+        static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
             = {{{valid_msg_ids_member}}};
 
       public:

@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "rover_can2/drivers/can_driver_mock.hpp"
+#include "rover_can2/drivers/driver_mock.hpp"
 #include "rover_can2/publisher.hpp"
 #include "rover_can2/msgs/test_msg.hpp"
-#include "rover_can2/can_device.hpp"
-#include "rover_can2/can_manager.hpp"
+#include "rover_can2/device.hpp"
+#include "rover_can2/manager.hpp"
 
 // =============================================================================
 // Helpers
@@ -27,9 +27,9 @@ TEST(SUITE_NAME_Publisher, SimplePublish)
 {
     RoverCan2::Publisher<RoverCan2::Msgs::TestMsg> pub;
 
-    RoverCan2::Drivers::CanDriverMock driver;
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
-    RoverCan2::CanManager manager(driver, device);
+    RoverCan2::Drivers::DriverMock driver;
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    RoverCan2::Manager manager(driver, device);
     manager.init();
 
     RoverCan2::Msgs::TestMsg msg;
@@ -37,6 +37,7 @@ TEST(SUITE_NAME_Publisher, SimplePublish)
     msg.data().closeLoop = true;
     pub.queueMsg(msg);
 
+    HealthState::getInstance().setInError(false); // Disabling error state reporting to get accurate sentMsg buffer
     manager.update();
     pub.sendQueuedMsgs(RoverCan2::Constant::eDeviceId::TEST_DEVICE, manager);
 
@@ -47,9 +48,9 @@ TEST(SUITE_NAME_Publisher, MultiplePublish)
 {
     RoverCan2::Publisher<RoverCan2::Msgs::TestMsg, 10UL> pub;
 
-    RoverCan2::Drivers::CanDriverMock driver;
-    RoverCan2::CanDevice device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
-    RoverCan2::CanManager manager(driver, device);
+    RoverCan2::Drivers::DriverMock driver;
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
+    RoverCan2::Manager manager(driver, device);
     manager.init();
 
     RoverCan2::Msgs::TestMsg msg;
@@ -59,6 +60,7 @@ TEST(SUITE_NAME_Publisher, MultiplePublish)
     pub.queueMsg(msg);
     pub.queueMsg(msg);
 
+    HealthState::getInstance().setInError(false); // Disabling error state reporting to get accurate sentMsg buffer
     manager.update();
     pub.sendQueuedMsgs(RoverCan2::Constant::eDeviceId::TEST_DEVICE, manager);
 

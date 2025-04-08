@@ -8,7 +8,7 @@ uint64_t millis(void);
 uint64_t micros(void);
 uint64_t nanos(void);
 
-// Necessary because of the hardcoded compilation path of platformio...
+// Necessary because of the hardcoded paths in platformio...
 #if defined(TEST_NATIVE)
 #ifndef TIME_CPP
 #include "time.cpp"

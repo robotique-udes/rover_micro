@@ -8,7 +8,7 @@
 #endif
 
 #if !defined(NODE_BYPASS_SEVERITY_LEVEL)
-#define NODE_BYPASS_SEVERITY_LEVEL Logger::eSeverityLevels::INFO
+#define NODE_BYPASS_SEVERITY_LEVEL Logger::eSeverityLevels::ERROR
 #endif
 
 #if defined(ARDUINO_ESP32S3_DEV)
@@ -21,6 +21,7 @@
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
 #include "rover_lib2/helpers/macros.hpp"
+#include "rover_lib2/helpers/health_state.hpp"
 
 #define DEFINE_LOG_NODE(name_, state_)                              \
     namespace Logger::Nodes                                         \
@@ -117,11 +118,13 @@ namespace Logger
 #define LOG_WARN(NODE, FMT, ...) \
     Logger::logInternal<Logger::eSeverityLevels::WARN>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
 
-#define LOG_ERROR(NODE, FMT, ...) \
-    Logger::logInternal<Logger::eSeverityLevels::ERROR>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
+#define LOG_ERROR(NODE, FMT, ...)                                                                          \
+    Logger::logInternal<Logger::eSeverityLevels::ERROR>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__); \
+    HealthState::getInstance().setInError();
 
-#define LOG_FATAL(NODE, FMT, ...) \
-    Logger::logInternal<Logger::eSeverityLevels::FATAL>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__)
+#define LOG_FATAL(NODE, FMT, ...)                                                                          \
+    Logger::logInternal<Logger::eSeverityLevels::FATAL>(NODE, __FILENAME__, __LINE__, FMT, ##__VA_ARGS__); \
+    HealthState::getInstance().setInError();
 
 /**
  * @brief Block execution until the Logger's TX buffer is empty
@@ -138,8 +141,8 @@ namespace Logger
 #define LOG_DEBUG(NODE, FMT, ...)
 #define LOG_INFO(NODE, FMT, ...)
 #define LOG_WARN(NODE, FMT, ...)
-#define LOG_ERROR(NODE, FMT, ...)
-#define LOG_FATAL(NODE, FMT, ...)
+#define LOG_ERROR(NODE, FMT, ...) HealthState::getInstance().setInError();
+#define LOG_FATAL(NODE, FMT, ...) HealthState::getInstance().setInError();
 
 /**
  * @brief Block execution until the Logger's TX buffer is empty

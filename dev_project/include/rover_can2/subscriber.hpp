@@ -10,13 +10,24 @@ DEFINE_LOG_NODE(Subscriber, Logger::eNodeState::OFF)
 
 namespace RoverCan2
 {
-    // Shadow class for simpler type validation
+    /**
+     * @brief Base Subscriber class. Allows template abstraction for type validation
+     */
     class SubscriberBaseT
     {
       protected:
         SubscriberBaseT() = default;
     };
 
+    /**
+     * @brief SubscriberBase CRTP Interface; Registering a subscriber to a DeviceT enables the reception of a certain CAN ID and
+     * MsgT and links it's reception to a user specified callback for data handling.
+     *
+     * @attention [WARNING] Interface, can't be used directly
+     *
+     * @tparam ImplT
+     * @tparam MsgT
+     */
     template<typename ImplT, typename MsgT>
     class SubscriberBase : public SubscriberBaseT
     {
@@ -76,7 +87,7 @@ namespace RoverCan2
     /**
      * @brief Subscriber -> Links the reception of a RoverCan2::Msgs to a user
      * specified callback. SubscriberStandalone is meant for standalone
-     * functions (static/C style/Non-Member) callback without any dynamic
+     * functions (static/C style/Non-Member) callback without dynamic
      * allocation.
      *
      * @tparam MsgT Object will subscribe to this message type
