@@ -209,7 +209,7 @@ namespace RoverCan2
         DriverT& _driver;
         std::tuple<DevicesT...> _canDevices;
         Device<SubscriberMember<Msgs::ErrorState, Manager<DriverT, DevicesT...>>> _dev_Master;
-        LoopTimer<unsigned long, millis> _errorStateReportingLoop;
+        LoopTimer<uint64_t, Time::millis> _errorStateReportingLoop;
     };
 
     template<typename DriverT, typename... DevicesT>

@@ -4,7 +4,7 @@
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
 
-DEFINE_LOG_NODE(TestMsg_msg, Logger::eNodeState::OFF)
+DEFINE_LOG_NODE(TestMsg_msg, Logger::eNodeState::ON)
 
 namespace RoverCan2::Msgs
 {
@@ -19,11 +19,13 @@ namespace RoverCan2::Msgs
         };
 
       private:
+#pragma pack(push, 1)
         struct sMsgData
         {
             float cmd;
             bool closeLoop;
         };
+#pragma pack(pop)
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
             = {eMsgContentID::CMD, eMsgContentID::CLOSE_LOOP};

@@ -1,13 +1,11 @@
 #include <gtest/gtest.h>
 
-#if defined(TEST_ON_DEVICE)
-static_assert(false, "Not implemented yet")
-
-#elif defined(TEST_NATIVE)
+#if defined(TEST_NATIVE)
 #include "native/helpers/chrono.hpp"
 #include "native/helpers/circular_buffer.hpp"
 #include "native/helpers/watchdog.hpp"
 #include "native/helpers/loop_timer.hpp"
+#include "native/helpers/one_shot_timer.hpp"
 
 #include "native/rover_can2/helpers.hpp"
 #include "native/rover_can2/msg.hpp"
@@ -25,7 +23,4 @@ int main(int argc, char* argv[])
     return RUN_ALL_TESTS();
 }
 
-#else  // defined(TEST_ON_DEVICE)
-static_assert(false, "Test type not supported");
-
-#endif  // defined(TEST_ON_DEVICE)
+#endif  // defined(TEST_NATIVE)

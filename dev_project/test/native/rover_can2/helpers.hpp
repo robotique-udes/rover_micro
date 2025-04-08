@@ -35,6 +35,25 @@ TEST(SUITE_ROVER_CAN2_Helpers, ROVER_MSG_CONTENT_TO_CAN_MSG)
     GTEST_ASSERT_TRUE(static_cast<bool>(msg_.msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)]) == true);
 }
 
+TEST(SUITE_ROVER_CAN2_Helpers, ROVER_MSG_CONTENT_TO_CAN_MSG_FLOAT)
+{
+    const float cmd = 69.0f;
+    RoverCan2::CanMsg msg_;
+    RoverCan2::Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(RoverCan2::Constant::eMsgId::TEST_MSG,
+                                                     TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CMD),
+                                                     cmd,
+                                                     msg_);
+
+    // Verify message header fields
+    GTEST_ASSERT_EQ(msg_.getMsgID(), RoverCan2::Constant::eMsgId::TEST_MSG);
+    GTEST_ASSERT_EQ(msg_.getMsgContentID(), TO_UNDERLYING(RoverCan2::Msgs::TestMsg::eMsgContentID::CMD));
+    GTEST_ASSERT_EQ(msg_.dataLength, sizeof(float) + TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA));
+
+    float expectedValue;
+    std::memcpy(&expectedValue, &msg_.msgData[TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA)], sizeof(float));
+
+    GTEST_ASSERT_TRUE(expectedValue == cmd);
+}
 TEST(SUITE_ROVER_CAN2_Helpers, CAN_MSG_TO_ROVER_MSG_CONTENT)
 {
     RoverCan2::Msgs::TestMsg testMsg;

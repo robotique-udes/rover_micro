@@ -49,7 +49,7 @@ namespace RoverCan2
                     this->triggerCallback(this->getMsg());
                     break;
                 case Msgs::eLoadMsgCode::SUCCESS_INCOMPLETE:
-                    LOG_DEBUG(Logger::Nodes::Subscriber, "Loaded a part of message, waiting on for the reset...");
+                    LOG_DEBUG(Logger::Nodes::Subscriber, "Loaded a part of message, waiting on for the rest...");
                     break;
                 case Msgs::eLoadMsgCode::NOT_CONCERNED:
                     LOG_DEBUG(Logger::Nodes::Subscriber, "Parsed msg wasn't meant for this subscriber");

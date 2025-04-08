@@ -16,13 +16,17 @@
 #include <Arduino.h>
 #elif defined(__linux__)
 #include <cstdarg>
-#include "rover_lib2/helpers/time.hpp"
-// #include "rover_lib2/helpers/"
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
+#include "rover_lib2/helpers/time.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/health_state.hpp"
 
+/**
+ * @brief Usage: DEFINE_LOG_NODE(Main, Logger::eNodeState::ON/OFF);
+ *
+ * @note Data can then be logged with LOG_INFO(Logger::Nodes::Main, "Hello world");
+ */
 #define DEFINE_LOG_NODE(name_, state_)                              \
     namespace Logger::Nodes                                         \
     {                                                               \
@@ -81,7 +85,7 @@ namespace Logger
 #if defined(ARDUINO_ESP32S3_DEV)
                 loggerStream.printf("%s[%lu][%s]%s:%d: ",
                                     SEVERITY_COLORS[severityIndex],
-                                    millis(),
+                                    static_cast<uint32_t>(Time::millis()),
                                     SEVERITY_NAMES[severityIndex],
                                     fileName,
                                     lineNb);
@@ -94,7 +98,7 @@ namespace Logger
 #elif defined(__linux__)
                 printf("%s[%lu][%s]%s:%d: ",
                        SEVERITY_COLORS[severityIndex],
-                       millis(),
+                       Time::millis(),
                        SEVERITY_NAMES[severityIndex],
                        fileName,
                        lineNb);

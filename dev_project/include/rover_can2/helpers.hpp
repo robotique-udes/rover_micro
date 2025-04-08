@@ -1,11 +1,13 @@
 #ifndef HELPERS_HPP
 #define HELPERS_HPP
 
-#include <cstdint>
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_can2/constant.hpp"
 #include "rover_can2/can_msg.hpp"
+
+#include <cstdint>
+#include <bit>
 
 DEFINE_LOG_NODE(CanHelpers, Logger::eNodeState::OFF)
 
@@ -55,13 +57,7 @@ namespace RoverCan2::Helpers
         }
 
         auto dataStartIndex = TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA);
-
-        std::array<std::byte, sizeof(ROVER_MSG_CONTENT_TYPE)> bytes{};
-        for (size_t i = 0; i < sizeof(ROVER_MSG_CONTENT_TYPE); ++i)
-        {
-            bytes[i] = static_cast<std::byte>(canMsg_.msgData[dataStartIndex + i]);
-        }
-        msgContent_ = std::bit_cast<ROVER_MSG_CONTENT_TYPE>(bytes);
+        std::memcpy(&msgContent_, &(canMsg_.msgData[dataStartIndex]), sizeof(msgContent_));
 
         return true;
     }
