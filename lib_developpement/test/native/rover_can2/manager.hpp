@@ -321,7 +321,7 @@ TEST(SUITE_ROVER_CAN2_CanManager, ManagerHealthStateReporting)
     manager.init();
     HealthState::getInstance().setInError();
 
-    // Error state should be repported each 2 seconds
+    // Error state should be reported each 2 seconds
     // std::this_thread::sleep_for(std::chrono::seconds(2));
     manager.update();
 

@@ -61,7 +61,7 @@ namespace RoverCan2
         {
             _driver.update();
 
-            if (_errorStateReportingLoop.isReady() && HealthState::getInstance().getInError())
+            if (HealthState::getInstance().getInError() && _errorStateReportingLoop.isReady())
             {
                 this->reportErrorStateToMaster();
             }

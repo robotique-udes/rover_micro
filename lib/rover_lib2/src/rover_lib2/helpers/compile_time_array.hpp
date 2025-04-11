@@ -52,9 +52,9 @@ class CompileTimeArray
         return NB_ELEM;
     }
 
-    constexpr const std::array<DataT, NB_ELEM>& data(void) const
+    constexpr const DataT* data(void) const
     {
-        return _data;
+        return _data.data();
     }
 
     constexpr auto begin(void) const

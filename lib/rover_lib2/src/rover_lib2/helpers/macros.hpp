@@ -44,4 +44,41 @@ constexpr std::underlying_type_t<ENUM_T> TO_UNDERLYING(ENUM_T e) noexcept
     static_assert((... && std::is_base_of_v<BaseT, std::remove_reference_t<__VA_ARGS__>>), \
                   "All template arguments must be derived from " #BaseT)
 
+template<typename T>
+constexpr T ABS(T var_) noexcept
+{
+    if constexpr (std::is_unsigned_v<T>)
+    {
+        return var_;
+    }
+    else
+    {
+        return ((var_ < static_cast<T>(0)) ? -var_ : var_);
+    }
+}
+
+template<typename T>
+constexpr bool IN_ERROR(T var_, T error_, T goal_)
+{
+    error_ = ABS(error_);
+    return var_ <= (goal_ + error_) && var_ >= (goal_ - error_);
+}
+
+template<typename T>
+constexpr T CONSTRAIN(T value_, T min_, T max_)
+{
+    if (value_ < min_)
+    {
+        return min_;
+    }
+    else if (value_ > max_)
+    {
+        return max_;
+    }
+    else
+    {
+        return value_;
+    }
+}
+
 #endif  // MACROS_HPP

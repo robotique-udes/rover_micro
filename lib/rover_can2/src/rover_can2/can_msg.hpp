@@ -20,12 +20,12 @@ namespace RoverCan2
     {
 #if defined(ARDUINO_ESP32S3_DEV)
         CanMsg(twai_message_t& twaiMsg_):
-            CanMsg(static_cast<RoverCan2::Constant::eDeviceId>(twaiMsg_.identifier), twaiMsg_.data, twaiMsg_.data_length_code){
-#warning TODO: Test
-            }
+            CanMsg(static_cast<RoverCan2::Constant::eDeviceId>(twaiMsg_.identifier), twaiMsg_.data, twaiMsg_.data_length_code)
+        {
+        }
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
-            CanMsg(RoverCan2::Constant::eDeviceId canID_, const uint8_t* data_, uint8_t dataLength_)
+        CanMsg(RoverCan2::Constant::eDeviceId canID_, const uint8_t* data_, uint8_t dataLength_)
         {
             _canID = canID_;
 

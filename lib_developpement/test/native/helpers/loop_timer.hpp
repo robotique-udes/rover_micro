@@ -31,8 +31,8 @@ TEST(SUITE_NAME_LoopTimer, Construction)
 
 TEST(SUITE_NAME_LoopTimer, isReady_Normal)
 {
-    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
     TestLoopTimer::counter = 0ULL;
+    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
 
     TestLoopTimer::counter += 10ULL;
     GTEST_ASSERT_TRUE(timer.isReady());
@@ -45,8 +45,8 @@ TEST(SUITE_NAME_LoopTimer, isReady_Normal)
 
 TEST(SUITE_NAME_LoopTimer, isReady_JitterCompensation)
 {
-    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
     TestLoopTimer::counter = 0ULL;
+    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
 
     TestLoopTimer::counter += 11ULL;
     GTEST_ASSERT_TRUE(timer.isReady());
@@ -66,24 +66,24 @@ TEST(SUITE_NAME_LoopTimer, isReady_JitterCompensation)
 
 TEST(SUITE_NAME_LoopTimer, isReady_JitterOvershoot)
 {
-    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
     TestLoopTimer::counter = 0ULL;
+    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
 
-    TestLoopTimer::counter = 25ULL;
+    TestLoopTimer::counter += 25ULL;
     GTEST_ASSERT_TRUE(timer.isReady());
     GTEST_ASSERT_TRUE(!timer.isReady());
 }
 
 TEST(SUITE_NAME_LoopTimer, isReady_ClockOvershoot)
 {
-    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
     TestLoopTimer::counter = 0ULL;
+    LoopTimer<uint64_t, TestLoopTimer::mock_millis> timer(10);
 
-    TestLoopTimer::counter = 25ULL;
+    TestLoopTimer::counter += 25ULL;
     GTEST_ASSERT_TRUE(timer.isReady());
     GTEST_ASSERT_TRUE(!timer.isReady());
 
-    TestLoopTimer::counter = 10ULL;
+    TestLoopTimer::counter += 10ULL;
     GTEST_ASSERT_TRUE(timer.isReady());
     GTEST_ASSERT_TRUE(!timer.isReady());
 

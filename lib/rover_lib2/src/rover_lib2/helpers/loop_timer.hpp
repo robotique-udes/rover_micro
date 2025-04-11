@@ -6,64 +6,74 @@
 
 DEFINE_LOG_NODE(LoopTimer, Logger::eNodeState::OFF)
 
+/**
+ * @brief Object to help execute code at a specific rate/period. This object will set the controller HealthState in error if a
+ * loop is missed to make sure actuators control loops or other timing critical components are "safe".
+ *
+ * @tparam ClockT Return type of the passed clock function -> ex: uint64_t
+ * @tparam (*CLOCK_FUNC)(void) Function ptr to a clock function -> ex: Time::millis
+ */
 template<typename ClockT, ClockT (*CLOCK_FUNC)(void)>
 class LoopTimer
 {
   public:
-    LoopTimer(ClockT interval_)
+    LoopTimer(ClockT interval_):
+        _interval(interval_),
+        _nextTriggerTime(CLOCK_FUNC()),
+        _overrunFalsePositiveLatch(false)
     {
-        this->setInterval(interval_);
     }
 
-    bool isReady(void)
+    bool isReady()
     {
-        ClockT currentTime = CLOCK_FUNC();
-        if (_nextTriggerTime > currentTime)
-        {
-            LOG_WARN(Logger::Nodes::LoopTimer, "Timer overflow detected, trying to handle");
-            this->reset();
-        }
-
-        _nextTriggerTime = currentTime;
-
-        uint64_t expectedTriggerCtn = static_cast<uint64_t>(currentTime / _interval);
-        if (_triggerCtn < expectedTriggerCtn)
-        {
-            if (_triggerCtn != 0 && (expectedTriggerCtn - _triggerCtn) != 1ULL)
-            {
-                LOG_WARN(Logger::Nodes::LoopTimer, "Warning code execution too slow for specified interval");
-            }
-
-            _triggerCtn = expectedTriggerCtn;
-            return true;
-        }
-        else
+        const ClockT currentTime = CLOCK_FUNC();
+        if (currentTime < _nextTriggerTime)
         {
             return false;
         }
+
+        _nextTriggerTime += _interval;
+        if (currentTime >= _nextTriggerTime)
+        {
+            if (currentTime >= _nextTriggerTime + _interval)
+            {
+                _nextTriggerTime = currentTime + _interval;
+            }
+            else
+            {
+                _nextTriggerTime += _interval;
+            }
+
+            if (_overrunFalsePositiveLatch)
+            {
+                LOG_ERROR(Logger::Nodes::LoopTimer, "Warning code execution too slow for specified interval");
+                _overrunFalsePositiveLatch = true;
+            }
+        }
+
+        return true;
     }
 
-    void setInterval(ClockT newInterval_)
+    void setInterval(ClockT interval_)
     {
-        _nextTriggerTime = static_cast<ClockT>(0);
-        _interval = newInterval_;
-        _triggerCtn = 0ULL;
+        _interval = interval_;
+        _nextTriggerTime = CLOCK_FUNC() + _interval;
     }
 
-    ClockT getInterval(void) const
+    void reset()
+    {
+        _nextTriggerTime = CLOCK_FUNC() + _interval;
+    }
+
+    ClockT getInterval() const
     {
         return _interval;
     }
 
-    void reset(void)
-    {
-        this->setInterval(this->getInterval());
-    }
-
   private:
     ClockT _interval;
-    uint64_t _triggerCtn;
     ClockT _nextTriggerTime;
+    bool _overrunFalsePositiveLatch;
 };
 
 #endif  // LOOP_TIMER

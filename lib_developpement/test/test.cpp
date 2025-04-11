@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #if defined(TEST_NATIVE)
+#include "native/helpers/macros.hpp"
 #include "native/helpers/chrono.hpp"
 #include "native/helpers/circular_buffer.hpp"
 #include "native/helpers/watchdog.hpp"

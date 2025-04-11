@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "rover_lib2/helpers/compile_time_array.hpp"
+#include "rover_lib2/LED/blink_pattern.hpp"
 
 namespace RoverCan2::Constant
 {
@@ -103,6 +104,34 @@ namespace RoverCan2::Constant
         MSG_CONTENT_ID = 0x01,
         START_OF_DATA = 0x02
     };
+
+    namespace LedPatterns
+    {
+        constexpr LED::BlinkingPattern DRIVER_NOT_STARTED = LED::BlinkPatterns::OFF;
+        constexpr LED::BlinkingPattern<4UL> RUNNING_OK = {LED::BlinkPatternStep(50UL, 100U),
+                                                          LED::BlinkPatternStep(50UL, 25U),
+                                                          LED::BlinkPatternStep(50UL, 100U),
+                                                          LED::BlinkPatternStep(850UL, 25U)};
+        constexpr LED::BlinkingPattern<9UL> DRIVER_INTERNAL_ERROR = {LED::BlinkPatternStep(200UL, 100U),
+                                                                     LED::BlinkPatternStep(200UL, 0U),
+                                                                     LED::BlinkPatternStep(200UL, 100U),
+                                                                     LED::BlinkPatternStep(200UL, 0U),
+                                                                     LED::BlinkPatternStep(200UL, 100U),
+                                                                     LED::BlinkPatternStep(200UL, 0U),
+                                                                     LED::BlinkPatternStep(200UL, 100U),
+                                                                     LED::BlinkPatternStep(200UL, 0U),
+                                                                     LED::BlinkPatternStep(2'000UL, 100U)};
+        constexpr LED::BlinkingPattern<8UL> TX_QUEUE_FULL = {LED::BlinkPatternStep(50UL, 10U),
+                                                             LED::BlinkPatternStep(50UL, 0U),
+                                                             LED::BlinkPatternStep(50UL, 10U),
+                                                             LED::BlinkPatternStep(50UL, 0U),
+                                                             LED::BlinkPatternStep(50UL, 100U),
+                                                             LED::BlinkPatternStep(50UL, 0U),
+                                                             LED::BlinkPatternStep(50UL, 100U),
+                                                             LED::BlinkPatternStep(50UL, 0U)};
+        constexpr LED::BlinkingPattern WATCHDOG_TRIGGER = TX_QUEUE_FULL;
+        
+    }  // namespace LedPatterns
 
 }  // namespace RoverCan2::Constant
 
