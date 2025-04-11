@@ -207,7 +207,11 @@ namespace RoverCan2::Drivers
 
                             case twai_state_t::TWAI_STATE_BUS_OFF:
                                 LOG_WARN(Logger::Nodes::DriverESP32, "Bus has fallen in invalid state, initiation recovery...");
-                                if (twai_initiate_recovery() != ESP_OK)
+                                if (twai_initiate_recovery() == ESP_OK)
+                                {
+                                    _state = eState::INVALID_STATE;
+                                }
+                                else
                                 {
                                     _state = eState::UNINSTALLED;
                                 }
@@ -275,7 +279,7 @@ namespace RoverCan2::Drivers
                 case ESP_OK:
                     LOG_DEBUG(Logger::Nodes::DriverESP32, "Twai driver installed successfully");
                     LOG_DEBUG(Logger::Nodes::DriverESP32,
-                              "Using TX pin: %u and RX pin: %u. Friendly reminder, the CAN specs specifies MCU_RX<-TRANS_RX "
+                              "Using TX pin: %i and RX pin: %i. Friendly reminder, the CAN specs specifies MCU_RX<-TRANS_RX "
                               "and MCU_TX->TRANS_TX and NOT RX->TX|TX->RX crossover like on UART.",
                               TO_UNDERLYING(_ioTx),
                               TO_UNDERLYING(_ioRx));
@@ -393,7 +397,7 @@ namespace RoverCan2::Drivers
         const gpio_num_t _ioTx;
 
         eState _state;
-        LedBlinkerT_* _led;
+        LedBlinkerT_* const _led;
 
         CircularBuffer<CanMsg, 10UL> _msgBuffer;
         Watchdog<uint64_t, Time::millis> _recvWatchdog;

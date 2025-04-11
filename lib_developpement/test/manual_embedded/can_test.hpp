@@ -37,7 +37,7 @@
 #include <Arduino.h>
 
 #include "rover_can2/msgs/test_msg.hpp"
-#include "rover_can2/rover_can.hpp"
+#include "rover_can2/rover_can2.hpp"
 
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/macros.hpp"

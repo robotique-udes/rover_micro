@@ -79,7 +79,7 @@ namespace RoverCan2
         /**
          * @brief Queues the passed msg into a matching publisher's send buffer. The msg will be sent during the next call
          * to sendPubsQueuedMsgs().
-         * @attention It's suggested to let the Manager call the sendPubsQueuedMsgs in it's update() loop instead of doing it
+         * @attention It's suggested to let the Manager call the sendPubsQueuedMsgs in its update() loop instead of doing it
          * manually. The manager needs to be passed to the function anyway.
          * @attention [WARNING] Internal use only
          */

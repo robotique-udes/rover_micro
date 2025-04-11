@@ -30,6 +30,8 @@
 #include <Arduino.h>
 #include "rover_lib2/LED/led_blinker.hpp"
 
+#include "rover_can2/rover_can2.hpp"
+
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
