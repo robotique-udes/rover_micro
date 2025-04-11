@@ -1,1 +1,0 @@
-{"type": "tool", "name": "framework-arduinoespressif32", "version": "3.0.10+sha.cb79362", "spec": {"owner": "tasmota", "id": null, "name": "framework-arduinoespressif32", "requirements": null, "uri": "https://github.com/Jason2866/esp32-arduino-lib-builder/releases/download/3344/framework-arduinoespressif32-all-release_v5.1-cb79362.zip"}}
