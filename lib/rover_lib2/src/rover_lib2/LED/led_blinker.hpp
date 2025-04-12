@@ -8,6 +8,7 @@
 #include "rover_lib2/helpers/one_shot_timer.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_lib2/helpers/macros.hpp"
+#include "rover_lib2/helpers/time.hpp"
 
 DEFINE_LOG_NODE(LedBlinker, Logger::eNodeState::ON);
 

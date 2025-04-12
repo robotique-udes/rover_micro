@@ -16,24 +16,6 @@
  * command in your terminal. Expected output (at ~0.5Hz): "canRovus  7FF   [5]  11 00 01 00 00"
  */
 
-/**
- * @file can_test.hpp
- * @brief Canbus lib example and integration test
- *
- * @test:
- * 1. Connect the CAN->USB adapter to a linux computer, (make sure to setup your laptop with the steps in
- * rover_document/.../can_setup.md).
- * 2. Write this command: while true; do cansend canRovus 7FF#010000008A42; cansend canRovus 7FF#010101; sleep 0.1; done
- * 3. Upload this code into any device (current pin numbers fit with ArmJ345-REV0).
- * 4. Connect the device canbus connector to your USB->CAN adapter.
- * 5. Open a serial monitor
- * 6. There should be a print with the value sent by step #2: cmd = 69.0F, closed_loop = true;
- * 7. Stop the cmd sent at step #2
- * 8. The LED pattern should change to the watchdog triggered pattern
- * 9. 5s after boot, the device should send a error state message with error=1. You can check this with the `candump canRovus`
- * command in your terminal. Expected msg:
- */
-
 #include <Arduino.h>
 
 #include "rover_can2/msgs/test_msg.hpp"
