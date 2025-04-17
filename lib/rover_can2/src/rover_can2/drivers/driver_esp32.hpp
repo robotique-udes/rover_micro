@@ -224,7 +224,7 @@ namespace RoverCan2::Drivers
                         break;
 
                     case ESP_ERR_INVALID_ARG:
-                        ASSERT(
+                        ASSERT_MSG(
                             "In recovery handling, can't get current twai state with specified arguments. Implementation error");
                         break;
                     case ESP_ERR_INVALID_STATE:
@@ -291,15 +291,15 @@ namespace RoverCan2::Drivers
                              TO_UNDERLYING(_state));
                     break;
                 case ESP_ERR_INVALID_ARG:
-                    ASSERT("Can't install twai driver with specified arguments");
+                    ASSERT_MSG("Can't install twai driver with specified arguments");
                     _state = eState::UNINSTALLED;
                     break;
                 case ESP_ERR_NO_MEM:
-                    ASSERT("Can't install twai driver... no more memory");
+                    ASSERT_MSG("Can't install twai driver... no more memory");
                     _state = eState::UNINSTALLED;
                     break;
                 default:
-                    ASSERT("Can't install twai driver... Unknown error: %d", successCode);
+                    ASSERT_MSG_ARGS("Can't install twai driver... Unknown error: %d", successCode);
                     _state = eState::UNINSTALLED;
                     break;
             }
@@ -318,7 +318,7 @@ namespace RoverCan2::Drivers
                     LOG_WARN(Logger::Nodes::DriverESP32, "Can't install twai driver in current state %u", TO_UNDERLYING(_state));
                     break;
                 default:
-                    ASSERT("Can't start twai driver... Unknown error: %d", successCode);
+                    ASSERT_MSG_ARGS("Can't start twai driver... Unknown error: %d", successCode);
                     break;
             }
         }
@@ -340,7 +340,7 @@ namespace RoverCan2::Drivers
                     _state = eState::INVALID_STATE;
                     return;
                 case ESP_ERR_INVALID_ARG:
-                    ASSERT("Invalid arguments, implementation error");
+                    ASSERT_MSG("Invalid arguments, implementation error");
                     _state = eState::UNINSTALLED;
                     return;
             }

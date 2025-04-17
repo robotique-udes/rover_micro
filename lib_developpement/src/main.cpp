@@ -21,14 +21,15 @@
  *   └── .vscode
  *
  *  [WARNING] For intellisense to work, replace the default .vscode inside the lib folder with the one generated under
- * lib_developpement
+ *  lib_developpement
  *
- * Backup all your manuel tests under:
+ *  Backup all your manuel tests under:
  *  lib_developpement/test/manual_embedded
  */
 
 #include <Arduino.h>
 #include "rover_lib2/LED/led_blinker.hpp"
+#include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 
 #include "rover_can2/rover_can2.hpp"
 

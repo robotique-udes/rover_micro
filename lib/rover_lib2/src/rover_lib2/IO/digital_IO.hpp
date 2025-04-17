@@ -64,7 +64,9 @@ namespace IO
                     }
                     break;
                 default:
-                    ASSERT(false, "Invalid argument | Tried to write gpio state: %u", static_cast<uint32_t>(state_));
+                    ASSERT_COND_MSG_ARGS(false,
+                                         "Invalid argument | Tried to write gpio state: %u",
+                                         static_cast<uint32_t>(state_));
                     break;
             }
             return;
@@ -99,9 +101,9 @@ namespace IO
 
         void setMode(gpio_mode_t mode_)
         {
-            ASSERT(mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT_OD
-                       || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT_OD,
-                   "Wrong mode selected for DigitalIO, implementation error. Undefined behavior on IO");
+            ASSERT_COND_MSG(mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT_OD
+                                || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT_OD,
+                            "Wrong mode selected for DigitalIO, implementation error. Undefined behavior on IO");
             gpio_set_direction(_pin, mode_);
         }
 
