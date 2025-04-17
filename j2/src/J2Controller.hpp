@@ -51,8 +51,8 @@ private:
     static constexpr uint8_t COMMAND_SET_RPM = 0x08;
 
     // Motor limtis
-    static constexpr uint32_t RATED_SPEED_ERPM = 19572;
-    static constexpr uint32_t MAX_SPEED_ERPM = 26880; //no load
+    static constexpr int32_t RATED_SPEED_ERPM = 19572;
+    static constexpr int32_t MAX_SPEED_ERPM = 26880; //no load
 
     // Speed set/get
     float speedNowRadS;
@@ -61,12 +61,13 @@ private:
 
 public:
     J2Controller(Stream *serial_);
-    void sendSpeedCommand(int32_t rpm_);
+    void sendSpeedCommand(float rpm_);
     unsigned short calculateCRC16(unsigned char *buf_, unsigned int len_);
     void readMotorParameters(bool verbose = false);
     void setSpeed(float newSpeedRadS_);
     float getSpeed(void);
     void update(void);
+    bool isJogButtonPressed(bool plus_moins_);
     ~J2Controller();
 };
 

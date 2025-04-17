@@ -39,24 +39,31 @@ J2Controller::J2Controller(Stream *serial_)
 }
 
 
-void J2Controller::sendSpeedCommand(int32_t rpm_)
+void J2Controller::sendSpeedCommand(float rpm_)
 {
-  //Speed conversion to electrical RPM
-  int32_t erpm = rpm_*100*6*14;
-  if (erpm > J2Controller::RATED_SPEED_ERPM) {
-    erpm = J2Controller::RATED_SPEED_ERPM;
+  // Speed conversion to electrical RPM
+  float erpm_f = rpm_ * 100.0 * 6.0 * 14.0;
+  if (erpm_f > J2Controller::RATED_SPEED_ERPM) {
+    erpm_f = J2Controller::RATED_SPEED_ERPM;
+    LOG(WARN, "Trop vite bozo");
+  } else if (erpm_f < -J2Controller::RATED_SPEED_ERPM) {
+    erpm_f = -J2Controller::RATED_SPEED_ERPM;
     LOG(WARN, "Trop vite bozo");
   }
 
-  uint8_t buffer[10]; // 10 bytes: Header-1, Length-1, Command-1, Data (4 bytes), Checksum (2 bytes), Tail-1
+  // Convert to int32_t for proper signed byte handling
+  int32_t erpm = static_cast<int32_t>(erpm_f);
+
+  uint8_t buffer[10];
 
   buffer[0] = J2Controller::FRAME_HEAD;
-  buffer[1] = 0x05; // Data Length (1 byte for command + 4 bytes for speed)
+  buffer[1] = 0x05; // 1 byte command + 4 bytes speed
   buffer[2] = J2Controller::COMMAND_SET_RPM;
   buffer[3] = (erpm >> 24) & 0xFF;
   buffer[4] = (erpm >> 16) & 0xFF;
   buffer[5] = (erpm >> 8) & 0xFF;
   buffer[6] = erpm & 0xFF;
+
 
   // Calculate checksum
   uint16_t checksum = J2Controller::calculateCRC16(buffer + 2, 5);
@@ -66,7 +73,7 @@ void J2Controller::sendSpeedCommand(int32_t rpm_)
   buffer[9] = J2Controller::FRAME_TAIL;
     
   J2Controller::motorSerial->write(buffer, 10);
-  LOG(INFO, "Sent RPM Command: %d", rpm_);
+  LOG(INFO, "Sent RPM Command: %f", rpm_);
 }
 
 
@@ -162,7 +169,7 @@ void J2Controller::readMotorParameters(bool verbose)
       LOG(INFO, "Vq Voltage: %.2f V\n", J2Controller::param_vqVoltage);
     }
   } else {
-    Serial.println("No response from motor");
+    LOG(ERROR, "No response from motor");
   }
 }
 
@@ -187,6 +194,27 @@ void J2Controller::update(void)
     J2Controller::speedNowRPM = 30.0*J2Controller::speedNowRadS/PI;
   }
   J2Controller::sendSpeedCommand(J2Controller::speedNowRPM);
+}
+
+bool J2Controller::isJogButtonPressed(bool plus_moins_)
+{
+  if(plus_moins_ == 0)
+  {
+    if(digitalRead(J2Controller::BUT_JOG_MOINS) == LOW)
+    {
+      return true;
+    }
+  }
+
+  if(plus_moins_ == 1)
+  {
+    if(digitalRead(J2Controller::BUT_JOG_PLUS) == LOW)
+    {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 
