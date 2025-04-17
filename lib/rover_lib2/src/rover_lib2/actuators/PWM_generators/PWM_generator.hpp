@@ -54,7 +54,7 @@ namespace PWMGenerators
          * @brief Range is [0.0F; 100.0F]
          *
          */
-        float getDutyCycle(void)
+        float getDutyCycle(void) const
         {
             return static_cast<Impl_T*>(this)->_getDutyCycle();
         }
@@ -69,7 +69,7 @@ namespace PWMGenerators
             static_cast<Impl_T*>(this)->_setFrequency(frequency_);
         }
 
-        float getFrequency(void)
+        float getFrequency(void) const
         {
             return static_cast<Impl_T*>(this)->_getFrequency();
         }

@@ -46,7 +46,10 @@ void setup(void)
 #endif
 
     PWMGenerators::MCPWMTimer pwmTimer(0UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
-    PWMGenerators::MCPWM ledCan(PIN_CAN_LED, pwmTimer, PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH, PWMGenerators::MCPWM::ePinPullMode::PULL_DOWN_UP);
+    PWMGenerators::MCPWM ledCan(PIN_CAN_LED,
+                                pwmTimer,
+                                PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH,
+                                PWMGenerators::MCPWM::ePinPullMode::PULL_DOWN_UP);
     PWMGenerators::MCPWM ledUser(PIN_USER_LED, pwmTimer, PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH);
     ledCan.setDutyCycle(0.0F);
     ledUser.setDutyCycle(50.0F);

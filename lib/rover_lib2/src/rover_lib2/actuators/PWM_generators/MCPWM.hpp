@@ -18,7 +18,7 @@ namespace PWMGenerators
         static constexpr int DEFAULT_INTERUPT_PRIORITY = MCPWMTimer::DEFAULT_INTERUPT_PRIORITY;
 
       public:
-        enum class ePinPullMode
+        enum class ePinPullMode : size_t
         {
             FLOATING = 0,
             PULL_DOWN,
@@ -37,7 +37,9 @@ namespace PWMGenerators
               ePinOutputMode outputMode_ = ePinOutputMode::ACTIVE_HIGH,
               ePinPullMode pinPullMode_ = ePinPullMode::FLOATING):
             _timer(timer_),
-            _duty(0.0F)
+            _duty(0.0F),
+            _comparatorH(nullptr),
+            _generatorH(nullptr)
         {
             mcpwm_comparator_config_t comparatorConfig = {
                 .intr_priority = DEFAULT_INTERUPT_PRIORITY,
@@ -54,6 +56,12 @@ namespace PWMGenerators
                           .pull_up = (pinPullMode_ == ePinPullMode::PULL_UP || pinPullMode_ == ePinPullMode::PULL_DOWN_UP),
                           .pull_down = (pinPullMode_ == ePinPullMode::PULL_DOWN || pinPullMode_ == ePinPullMode::PULL_DOWN_UP)}};
             _timer.createGenerator(generatorConfig, _generatorH);
+
+            LOG_DEBUG(Logger::Nodes::MCPWM,
+                      "Initialized MCPWM on GPIO %d, output mode: %s, pull: %u",
+                      io_,
+                      outputMode_ == ACTIVE_HIGH ? "ACTIVE_HIGH" : "ACTIVE_LOW",
+                      TO_UNDERLYING(pinPullMode_));
 
             esp_err_t retVal = mcpwm_generator_set_action_on_timer_event(
                 _generatorH,
@@ -73,19 +81,30 @@ namespace PWMGenerators
             _timer.enable();
         }
 
+        ~MCPWM()
+        {
+            ASSERT_MSG("Destructor should never be called at runtime, ressources management is RAII");
+        }
+
         void __init(void) {}
 
         void __update(void) {}
 
         void _setDutyCycle(float duty_)
         {
-            _duty = duty_;
-            uint32_t activePeriodCtn = _timer.dutyToTickCtn(duty_);
+            _duty = CONSTRAIN(duty_, 0.0F, 100.0F);
+            uint32_t activePeriodCtn = _timer.dutyToTickCtn(_duty);
+
+            if (!_timer.isEnable())
+            {
+                LOG_WARN(Logger::Nodes::MCPWM, "Setting duty cycle to %f, won't have any effect until timer is enabled", _duty);
+            }
+
             esp_err_t retval = mcpwm_comparator_set_compare_value(_comparatorH, activePeriodCtn);
             ASSERT_COND_MSG_ARGS(retval == ESP_OK, "mcpwm_comparator_set_compare_value(0x%p, %u)", _comparatorH, activePeriodCtn);
         }
 
-        float _getDutyCycle(void)
+        float _getDutyCycle(void) const
         {
             return _duty;
         }
@@ -100,7 +119,7 @@ namespace PWMGenerators
             ASSERT_MSG("Changing frequency is not supported by MCPWM driver");
         }
 
-        float _getFrequency(void)
+        float _getFrequency(void) const
         {
             return _timer.getFrequency();
         }
@@ -109,8 +128,8 @@ namespace PWMGenerators
         MCPWMTimer& _timer;
         float _duty;
 
-        mcpwm_cmpr_handle_t _comparatorH = nullptr;
-        mcpwm_gen_handle_t _generatorH = nullptr;
+        mcpwm_cmpr_handle_t _comparatorH;
+        mcpwm_gen_handle_t _generatorH;
     };
 }  // namespace PWMGenerators
 

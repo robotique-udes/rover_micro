@@ -184,6 +184,11 @@ namespace PWMGenerators
             }
         }
 
+        bool isEnable(void) const
+        {
+            return _enabled;
+        }
+
         void disable(void)
         {
             if (_enabled)
