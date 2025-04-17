@@ -120,8 +120,8 @@ namespace LED
                 return;
             }
 
-            ASSERT(pattern_, "Passed pattern can't be null");
-            ASSERT(patternSize_ > 0, "Pattern size must be at least 1");
+            ASSERT_COND_MSG(pattern_, "Passed pattern can't be null");
+            ASSERT_COND_MSG(patternSize_ > 0, "Pattern size must be at least 1");
 
             _pattern = pattern_;
             _patternSize = patternSize_;
