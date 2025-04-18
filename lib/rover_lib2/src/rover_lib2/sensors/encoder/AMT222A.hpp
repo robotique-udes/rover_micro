@@ -39,7 +39,6 @@ class AMT222A : public Encoder<AMT222A>
 
   public:
     AMT222A(SPIBus& spiBus_, gpio_num_t pinCS_, bool reversed_ = false):
-        Encoder<AMT222A>(reversed_),
         _spiDevice(spiBus_, pinCS_, SPI_CLOCK_SPEED_HZ, 3U, 3U, SPIDeviceT::eSPIMode::MODE_0),
         _currentState(eState::READY),
         loopExec(LOOP_PERIOD_US),

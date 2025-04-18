@@ -8,10 +8,7 @@ class Encoder : public RoverObject<Encoder<Impl_T>>
 {
   private:
     friend Impl_T;
-    Encoder(bool reversed_):
-        _reversed(reversed_)
-    {
-    }
+    Encoder() = default;
 
   public:
     void _init(void)
@@ -31,38 +28,23 @@ class Encoder : public RoverObject<Encoder<Impl_T>>
 
     float getPosition(void)
     {
-        float posRaw = static_cast<Impl_T*>(this)->_getPosition();
-        if (!_reversed)
-        {
-            return -posRaw;
-        }
-        else
-        {
-            return posRaw;
-        }
+        return static_cast<Impl_T*>(this)->_getPosition();
     }
 
     float getSpeed(void)
     {
-        float speedRaw = static_cast<Impl_T*>(this)->_getSpeed();
-        if (!_reversed)
-        {
-            return -speedRaw;
-        }
-        else
-        {
-            return speedRaw;
-        }
+        return static_cast<Impl_T*>(this)->_getSpeed();
     }
 
     void calib(float offset_)
     {
-#warning TODO: Constrain offset around 2PI
-        float offset = _reversed ? -offset_ : offset_;
-        static_cast<Impl_T*>(this)->_calib(offset);
+        static_cast<Impl_T*>(this)->_calib(offset_);
     }
 
-    bool _reversed;
+    void setReversed(bool reverse_)
+    {
+        static_cast<Impl_T*>(this)->_setReversed(reverse_);
+    }
 };
 
 #endif  // ENCODER_HPP

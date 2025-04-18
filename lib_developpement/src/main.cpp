@@ -32,6 +32,7 @@ void setup()
     LoopTimer<uint64_t, Time::millis> printLoop(100);
     for (EVER)
     {
+        ledUser.update();
         encoder.update();
 
         if (printLoop.isReady())
