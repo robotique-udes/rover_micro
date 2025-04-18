@@ -3,7 +3,7 @@
 
 #include "rover_lib2/LED/blink_pattern.hpp"
 
-#include "rover_lib2/IO/digital_IO.hpp"
+#include "rover_lib2/IO/digital_output.hpp"
 #include "rover_lib2/rover_object.hpp"
 #include "rover_lib2/helpers/one_shot_timer.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"

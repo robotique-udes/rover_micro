@@ -1,24 +1,19 @@
-#ifndef DIGITAL_IO_HPP
-#define DIGITAL_IO_HPP
+#ifndef DIGITAL_OUTPUT_HPP
+#define DIGITAL_OUTPUT_HPP
 
-#include <rover_lib2/rover_object.hpp>
-#include <rover_lib2/helpers/log.hpp>
-#include <rover_lib2/helpers/assert.hpp>
+#include "rover_lib2/IO/digital_io.hpp"
+#include "rover_lib2/rover_object.hpp"
+#include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/helpers/assert.hpp"
 
 #if defined(ARDUINO_ESP32S3_DEV)
 #include "driver/gpio.h"
 #include "soc/gpio_struct.h"
 
-DEFINE_LOG_NODE(DigitalIO, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(DigitalOutput, Logger::eNodeState::OFF);
 
 namespace IO
 {
-    enum class eIOState : uint32_t
-    {
-        LOW_ = 0U,
-        HIGH_ = 1U,
-    };
-
     class DigitalOutput
     {
         static constexpr gpio_num_t GPIO_DIRECT_ACCESS_MAX = static_cast<gpio_num_t>(31);
@@ -32,6 +27,7 @@ namespace IO
             _pin(pin_),
             _isDirectAccess(_pin <= GPIO_DIRECT_ACCESS_MAX)
         {
+            gpio_reset_pin(pin_);
             this->setMode(mode_);
             this->setPullMode(pullMode_);
             this->setPowerMode(powerMode_);
@@ -76,7 +72,7 @@ namespace IO
         {
             if (_isDirectAccess)
             {
-                LOG_DEBUG(Logger::Nodes::DigitalIO, "Pin state: %d", GPIO.out & (1 << _pin));
+                LOG_DEBUG(Logger::Nodes::DigitalOutput, "Pin state: %d", GPIO.out & (1 << _pin));
                 bool pinHigh = static_cast<bool>(GPIO.out & (1 << _pin));
                 eIOState pinState = pinHigh ? eIOState::HIGH_ : eIOState::LOW_;
                 return pinState;
@@ -125,4 +121,4 @@ namespace IO
 
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
-#endif  // DIGITAL_IO_HPP
+#endif  // DIGITAL_OUTPUT_HPP

@@ -137,4 +137,9 @@ constexpr T ROUND_DOWN(T value_)
     return (value_ < 0) ? integerPart - static_cast<T>(1) : integerPart;
 }
 
+#warning TODO: Test
+#define MAP(x, in_min, in_max, out_min, out_max)                                                                  \
+    (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) \
+     + (float)(out_min))
+
 #endif  // MACROS_HPP
