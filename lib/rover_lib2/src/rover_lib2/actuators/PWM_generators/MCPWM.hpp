@@ -60,7 +60,7 @@ namespace PWMGenerators
             LOG_DEBUG(Logger::Nodes::MCPWM,
                       "Initialized MCPWM on GPIO %d, output mode: %s, pull: %u",
                       io_,
-                      outputMode_ == ACTIVE_HIGH ? "ACTIVE_HIGH" : "ACTIVE_LOW",
+                      outputMode_ == ePinOutputMode::ACTIVE_HIGH ? "ACTIVE_HIGH" : "ACTIVE_LOW",
                       TO_UNDERLYING(pinPullMode_));
 
             esp_err_t retVal = mcpwm_generator_set_action_on_timer_event(

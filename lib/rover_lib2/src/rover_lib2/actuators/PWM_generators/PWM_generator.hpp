@@ -56,7 +56,7 @@ namespace PWMGenerators
          */
         float getDutyCycle(void) const
         {
-            return static_cast<Impl_T*>(this)->_getDutyCycle();
+            return static_cast<const Impl_T*>(this)->_getDutyCycle();
         }
 
         /**
@@ -71,7 +71,7 @@ namespace PWMGenerators
 
         float getFrequency(void) const
         {
-            return static_cast<Impl_T*>(this)->_getFrequency();
+            return static_cast<const Impl_T*>(this)->_getFrequency();
         }
     };
 

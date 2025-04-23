@@ -26,14 +26,22 @@ namespace IO
             _pin(pin_),
             _isDirectAccess(_pin <= GPIO_DIRECT_ACCESS_MAX)
         {
-            gpio_reset_pin(pin_);
-            this->setMode(mode_);
-            this->setPullMode(pullMode_);
-            this->setPowerMode(powerMode_);
+            if (_pin != GPIO_NUM_NC)
+            {
+                gpio_reset_pin(pin_);
+                this->setMode(mode_);
+                this->setPullMode(pullMode_);
+                this->setPowerMode(powerMode_);
+            }
         }
 
         eIOState read(void)
         {
+            if (_pin == GPIO_NUM_NC)
+            {
+                return;
+            }
+
             if (_isDirectAccess)
             {
                 LOG_DEBUG(Logger::Nodes::DigitalInput, "Pin state: %d", GPIO.in & (1 << _pin));
@@ -49,6 +57,11 @@ namespace IO
 
         void setMode(gpio_mode_t mode_)
         {
+            if (_pin == GPIO_NUM_NC)
+            {
+                return;
+            }
+
             ASSERT_COND_MSG(mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT_OD
                                 || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT_OD,
                             "Wrong mode selected for DigitalIO, implementation error. Undefined behavior on IO");
@@ -57,11 +70,21 @@ namespace IO
 
         void setPullMode(gpio_pull_mode_t pullMode_)
         {
+            if (_pin == GPIO_NUM_NC)
+            {
+                return;
+            }
+
             gpio_set_pull_mode(_pin, pullMode_);
         }
 
         void setPowerMode(gpio_drive_cap_t powerMode_)
         {
+            if (_pin == GPIO_NUM_NC)
+            {
+                return;
+            }
+
             gpio_set_drive_capability(_pin, powerMode_);
         }
 

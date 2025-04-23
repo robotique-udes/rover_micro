@@ -3,6 +3,7 @@
 
 #include "rover_lib2/helpers/chrono.hpp"
 #include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/helpers/time.hpp"
 
 DEFINE_LOG_NODE(LoopTimer, Logger::eNodeState::OFF)
 
