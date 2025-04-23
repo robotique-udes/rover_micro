@@ -233,7 +233,7 @@ float CUI_AMT222::readPosition(void)
             // Checksum failed
             if (_errorAvg.addValue(true) > ERROR_THRESHOLD)
             {
-                LOG(WARN, "Encoder read checksum failed, returning last valid values instead");
+                // LOG(WARN, "Encoder read checksum failed, returning last valid values instead");
             }
             position = _currentPosition;
         }
