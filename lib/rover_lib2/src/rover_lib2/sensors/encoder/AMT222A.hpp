@@ -14,8 +14,8 @@ DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::ON);
 
 class AMT222A : public Encoder<AMT222A>
 {
-    // That low necessary because the ESP-IDF doesn't support clean delay between bytes... AMT222X Requires 2.5us
-    // between bytes in same transaction
+    // Clock speed this low necessary because the ESP-IDF doesn't support adding clean delay between bytes in same transaction...
+    // and AMT222X Requires 2.5us between bytes in same transaction.
     static constexpr uint32_t SPI_CLOCK_SPEED_HZ = 250'000UL;
     static constexpr uint64_t LOOP_PERIOD_US = 1UL;
     static constexpr uint64_t WATCHDOG_DATA_VALID_PERIOD = 500ULL;

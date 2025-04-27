@@ -62,8 +62,8 @@ namespace IO
                 return;
             }
 
-            ASSERT_COND_MSG(mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_INPUT_OUTPUT_OD
-                                || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT || mode_ != gpio_mode_t::GPIO_MODE_OUTPUT_OD,
+            ASSERT_COND_MSG(mode_ == gpio_mode_t::GPIO_MODE_INPUT_OUTPUT || mode_ == gpio_mode_t::GPIO_MODE_INPUT_OUTPUT_OD
+                                || mode_ == gpio_mode_t::GPIO_MODE_OUTPUT || mode_ == gpio_mode_t::GPIO_MODE_OUTPUT_OD,
                             "Wrong mode selected for DigitalIO, implementation error. Undefined behavior on IO");
             gpio_set_direction(_pin, mode_);
         }
@@ -76,16 +76,6 @@ namespace IO
             }
 
             gpio_set_pull_mode(_pin, pullMode_);
-        }
-
-        void setPowerMode(gpio_drive_cap_t powerMode_)
-        {
-            if (_pin == GPIO_NUM_NC)
-            {
-                return;
-            }
-
-            gpio_set_drive_capability(_pin, powerMode_);
         }
 
       private:
