@@ -227,7 +227,7 @@ namespace PWMGenerators
                 float resolutionHz = static_cast<float>(rTickPeriod_ + 1UL) * static_cast<float>(frequency_);
 
                 size_t maxIteration = (CLOCK_FREQUENCY_HZ / rTickPeriod_) - 1UL;
-                for (size_t i = 0UL; resolutionHz > static_cast<float>(CLOCK_FREQUENCY_HZ) || i > maxIteration; i++)
+                for (size_t i = 0UL; resolutionHz > static_cast<float>(CLOCK_FREQUENCY_HZ) && i < maxIteration; i++)
                 {
                     resolutionHz -= static_cast<float>(rTickPeriod_);
                 }
