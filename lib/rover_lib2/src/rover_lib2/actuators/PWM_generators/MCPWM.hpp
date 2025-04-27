@@ -83,7 +83,7 @@ namespace PWMGenerators
 
         ~MCPWM()
         {
-            ASSERT_MSG("Destructor should never be called at runtime, ressources management is RAII");
+            ASSERT_MSG("Destructor should never be called at runtime, resources management is RAII");
         }
 
         void __init(void) {}
