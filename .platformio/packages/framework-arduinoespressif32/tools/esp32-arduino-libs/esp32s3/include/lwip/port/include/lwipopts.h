@@ -162,6 +162,12 @@ extern "C" {
  */
 #define ARP_QUEUEING                    1
 
+#ifdef CONFIG_LWIP_DHCPS_STATIC_ENTRIES
+#define ETHARP_SUPPORT_STATIC_ENTRIES   1
+#else
+#define ETHARP_SUPPORT_STATIC_ENTRIES   0
+#endif
+
 /*
    --------------------------------
    ---------- IP options ----------
@@ -211,11 +217,18 @@ extern "C" {
 
 /**
  * IP_NAPT==1: Enables IPv4 Network Address and Port Translation.
- * Note that both CONFIG_LWIP_IP_FORWARD and CONFIG_LWIP_L2_TO_L3_COPY options
- * need to be enabled in system configuration for the NAPT to work on ESP platform
+ * Note that CONFIG_LWIP_IP_FORWARD option need to be enabled in
+ * system configuration for the NAPT to work on ESP platform
  */
 #ifdef CONFIG_LWIP_IPV4_NAPT
 #define IP_NAPT                         1
+
+#ifdef CONFIG_LWIP_IPV4_NAPT_PORTMAP
+#define IP_NAPT_PORTMAP                 1
+#else
+#define IP_NAPT_PORTMAP                 0
+#endif
+
 #else
 #define IP_NAPT                         0
 #endif
@@ -457,6 +470,10 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
  */
 #define LWIP_DNS                        1
 
+/** The maximum number of IP addresses per host
+ */
+#define DNS_MAX_HOST_IP                 CONFIG_LWIP_DNS_MAX_HOST_IP
+
 /** The maximum of DNS servers
  */
 #define DNS_MAX_SERVERS                 CONFIG_LWIP_DNS_MAX_SERVERS
@@ -484,6 +501,17 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #define LWIP_DNS_SUPPORT_MDNS_QUERIES   1
 #else
 #define LWIP_DNS_SUPPORT_MDNS_QUERIES   0
+#endif
+
+/**
+ * LWIP_DNS_SETSERVER_WITH_NETIF: If this is turned on, the dns_setserver_with_netif() is enabled and called
+ * from all internal modules (instead of dns_setserver()) allowing to setup a user callback to collect DNS server
+ * information acquired by the related network interface.
+ */
+#ifdef CONFIG_LWIP_DNS_SETSERVER_WITH_NETIF
+#define LWIP_DNS_SETSERVER_WITH_NETIF   1
+#else
+#define LWIP_DNS_SETSERVER_WITH_NETIF   0
 #endif
 
 /*
@@ -849,7 +877,7 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
  * The queue size value itself is platform-dependent, but is passed to
  * sys_mbox_new() when the acceptmbox is created.
  */
-#define DEFAULT_ACCEPTMBOX_SIZE         6
+#define DEFAULT_ACCEPTMBOX_SIZE         CONFIG_LWIP_TCP_ACCEPTMBOX_SIZE
 
 /**
  * DEFAULT_THREAD_STACKSIZE: The stack size used by any other lwIP thread.
@@ -1078,9 +1106,19 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #define MPPE_SUPPORT                    CONFIG_LWIP_PPP_MPPE_SUPPORT
 
 /**
+ * PPP_SERVER==1: Enable PPP server support (waiting for incoming PPP session).
+ */
+#define PPP_SERVER                      CONFIG_LWIP_PPP_SERVER_SUPPORT
+
+/**
+ * VJ_SUPPORT==1: Support VJ header compression.
+ */
+#define VJ_SUPPORT                      CONFIG_LWIP_PPP_VJ_HEADER_COMPRESSION
+
+/**
  * PPP_MAXIDLEFLAG: Max Xmit idle time (in ms) before resend flag char.
  * TODO: If PPP_MAXIDLEFLAG > 0 and next package is send during PPP_MAXIDLEFLAG time,
- *       then 0x7E is not added at the begining of PPP package but 0x7E termination
+ *       then 0x7E is not added at the beginning of PPP package but 0x7E termination
  *       is always at the end. This behaviour brokes PPP dial with GSM (PPPoS).
  *       The PPP package should always start and end with 0x7E.
  */
@@ -1112,6 +1150,15 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #else
 #define PPP_SUPPORT                     0
 #endif  /* CONFIG_LWIP_PPP_SUPPORT */
+
+/**
+ * LWIP_USE_EXTERNAL_MBEDTLS: Use external mbed TLS library for crypto implementation used in PPP AUTH
+ */
+#ifdef CONFIG_LWIP_USE_EXTERNAL_MBEDTLS
+#define LWIP_USE_EXTERNAL_MBEDTLS 1
+#else
+#define LWIP_USE_EXTERNAL_MBEDTLS 0
+#endif
 
 /*
    --------------------------------------
@@ -1510,6 +1557,18 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #define SNTP_UPDATE_DELAY                 (sntp_get_sync_interval())
 #define SNTP_SET_SYSTEM_TIME_US(sec, us)  (sntp_set_system_time(sec, us))
 #define SNTP_GET_SYSTEM_TIME(sec, us)     (sntp_get_system_time(&(sec), &(us)))
+
+/**
+ * Configuring SNTP startup delay
+ */
+#ifdef CONFIG_LWIP_SNTP_STARTUP_DELAY
+#define SNTP_STARTUP_DELAY 1
+#ifdef CONFIG_LWIP_SNTP_MAXIMUM_STARTUP_DELAY
+#define SNTP_STARTUP_DELAY_FUNC     (LWIP_RAND() % CONFIG_LWIP_SNTP_MAXIMUM_STARTUP_DELAY)
+#endif /* CONFIG_LWIP_SNTP_MAXIMUM_STARTUP_DELAY */
+#else
+#define SNTP_STARTUP_DELAY 0
+#endif /* SNTP_STARTUP_DELAY */
 
 /*
    ---------------------------------------

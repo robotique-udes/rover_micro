@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2019-2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2019-2023 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -15,10 +15,18 @@
 
 #pragma once
 
-#include "hal/ledc_ll.h"
-#include "hal/ledc_types.h"
 #include "soc/soc_caps.h"
+#include "hal/ledc_types.h"
+#if SOC_LEDC_SUPPORTED
+#include "hal/ledc_ll.h"
+#endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#if SOC_LEDC_SUPPORTED
 /**
  * Context that should be maintained by both the driver and the HAL
  */
@@ -157,12 +165,12 @@ typedef struct {
  * @brief Get LEDC max duty
  *
  * @param hal Context of the HAL layer
- * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
+ * @param channel_num LEDC timer index (0-3), select from ledc_timer_t
  * @param max_duty Pointer to accept the max duty
  *
  * @return None
  */
-#define ledc_hal_get_max_duty(hal, channel_num, max_duty)  ledc_ll_get_max_duty((hal)->dev, (hal)->speed_mode, channel_num, max_duty)
+#define ledc_hal_get_max_duty(hal, timer_sel, max_duty)  ledc_ll_get_max_duty((hal)->dev, (hal)->speed_mode, timer_sel, max_duty)
 
 /**
  * @brief Get LEDC hpoint value
@@ -295,48 +303,19 @@ void ledc_hal_set_hpoint(ledc_hal_context_t *hal, ledc_channel_t channel_num, ui
 void ledc_hal_get_duty(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t *duty_val);
 
 /**
- * @brief Set LEDC duty change direction
+ * @brief Function to set fade parameters all-in-one
  *
  * @param hal Context of the HAL layer
- * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
- * @param duty_direction LEDC duty change direction, increase or decrease
+ * @param channel_num LEDC channel index, select from ledc_channel_t
+ * @param range Range index
+ * @param dir LEDC duty change direction, increase or decrease
+ * @param cycle The duty cycles
+ * @param scale The step scale
+ * @param step The number of increased or decreased times
  *
  * @return None
  */
-void ledc_hal_set_duty_direction(ledc_hal_context_t *hal, ledc_channel_t channel_num, ledc_duty_direction_t duty_direction);
-
-/**
- * @brief Set the number of increased or decreased times
- *
- * @param hal Context of the HAL layer
- * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
- * @param duty_num The number of increased or decreased times
- *
- * @return None
- */
-void ledc_hal_set_duty_num(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t duty_num);
-
-/**
- * @brief Set the duty cycles of increase or decrease
- *
- * @param hal Context of the HAL layer
- * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
- * @param duty_cycle The duty cycles
- *
- * @return None
- */
-void ledc_hal_set_duty_cycle(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t duty_cycle);
-
-/**
- * @brief Set the step scale of increase or decrease
- *
- * @param hal Context of the HAL layer
- * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
- * @param duty_scale The step scale
- *
- * @return None
- */
-void ledc_hal_set_duty_scale(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t duty_scale);
+void ledc_hal_set_fade_param(const ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t range, uint32_t dir, uint32_t cycle, uint32_t scale, uint32_t step);
 
 #if SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED
 /**
@@ -419,3 +398,9 @@ void ledc_hal_clear_fade_end_intr_status(ledc_hal_context_t *hal, ledc_channel_t
  * @return None
  */
 void ledc_hal_get_clk_cfg(ledc_hal_context_t *hal, ledc_timer_t timer_sel, ledc_clk_cfg_t *clk_cfg);
+
+#endif  //#if SOC_LEDC_SUPPORTED
+
+#ifdef __cplusplus
+}
+#endif

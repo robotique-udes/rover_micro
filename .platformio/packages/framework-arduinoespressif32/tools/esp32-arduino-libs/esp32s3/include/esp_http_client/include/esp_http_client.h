@@ -24,6 +24,11 @@ ESP_EVENT_DECLARE_BASE(ESP_HTTP_CLIENT_EVENT);
 typedef struct esp_http_client *esp_http_client_handle_t;
 typedef struct esp_http_client_event *esp_http_client_event_handle_t;
 
+#if CONFIG_ESP_HTTP_CLIENT_ENABLE_CUSTOM_TRANSPORT
+// Forward declares transport handle item to keep the dependency private (even if ENABLE_CUSTOM_TRANSPORT=y)
+struct esp_transport_item_t;
+#endif
+
 /**
  * @brief   HTTP Client events id
  */
@@ -177,6 +182,12 @@ typedef struct {
 #endif
 #if CONFIG_ESP_TLS_USE_DS_PERIPHERAL
     void *ds_data;                          /*!< Pointer for digital signature peripheral context, see ESP-TLS Documentation for more details */
+#endif
+#if CONFIG_ESP_TLS_CLIENT_SESSION_TICKETS
+    bool save_client_session;
+#endif
+#if CONFIG_ESP_HTTP_CLIENT_ENABLE_CUSTOM_TRANSPORT
+    struct esp_transport_item_t *transport;
 #endif
 } esp_http_client_config_t;
 
@@ -622,6 +633,21 @@ esp_err_t esp_http_client_set_redirection(esp_http_client_handle_t client);
  *     - ESP_ERR_INVALID_ARG
  */
 esp_err_t esp_http_client_reset_redirect_counter(esp_http_client_handle_t client);
+
+/**
+ * @brief      On receiving a custom authentication header, this API can be invoked to set the
+ *             authentication information from the header. This API can be called from the event
+ *             handler.
+ *
+ * @param[in]  client       The esp_http_client handle
+ * @param[in]  auth_data    The authentication data received in the header
+ * @param[in]  len          length of auth_data.
+ *
+ * @return
+ *      - ESP_ERR_INVALID_ARG
+ *      - ESP_OK
+ */
+esp_err_t esp_http_client_set_auth_data(esp_http_client_handle_t client, const char *auth_data, int len);
 
 /**
  * @brief      On receiving HTTP Status code 401, this API can be invoked to add authorization

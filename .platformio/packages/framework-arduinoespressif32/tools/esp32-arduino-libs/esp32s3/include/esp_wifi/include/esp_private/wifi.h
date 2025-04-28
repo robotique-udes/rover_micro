@@ -15,7 +15,6 @@
  *
  */
 
-
 #ifndef __ESP_WIFI_INTERNAL_H__
 #define __ESP_WIFI_INTERNAL_H__
 
@@ -46,7 +45,7 @@ typedef struct {
   */
 typedef enum {
     WIFI_LOG_NONE = 0,
-    WIFI_LOG_ERROR ,      /*enabled by default*/
+    WIFI_LOG_ERROR,       /*enabled by default*/
     WIFI_LOG_WARNING,     /*enabled by default*/
     WIFI_LOG_INFO,        /*enabled by default*/
     WIFI_LOG_DEBUG,       /*can be set in menuconfig*/
@@ -73,7 +72,6 @@ typedef enum {
 #define WIFI_LOG_SUBMODULE_IOCTL (1<<1) /*logs related to API calling*/
 #define WIFI_LOG_SUBMODULE_CONN  (1<<2) /*logs related to connecting*/
 #define WIFI_LOG_SUBMODULE_SCAN  (1<<3) /*logs related to scanning*/
-
 
 /**
  * @brief Initialize Wi-Fi Driver
@@ -214,7 +212,6 @@ esp_err_t esp_wifi_internal_wapi_deinit(void);
   *    - others  : failed to register the callback
   */
 esp_err_t esp_wifi_internal_reg_netstack_buf_cb(wifi_netstack_buf_ref_cb_t ref, wifi_netstack_buf_free_cb_t free);
-
 
 /**
   * @brief     The WiFi RX callback function
@@ -370,7 +367,7 @@ esp_err_t esp_wifi_internal_esp_wifi_he_md5_check(const char *md5);
   *
   * @return    A pointer to the memory allocated on success, NULL on failure
   */
-void *wifi_malloc( size_t size );
+void *wifi_malloc(size_t size);
 
 /**
   * @brief     Reallocate a chunk of memory for WiFi driver
@@ -382,7 +379,7 @@ void *wifi_malloc( size_t size );
   *
   * @return    A pointer to the memory allocated on success, NULL on failure
   */
-void *wifi_realloc( void *ptr, size_t size );
+void *wifi_realloc(void *ptr, size_t size);
 
 /**
   * @brief     Callocate memory for WiFi driver
@@ -394,7 +391,7 @@ void *wifi_realloc( void *ptr, size_t size );
   *
   * @return    A pointer to the memory allocated on success, NULL on failure
   */
-void *wifi_calloc( size_t n, size_t size );
+void *wifi_calloc(size_t n, size_t size);
 
 /**
   * @brief     Update WiFi MAC time
@@ -403,7 +400,7 @@ void *wifi_calloc( size_t n, size_t size );
   *
   * @return    Always returns ESP_OK
   */
-typedef esp_err_t (* wifi_mac_time_update_cb_t)( uint32_t time_delta );
+typedef esp_err_t (* wifi_mac_time_update_cb_t)(uint32_t time_delta);
 
 /**
   * @brief     Update WiFi MAC time
@@ -412,7 +409,7 @@ typedef esp_err_t (* wifi_mac_time_update_cb_t)( uint32_t time_delta );
   *
   * @return    Always returns ESP_OK
   */
-esp_err_t esp_wifi_internal_update_mac_time( uint32_t time_delta );
+esp_err_t esp_wifi_internal_update_mac_time(uint32_t time_delta);
 
 /**
   * @brief     Set current WiFi log level
@@ -538,7 +535,6 @@ void esp_wifi_power_domain_on(void);
  * @brief Wifi power domain power off
  */
 void esp_wifi_power_domain_off(void);
-
 
 #if (CONFIG_FREERTOS_USE_TICKLESS_IDLE && SOC_PM_MODEM_RETENTION_BY_REGDMA)
 /**
@@ -753,6 +749,33 @@ esp_err_t esp_nan_internal_datapath_resp(wifi_nan_datapath_resp_t *resp);
   *    - others: failed
   */
 esp_err_t esp_nan_internal_datapath_end(wifi_nan_datapath_end_req_t *req);
+
+/**
+  * @brief     Connect WiFi station to the AP.
+  *
+  * @attention 1. This API only impact WIFI_MODE_STA or WIFI_MODE_APSTA mode
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
+  *    - ESP_ERR_WIFI_MODE: WiFi mode error
+  *    - ESP_ERR_WIFI_CONN: WiFi internal error, station or soft-AP control block wrong
+  *    - ESP_ERR_WIFI_SSID: SSID of AP which station connects is invalid
+  */
+esp_err_t esp_wifi_connect_internal(void);
+
+/**
+  * @brief     Disconnect WiFi station from the AP.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi was not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi was not started by esp_wifi_start
+  *    - ESP_FAIL: other WiFi internal errors
+  *
+  */
+esp_err_t esp_wifi_disconnect_internal(void);
 
 #ifdef __cplusplus
 }

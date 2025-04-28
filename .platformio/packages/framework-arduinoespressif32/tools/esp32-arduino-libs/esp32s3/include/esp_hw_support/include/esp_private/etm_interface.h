@@ -24,6 +24,10 @@ typedef enum {
     ETM_TRIG_PERIPH_GDMA,     /*!< ETM trigger source: GDMA */
     ETM_TRIG_PERIPH_GPTIMER,  /*!< ETM trigger source: GPTimer */
     ETM_TRIG_PERIPH_SYSTIMER, /*!< ETM trigger source: Systimer */
+    ETM_TRIG_PERIPH_MCPWM,    /*!< ETM trigger source: MCPWM */
+    ETM_TRIG_PERIPH_ANA_CMPR, /*!< ETM trigger source: Analog Comparator */
+    ETM_TRIG_PERIPH_TSENS,    /*!< ETM trigger source: Temperature Sensor */
+    ETM_TRIG_PERIPH_LP_CORE,  /*!< ETM trigger source: Low-Power Core */
 } etm_trigger_peripheral_t;
 
 /**

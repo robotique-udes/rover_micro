@@ -9,7 +9,8 @@
 #include "esp_assert.h"
 #include "esp_flash_partitions.h"
 
-#define MSPI_TIMING_CONFIG_NUM_DEFAULT               20  //This should be larger than the max available timing config num
+#define MSPI_TIMING_MSPI1_IS_INVOLVED                1   //This means esp flash driver needs to be notified
+#define MSPI_TIMING_CONFIG_NUM_MAX                   20  //This should be larger than the max available timing config num
 #define MSPI_TIMING_TEST_DATA_LEN                    64
 #define MSPI_TIMING_PSRAM_TEST_DATA_ADDR             0
 #define MSPI_TIMING_FLASH_TEST_DATA_ADDR             ESP_BOOTLOADER_OFFSET
@@ -238,6 +239,7 @@ ESP_STATIC_ASSERT(CHECK_POWER_OF_2(MSPI_TIMING_CORE_CLOCK_MHZ / MSPI_TIMING_PSRA
 #define MSPI_TIMING_PSRAM_CONFIG_TABLE_CORE_CLK_120M_MODULE_CLK_120M_STR_MODE        {{2, 0, 1}, {0, 0, 0}, {2, 2, 2}, {1, 0, 1}, {2, 0, 2}, {0, 0, 1}, {2, 2, 3}, {1, 0, 2}, {2, 0, 3}, {0, 0, 2}, {2, 2, 4}, {1, 0, 3}}
 #define MSPI_TIMING_PSRAM_CONFIG_NUM_CORE_CLK_120M_MODULE_CLK_120M_STR_MODE          12
 #define MSPI_TIMING_PSRAM_DEFAULT_CONFIG_ID_CORE_CLK_120M_MODULE_CLK_120M_STR_MODE   2
+
 
 //PSRAM: core clock 240M, module clock 120M, DTR mode
 #define MSPI_TIMING_PSRAM_CONFIG_TABLE_CORE_CLK_240M_MODULE_CLK_120M_DTR_MODE        {{0, 0, 0}, {4, 1, 2}, {1, 0, 1}, {4, 0, 2}, {0, 0, 1}, {4, 1, 3}, {1, 0, 2}, {4, 0, 3}, {0, 0, 2}, {4, 1, 4}, {1, 0, 3}, {4, 0, 4}, {0, 0, 3}, {4, 1, 5}}

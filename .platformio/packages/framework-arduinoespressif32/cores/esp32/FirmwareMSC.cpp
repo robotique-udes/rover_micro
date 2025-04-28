@@ -264,7 +264,7 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_
   if (lba < fw_start_sector) {
     //write to sectors that are in RAM
     memcpy(msc_ram_disk + (lba * DISK_SECTOR_SIZE) + offset, buffer, bufsize);
-    if (msc_ota_partition && lba == static_cast<uint32_t>(fw_start_sector - 1)) {
+    if (msc_ota_partition && lba == (uint32_t)(fw_start_sector - 1)) {
       //monitor the root folder table
       if (msc_update_state <= MSC_UPDATE_RUNNING) {
         fat_dir_entry_t *update_entry = msc_update_find_new_bin();

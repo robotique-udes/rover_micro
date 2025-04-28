@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2020-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2020-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -109,7 +109,7 @@ extern const bootloader_qio_info_t __attribute__((weak)) bootloader_flash_qe_sup
   */
 esp_err_t __attribute__((weak)) bootloader_flash_unlock(void);
 
-#if CONFIG_BOOTLOADER_CACHE_32BIT_ADDR_OCTAL_FLASH
+#if CONFIG_BOOTLOADER_CACHE_32BIT_ADDR_QUAD_FLASH || CONFIG_BOOTLOADER_CACHE_32BIT_ADDR_OCTAL_FLASH
 /**
  * @brief Enable 32bits address flash(larger than 16MB) can map to cache.
  *

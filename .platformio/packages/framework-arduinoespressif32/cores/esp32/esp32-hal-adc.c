@@ -75,7 +75,7 @@ static bool adcDetachBus(void *pin) {
       if (err != ESP_OK) {
         return false;
       }
-#elif !defined(CONFIG_IDF_TARGET_ESP32H2)
+#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))
       err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
       if (err != ESP_OK) {
         return false;
@@ -127,7 +127,7 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
             log_e("adc_cali_create_scheme_curve_fitting failed with error: %d", err);
             return err;
           }
-#elif !defined(CONFIG_IDF_TARGET_ESP32H2)  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
           log_d("Deleting ADC_UNIT_%d line cali handle", adc_unit);
           err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
           if (err != ESP_OK) {
@@ -310,7 +310,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin) {
       .bitwidth = __analogWidth,
     };
     err = adc_cali_create_scheme_curve_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
-#elif !defined(CONFIG_IDF_TARGET_ESP32H2)  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
     adc_cali_line_fitting_config_t cali_config = {
       .unit_id = adc_unit,
       .bitwidth = __analogWidth,
@@ -379,7 +379,7 @@ static bool adcContinuousDetachBus(void *adc_unit_number) {
       if (err != ESP_OK) {
         return false;
       }
-#elif !defined(CONFIG_IDF_TARGET_ESP32H2)
+#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))
       err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
       if (err != ESP_OK) {
         return false;
@@ -462,7 +462,7 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
   esp_err_t err = ESP_OK;
 
   //Convert pins to channels and check if all are ADC1s unit
-  for (int i = 0; i < (int)pins_count; i++) {
+  for (size_t i = 0; i < pins_count; i++) {
     err = adc_continuous_io_to_channel(pins[i], &adc_unit, &channel[i]);
     if (err != ESP_OK) {
       log_e("Pin %u is not ADC pin!", pins[i]);
@@ -492,7 +492,7 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
 
   //Set periman deinit function and reset all pins to init state.
   perimanSetBusDeinit(ESP32_BUS_TYPE_ADC_CONT, adcContinuousDetachBus);
-  for (int j = 0; j < (int)pins_count; j++) {
+  for (size_t j = 0; j < pins_count; j++) {
     if (!perimanClearPinBus(pins[j])) {
       return false;
     }
@@ -537,7 +537,7 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
 
   //Allocate and prepare result structure for adc readings
   adc_result = malloc(pins_count * sizeof(adc_continuous_data_t));
-  for (int k = 0; k < (int)pins_count; k++) {
+  for (size_t k = 0; k < pins_count; k++) {
     adc_result[k].pin = pins[k];
     adc_result[k].channel = channel[k];
   }
@@ -552,7 +552,7 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
       .bitwidth = __adcContinuousWidth,
     };
     err = adc_cali_create_scheme_curve_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
-#elif !defined(CONFIG_IDF_TARGET_ESP32H2)  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
     adc_cali_line_fitting_config_t cali_config = {
       .unit_id = adc_unit,
       .bitwidth = __adcContinuousWidth,
@@ -566,7 +566,7 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
     }
   }
 
-  for (int k = 0; k < (int)pins_count; k++) {
+  for (size_t k = 0; k < pins_count; k++) {
     if (!perimanSetPinBus(pins[k], ESP32_BUS_TYPE_ADC_CONT, (void *)(adc_unit + 1), adc_unit, channel[k])) {
       log_e("perimanSetPinBus to ADC Continuous failed!");
       adcContinuousDetachBus((void *)(adc_unit + 1));
@@ -598,7 +598,7 @@ bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms) {
       return false;
     }
 
-    for (int i = 0; i < (int)bytes_read; i += SOC_ADC_DIGI_RESULT_BYTES) {
+    for (uint32_t i = 0; i < bytes_read; i += SOC_ADC_DIGI_RESULT_BYTES) {
       adc_digi_output_data_t *p = (adc_digi_output_data_t *)&adc_read[i];
       uint32_t chan_num = ADC_GET_CHANNEL(p);
       uint32_t data = ADC_GET_DATA(p);

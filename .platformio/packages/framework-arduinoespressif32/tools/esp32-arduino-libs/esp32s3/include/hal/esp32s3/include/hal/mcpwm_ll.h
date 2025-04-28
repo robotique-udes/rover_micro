@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -20,6 +20,7 @@
 #include "hal/mcpwm_types.h"
 #include "hal/misc.h"
 #include "hal/assert.h"
+#include "soc/system_struct.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,6 +69,59 @@ typedef enum {
 ////////////////////////////////////////MCPWM Group Specific////////////////////////////////////////////////////////////
 
 /**
+ * @brief Enable the bus clock for MCPWM module
+ *
+ * @param group_id Group ID
+ * @param enable true to enable, false to disable
+ */
+static inline void mcpwm_ll_enable_bus_clock(int group_id, bool enable)
+{
+    if (group_id == 0) {
+        SYSTEM.perip_clk_en0.pwm0_clk_en = enable;
+    } else {
+        SYSTEM.perip_clk_en0.pwm1_clk_en = enable;
+    }
+}
+
+/// use a macro to wrap the function, force the caller to use it in a critical section
+/// the critical section needs to declare the __DECLARE_RCC_ATOMIC_ENV variable in advance
+#define mcpwm_ll_enable_bus_clock(...) (void)__DECLARE_RCC_ATOMIC_ENV; mcpwm_ll_enable_bus_clock(__VA_ARGS__)
+
+/**
+ * @brief Reset the MCPWM module
+ *
+ * @param group_id Group ID
+ */
+static inline void mcpwm_ll_reset_register(int group_id)
+{
+    if (group_id == 0) {
+        SYSTEM.perip_rst_en0.pwm0_rst = 1;
+        SYSTEM.perip_rst_en0.pwm0_rst = 0;
+    } else {
+        SYSTEM.perip_rst_en0.pwm1_rst = 1;
+        SYSTEM.perip_rst_en0.pwm1_rst = 0;
+    }
+}
+
+/// use a macro to wrap the function, force the caller to use it in a critical section
+/// the critical section needs to declare the __DECLARE_RCC_ATOMIC_ENV variable in advance
+#define mcpwm_ll_reset_register(...) (void)__DECLARE_RCC_ATOMIC_ENV; mcpwm_ll_reset_register(__VA_ARGS__)
+
+/**
+ * @brief Enable MCPWM module clock
+ *
+ * @note Not support to enable/disable the peripheral clock
+ *
+ * @param group_id Group ID
+ * @param en true to enable, false to disable
+ */
+static inline void mcpwm_ll_group_enable_clock(int group_id, bool en)
+{
+    (void)group_id;
+    (void)en;
+}
+
+/**
  * @brief Set the clock source for MCPWM
  *
  * @param mcpwm Peripheral instance address
@@ -77,20 +131,6 @@ static inline void mcpwm_ll_group_set_clock_source(mcpwm_dev_t *mcpwm, mcpwm_tim
 {
     (void)mcpwm;
     (void)clk_src;
-}
-
-/**
- * @brief Enable MCPWM module clock
- *
- * @note Not support to enable/disable the peripheral clock
- *
- * @param mcpwm Peripheral instance address
- * @param en true to enable, false to disable
- */
-static inline void mcpwm_ll_group_enable_clock(mcpwm_dev_t *mcpwm, bool en)
-{
-    (void)mcpwm; // only one MCPWM instance
-    (void)en;
 }
 
 /**
@@ -316,7 +356,7 @@ static inline void mcpwm_ll_timer_set_start_stop_command(mcpwm_dev_t *mcpwm, int
         break;
     default:
         HAL_ASSERT(false);
-        break;;
+        break;
     }
 }
 
@@ -753,7 +793,7 @@ static inline void mcpwm_ll_generator_reset_actions(mcpwm_dev_t *mcpwm, int oper
  * @param action Action to set
  */
 static inline void mcpwm_ll_generator_set_action_on_timer_event(mcpwm_dev_t *mcpwm, int operator_id, int generator_id,
-        mcpwm_timer_direction_t direction, mcpwm_timer_event_t event, mcpwm_generator_action_t action)
+                                                                mcpwm_timer_direction_t direction, mcpwm_timer_event_t event, mcpwm_generator_action_t action)
 {
     // empty: 0, full: 1
     if (direction == MCPWM_TIMER_DIRECTION_UP) { // utez, utep
@@ -776,7 +816,7 @@ static inline void mcpwm_ll_generator_set_action_on_timer_event(mcpwm_dev_t *mcp
  * @param action Action to set
  */
 static inline void mcpwm_ll_generator_set_action_on_compare_event(mcpwm_dev_t *mcpwm, int operator_id, int generator_id,
-        mcpwm_timer_direction_t direction, int cmp_id, int action)
+                                                                  mcpwm_timer_direction_t direction, int cmp_id, int action)
 {
     if (direction == MCPWM_TIMER_DIRECTION_UP) { // utea, uteb
         mcpwm->operators[operator_id].generator[generator_id].val &= ~(0x03 << (cmp_id * 2 + 4));
@@ -798,7 +838,7 @@ static inline void mcpwm_ll_generator_set_action_on_compare_event(mcpwm_dev_t *m
  * @param action Action to set
  */
 static inline void mcpwm_ll_generator_set_action_on_trigger_event(mcpwm_dev_t *mcpwm, int operator_id, int generator_id,
-        mcpwm_timer_direction_t direction, int trig_id, int action)
+                                                                  mcpwm_timer_direction_t direction, int trig_id, int action)
 {
     if (direction == MCPWM_TIMER_DIRECTION_UP) { // ut0, ut1
         mcpwm->operators[operator_id].generator[generator_id].val &= ~(0x03 << (trig_id * 2 + 8));
@@ -820,7 +860,7 @@ static inline void mcpwm_ll_generator_set_action_on_trigger_event(mcpwm_dev_t *m
  * @param action Action to set
  */
 static inline void mcpwm_ll_generator_set_action_on_brake_event(mcpwm_dev_t *mcpwm, int operator_id, int generator_id,
-        mcpwm_timer_direction_t direction, mcpwm_operator_brake_mode_t brake_mode, int action)
+                                                                mcpwm_timer_direction_t direction, mcpwm_operator_brake_mode_t brake_mode, int action)
 {
     // the following bit operation is highly depend on the register bit layout.
     // the priority comes: generator ID > brake mode > direction
@@ -934,7 +974,7 @@ static inline void mcpwm_ll_operator_set_deadtime_clock_src(mcpwm_dev_t *mcpwm, 
         break;
     case MCPWM_LL_DEADTIME_CLK_SRC_TIMER:
         mcpwm->operators[operator_id].dt_cfg.dt_clk_sel = 1;
-        break;;
+        break;
     default:
         HAL_ASSERT(false);
     }
@@ -1595,7 +1635,8 @@ static inline uint32_t mcpwm_ll_group_get_clock_prescale(mcpwm_dev_t *mcpwm)
 
 static inline uint32_t mcpwm_ll_timer_get_clock_prescale(mcpwm_dev_t *mcpwm, int timer_id)
 {
-    mcpwm_timer_cfg0_reg_t cfg0 = mcpwm->timer[timer_id].timer_cfg0;
+    mcpwm_timer_cfg0_reg_t cfg0;
+    cfg0.val = mcpwm->timer[timer_id].timer_cfg0.val;
     return cfg0.timer_prescale + 1;
 }
 
