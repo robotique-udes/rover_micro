@@ -26,6 +26,9 @@ extern "C" {
 
 #include <nimble/transport_impl.h>
 #include <nimble/transport/monitor.h>
+#if MYNEWT_PKG_apache_mynewt_nimble__nimble_transport_common_hci_ipc
+#include <nimble/transport/transport_ipc.h>
+#endif
 #include <inttypes.h>
 #include "os/os_mempool.h"
 
@@ -184,11 +187,16 @@ int esp_ble_hci_trans_reset(void);
 
 struct os_mbuf;
 
+/* Initialization */
+void ble_transport_init(void);
+
 /* Allocators for supported data types */
 void *ble_transport_alloc_cmd(void);
 void *ble_transport_alloc_evt(int discardable);
 struct os_mbuf *ble_transport_alloc_acl_from_hs(void);
+struct os_mbuf *ble_transport_alloc_iso_from_hs(void);
 struct os_mbuf *ble_transport_alloc_acl_from_ll(void);
+struct os_mbuf *ble_transport_alloc_iso_from_ll(void);
 
 /* Generic deallocator for cmd/evt buffers */
 void ble_transport_free(void *buf);
@@ -200,8 +208,11 @@ int ble_transport_register_put_acl_from_ll_cb(os_mempool_put_fn *cb);
 int ble_transport_to_ll_cmd(void *buf);
 int ble_transport_to_ll_acl(struct os_mbuf *om);
 
+/* Send data to hs/ll side */
+int ble_transport_to_ll_iso(struct os_mbuf *om);
 int ble_transport_to_hs_evt(void *buf);
 int ble_transport_to_hs_acl(struct os_mbuf *om);
+int ble_transport_to_hs_iso(struct os_mbuf *om);
 
 #ifdef __cplusplus
 }

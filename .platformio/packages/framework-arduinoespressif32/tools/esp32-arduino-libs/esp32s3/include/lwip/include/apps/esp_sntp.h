@@ -283,12 +283,14 @@ const ip_addr_t* sntp_getserver(u8_t idx)
     return esp_sntp_getserver(idx);
 }
 
-static inline uint8_t sntp_getreachability(uint8_t idx)
+static inline __attribute__((deprecated("use esp_sntp_getreachability() instead")))
+uint8_t sntp_getreachability(uint8_t idx)
 {
     return esp_sntp_getreachability(idx);
 }
 
-static inline esp_sntp_operatingmode_t sntp_getoperatingmode(void)
+static inline __attribute__((deprecated("use esp_sntp_getoperatingmode() instead")))
+esp_sntp_operatingmode_t sntp_getoperatingmode(void)
 {
     return esp_sntp_getoperatingmode();
 }

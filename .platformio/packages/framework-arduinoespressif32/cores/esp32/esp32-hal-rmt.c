@@ -121,8 +121,7 @@ static bool _rmtCheckDirection(uint8_t gpio_num, rmt_ch_dir_t rmt_dir, const cha
   return false;  // mismatched
 }
 
-static rmt_bus_handle_t _rmtGetBus(int pin, const char *labelFunc) {
-  (void)labelFunc;
+static rmt_bus_handle_t _rmtGetBus(int pin, const char */*labelFunc*/) {
   // Is pin RX or TX? Let's find it out
   peripheral_bus_type_t rmt_bus_type = perimanGetPinBusType(pin);
   if (rmt_bus_type != ESP32_BUS_TYPE_RMT_TX && rmt_bus_type != ESP32_BUS_TYPE_RMT_RX) {

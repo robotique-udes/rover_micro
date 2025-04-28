@@ -10,12 +10,12 @@
 #include "soc/soc_caps.h"
 #include "hal/dma_types.h"
 #include "hal/adc_types.h"
-#include "hal/adc_ll.h"
 #include "hal/adc_hal_common.h"
-#include "esp_err.h"
+#if SOC_ADC_DMA_SUPPORTED
+#include "hal/adc_ll.h"
+#endif
 
 #if SOC_GDMA_SUPPORTED
-#include "soc/gdma_struct.h"
 #include "hal/gdma_ll.h"
 #endif
 
@@ -33,12 +33,8 @@
 extern "C" {
 #endif
 
-#if SOC_GDMA_SUPPORTED
-#define ADC_HAL_DMA_INTR_MASK                           GDMA_LL_EVENT_RX_SUC_EOF
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define ADC_HAL_DMA_INTR_MASK                           SPI_LL_INTR_IN_SUC_EOF
-#else //CONFIG_IDF_TARGET_ESP32
-#define ADC_HAL_DMA_INTR_MASK                           BIT(9)
+#if CONFIG_IDF_TARGET_ESP32
+#define ADC_HAL_DMA_I2S_HOST    0
 #endif
 
 /**
@@ -54,10 +50,8 @@ typedef enum adc_hal_dma_desc_status_t {
  * @brief Configuration of the HAL
  */
 typedef struct adc_hal_dma_config_t {
-    void                *dev;               ///< DMA peripheral address
     uint32_t            eof_desc_num;       ///< Number of dma descriptors that is eof
     uint32_t            eof_step;           ///< Number of linked descriptors that is one eof
-    uint32_t            dma_chan;           ///< DMA channel to be used
     uint32_t            eof_num;            ///< Bytes between 2 in_suc_eof interrupts
 } adc_hal_dma_config_t;
 
@@ -73,10 +67,8 @@ typedef struct adc_hal_dma_ctx_t {
     dma_descriptor_t    *cur_desc_ptr;      ///< Pointer to the current descriptor
 
     /**< these need to be configured by `adc_hal_dma_config_t` via driver layer*/
-    void                *dev;               ///< DMA address
     uint32_t            eof_desc_num;       ///< Number of dma descriptors that is eof
     uint32_t            eof_step;           ///< Number of linked descriptors that is one eof
-    uint32_t            dma_chan;           ///< DMA channel to be used
     uint32_t            eof_num;            ///< Words between 2 in_suc_eof interrupts
 } adc_hal_dma_ctx_t;
 
@@ -123,9 +115,8 @@ void adc_hal_digi_init(adc_hal_dma_ctx_t *hal);
 /**
  * Digital controller deinitialization.
  *
- * @param hal Context of the HAL
  */
-void adc_hal_digi_deinit(adc_hal_dma_ctx_t *hal);
+void adc_hal_digi_deinit(void);
 
 /**
  * @brief Initialize the hal context
@@ -139,38 +130,17 @@ void adc_hal_dma_ctx_config(adc_hal_dma_ctx_t *hal, const adc_hal_dma_config_t *
  * Setting the digital controller.
  *
  * @param hal    Context of the HAL
- * @param cfg    Pointer to digital controller paramter.
+ * @param cfg    Pointer to digital controller parameter.
  */
 void adc_hal_digi_controller_config(adc_hal_dma_ctx_t *hal, const adc_hal_digi_ctrlr_cfg_t *cfg);
 
 /**
- * @brief Start Conversion
+ * @brief Link DMA descriptor
  *
  * @param hal Context of the HAL
  * @param data_buf Pointer to the data buffer, the length should be multiple of ``desc_max_num`` and ``eof_num`` in ``adc_hal_dma_ctx_t``
  */
-void adc_hal_digi_start(adc_hal_dma_ctx_t *hal, uint8_t *data_buf);
-
-#if !SOC_GDMA_SUPPORTED
-/**
- * @brief Get the DMA descriptor that Hardware has finished processing.
- *
- * @param hal Context of the HAL
- *
- * @return DMA descriptor address
- */
-intptr_t adc_hal_get_desc_addr(adc_hal_dma_ctx_t *hal);
-
-/**
- * @brief Check the hardware interrupt event
- *
- * @param hal Context of the HAL
- * @param mask Event mask
- *
- * @return True: the event is triggered. False: the event is not triggered yet.
- */
-bool adc_hal_check_event(adc_hal_dma_ctx_t *hal, uint32_t mask);
-#endif
+void adc_hal_digi_dma_link(adc_hal_dma_ctx_t *hal, uint8_t *data_buf);
 
 /**
  * @brief Get the ADC reading result
@@ -185,27 +155,23 @@ bool adc_hal_check_event(adc_hal_dma_ctx_t *hal, uint32_t mask);
 adc_hal_dma_desc_status_t adc_hal_get_reading_result(adc_hal_dma_ctx_t *hal, const intptr_t eof_desc_addr, uint8_t **buffer, uint32_t *len);
 
 /**
- * @brief Clear interrupt
+ * @brief Enable or disable ADC digital controller
  *
- * @param hal  Context of the HAL
- * @param mask mask of the interrupt
+ * @param enable true to enable, false to disable
  */
-void adc_hal_digi_clr_intr(adc_hal_dma_ctx_t *hal, uint32_t mask);
+void adc_hal_digi_enable(bool enable);
 
 /**
- * @brief Enable interrupt
+ * @brief Enable pr disable output data to DMA from adc digital controller.
  *
- * @param hal  Context of the HAL
- * @param mask mask of the interrupt
+ * @param enable true to enable, false to disable
  */
-void adc_hal_digi_dis_intr(adc_hal_dma_ctx_t *hal, uint32_t mask);
+void adc_hal_digi_connect(bool enable);
 
 /**
- * @brief Stop conversion
- *
- * @param hal Context of the HAL
+ * @brief Reset adc digital controller.
  */
-void adc_hal_digi_stop(adc_hal_dma_ctx_t *hal);
+void adc_hal_digi_reset(void);
 
 #if ADC_LL_WORKAROUND_CLEAR_EOF_COUNTER
 /**
@@ -213,6 +179,17 @@ void adc_hal_digi_stop(adc_hal_dma_ctx_t *hal);
  */
 void adc_hal_digi_clr_eof(void);
 #endif
+
+/**
+ * @brief Set ADC monitor with high and low thresholds, and will enable the interrupts accordingly
+ *
+ * @param monitor_id Monitor to configure
+ * @param adc_n Which ADC unit will be monitored
+ * @param adc_ch Which ADC channel will be monitored
+ * @param h_thres High threshold (disable if < 0)
+ * @param l_thres Low threshold (disable if < 0)
+ */
+void adc_hal_digi_monitor_set_thres(adc_monitor_id_t monitor_id, adc_unit_t adc_n, uint8_t adc_ch, int32_t h_thres, int32_t l_thres);
 
 #ifdef __cplusplus
 }

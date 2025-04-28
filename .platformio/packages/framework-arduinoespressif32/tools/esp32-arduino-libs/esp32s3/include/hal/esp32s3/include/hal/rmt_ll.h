@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,6 +16,7 @@
 #include "hal/misc.h"
 #include "hal/assert.h"
 #include "soc/rmt_struct.h"
+#include "soc/system_struct.h"
 #include "hal/rmt_types.h"
 
 #ifdef __cplusplus
@@ -36,10 +37,47 @@ extern "C" {
 #define RMT_LL_MAX_FILTER_VALUE           255
 #define RMT_LL_MAX_IDLE_VALUE             32767
 
+// Maximum values due to limited register bit width
+#define RMT_LL_CHANNEL_CLOCK_MAX_PRESCALE 256
+#define RMT_LL_GROUP_CLOCK_MAX_INTEGER_PRESCALE 256
+#define RMT_LL_GROUP_CLOCK_MAX_FRACTAL_PRESCALE 64
+
 typedef enum {
     RMT_LL_MEM_OWNER_SW = 0,
     RMT_LL_MEM_OWNER_HW = 1,
 } rmt_ll_mem_owner_t;
+
+/**
+ * @brief Enable the bus clock for RMT module
+ *
+ * @param group_id Group ID
+ * @param enable true to enable, false to disable
+ */
+static inline void rmt_ll_enable_bus_clock(int group_id, bool enable)
+{
+    (void)group_id;
+    SYSTEM.perip_clk_en0.rmt_clk_en = enable;
+}
+
+/// use a macro to wrap the function, force the caller to use it in a critical section
+/// the critical section needs to declare the __DECLARE_RCC_ATOMIC_ENV variable in advance
+#define rmt_ll_enable_bus_clock(...) (void)__DECLARE_RCC_ATOMIC_ENV; rmt_ll_enable_bus_clock(__VA_ARGS__)
+
+/**
+ * @brief Reset the RMT module
+ *
+ * @param group_id Group ID
+ */
+static inline void rmt_ll_reset_register(int group_id)
+{
+    (void)group_id;
+    SYSTEM.perip_rst_en0.rmt_rst = 1;
+    SYSTEM.perip_rst_en0.rmt_rst = 0;
+}
+
+/// use a macro to wrap the function, force the caller to use it in a critical section
+/// the critical section needs to declare the __DECLARE_RCC_ATOMIC_ENV variable in advance
+#define rmt_ll_reset_register(...) (void)__DECLARE_RCC_ATOMIC_ENV; rmt_ll_reset_register(__VA_ARGS__)
 
 /**
  * @brief Enable clock gate for register and memory
@@ -441,7 +479,7 @@ static inline void rmt_ll_tx_set_carrier_level(rmt_dev_t *dev, uint32_t channel,
  *
  * @param dev Peripheral instance address
  * @param channel RMT TX channel number
- * @param enable True to output carrier signal in all RMT state, False to only ouput carrier signal for effective data
+ * @param enable True to output carrier signal in all RMT state, False to only output carrier signal for effective data
  */
 static inline void rmt_ll_tx_enable_carrier_always_on(rmt_dev_t *dev, uint32_t channel, bool enable)
 {
@@ -684,7 +722,7 @@ static inline void rmt_ll_enable_interrupt(rmt_dev_t *dev, uint32_t mask, bool e
  * @brief Clear RMT interrupt status by mask
  *
  * @param dev Peripheral instance address
- * @param mask Interupt status mask
+ * @param mask Interrupt status mask
  */
 __attribute__((always_inline))
 static inline void rmt_ll_clear_interrupt_status(rmt_dev_t *dev, uint32_t mask)

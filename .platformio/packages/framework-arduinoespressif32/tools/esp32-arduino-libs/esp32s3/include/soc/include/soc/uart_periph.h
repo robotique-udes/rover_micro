@@ -6,14 +6,13 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#include "soc/uart_reg.h"
-#include "soc/uart_struct.h"
-#include "soc/periph_defs.h"
+#include "soc/interrupts.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/io_mux_reg.h"
 #include "soc/uart_pins.h"
 #include "soc/uart_struct.h"
 #include "soc/uart_reg.h"
+#include "soc/regdma.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,10 +46,18 @@ typedef struct {
 typedef struct {
     const uart_periph_sig_t pins[SOC_UART_PINS_COUNT];
     const uint8_t irq;
-    const periph_module_t module;
 } uart_signal_conn_t;
 
 extern const uart_signal_conn_t uart_periph_signal[SOC_UART_NUM];
+
+#if SOC_UART_SUPPORT_SLEEP_RETENTION
+typedef struct {
+    const regdma_entries_config_t *regdma_entry_array;
+    uint32_t array_size;
+} uart_reg_retention_info_t;
+
+extern const uart_reg_retention_info_t uart_reg_retention_info[SOC_UART_HP_NUM];
+#endif
 
 #ifdef __cplusplus
 }

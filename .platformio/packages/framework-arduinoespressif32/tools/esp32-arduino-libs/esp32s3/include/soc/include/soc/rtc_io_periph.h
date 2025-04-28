@@ -1,27 +1,19 @@
 /*
- * SPDX-FileCopyrightText: 2019-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2019-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 #pragma once
 
-
-#include "soc/soc.h"
+#include <stdint.h>
 //include soc related (generated) definitions
 #include "soc/soc_caps.h"
 
 #if SOC_RTCIO_PIN_COUNT > 0
 #include "soc/rtc_io_channel.h"
-#if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
-#include "soc/rtc_io_reg.h"
-#include "soc/rtc_io_struct.h"
 #endif
-#endif
-
-#if SOC_ADC_RTC_CTRL_SUPPORTED
-#include "soc/sens_struct.h"
-#endif
+#include "soc/io_mux_reg.h"
 
 #ifdef __cplusplus
 extern "C"

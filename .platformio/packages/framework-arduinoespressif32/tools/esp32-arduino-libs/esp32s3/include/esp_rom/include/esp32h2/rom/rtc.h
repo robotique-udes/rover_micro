@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -8,7 +8,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+#include <stddef.h>
 #include "soc/soc.h"
 #include "soc/lp_aon_reg.h"
 #include "soc/reset_reasons.h"
@@ -55,16 +55,16 @@ extern "C" {
   *************************************************************************************
   */
 
-#define RTC_SLOW_CLK_CAL_REG    LP_AON_STORE1_REG
-#define RTC_BOOT_TIME_LOW_REG   LP_AON_STORE2_REG
-#define RTC_BOOT_TIME_HIGH_REG  LP_AON_STORE3_REG
-#define RTC_XTAL_FREQ_REG       LP_AON_STORE4_REG
-#define RTC_APB_FREQ_REG        LP_AON_STORE5_REG
-#define RTC_ENTRY_ADDR_REG      LP_AON_STORE6_REG
-#define RTC_RESET_CAUSE_REG     LP_AON_STORE6_REG
-#define RTC_MEMORY_CRC_REG      LP_AON_STORE7_REG
-#define LIGHT_SLEEP_WAKE_STUB_ADDR_REG  LP_AON_STORE8_REG
-#define SLEEP_MODE_REG          LP_AON_STORE9_REG
+#define RTC_SLOW_CLK_CAL_REG          LP_AON_STORE1_REG
+#define RTC_BOOT_TIME_LOW_REG         LP_AON_STORE2_REG
+#define RTC_BOOT_TIME_HIGH_REG        LP_AON_STORE3_REG
+#define RTC_XTAL_FREQ_REG             LP_AON_STORE4_REG
+#define RTC_APB_FREQ_REG              LP_AON_STORE5_REG
+#define RTC_ENTRY_ADDR_REG            LP_AON_STORE6_REG
+#define RTC_RESET_CAUSE_REG           LP_AON_STORE6_REG
+#define RTC_MEMORY_CRC_REG            LP_AON_STORE7_REG
+#define RTC_SLEEP_WAKE_STUB_ADDR_REG  LP_AON_STORE8_REG
+#define RTC_SLEEP_MODE_REG            LP_AON_STORE9_REG
 
 #define RTC_DISABLE_ROM_LOG ((1 << 0) | (1 << 16)) //!< Disable logging from the ROM code.
 
@@ -114,7 +114,6 @@ ESP_STATIC_ASSERT((soc_reset_reason_t)EFUSE_RESET == RESET_REASON_CORE_EFUSE_CRC
 ESP_STATIC_ASSERT((soc_reset_reason_t)USB_UART_CHIP_RESET == RESET_REASON_CORE_USB_UART, "USB_UART_CHIP_RESET != RESET_REASON_CORE_USB_UART");
 ESP_STATIC_ASSERT((soc_reset_reason_t)USB_JTAG_CHIP_RESET == RESET_REASON_CORE_USB_JTAG, "USB_JTAG_CHIP_RESET != RESET_REASON_CORE_USB_JTAG");
 ESP_STATIC_ASSERT((soc_reset_reason_t)POWER_GLITCH_RESET == RESET_REASON_CORE_PWR_GLITCH, "POWER_GLITCH_RESET != RESET_REASON_CORE_PWR_GLITCH");
-ESP_STATIC_ASSERT((soc_reset_reason_t)JTAG_CPU_RESET == RESET_REASON_CPU0_JTAG, "JTAG_CPU_RESET != RESET_REASON_CPU0_JTAG");
 
 typedef enum {
     NO_SLEEP        = 0,
