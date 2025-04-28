@@ -61,8 +61,7 @@ namespace RoverCan2
                     LOG_ERROR(Logger::Nodes::Subscriber, "Missmatch between sender and receiver, dropping message");
                     break;
                 case Msgs::eLoadMsgCode::ERROR_IMPLEMENTATION:
-                    ASSERT_MSG("Message implementation is eronous, expect undefined behavior");
-                    break;
+                    ASSERT_MSG("Message implementation is erroneous, expect undefined behavior");
             }
 
             return loadCode;
