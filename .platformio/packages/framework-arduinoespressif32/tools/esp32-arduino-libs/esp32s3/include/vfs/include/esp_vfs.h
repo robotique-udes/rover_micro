@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -21,7 +21,11 @@
 #include <sys/time.h>
 #include <sys/termios.h>
 #include <sys/poll.h>
+#ifdef __clang__ // TODO LLVM-330
 #include <sys/dirent.h>
+#else
+#include <dirent.h>
+#endif
 #include <string.h>
 #include "sdkconfig.h"
 
@@ -46,12 +50,17 @@ extern "C" {
 /**
  * Default value of flags member in esp_vfs_t structure.
  */
-#define ESP_VFS_FLAG_DEFAULT        0
+#define ESP_VFS_FLAG_DEFAULT (1 << 0)
 
 /**
  * Flag which indicates that FS needs extra context pointer in syscalls.
  */
-#define ESP_VFS_FLAG_CONTEXT_PTR    1
+#define ESP_VFS_FLAG_CONTEXT_PTR (1 << 1)
+
+/**
+ * Flag which indicates that FS is located on read-only partition.
+ */
+#define ESP_VFS_FLAG_READONLY_FS (1 << 2)
 
 /*
  * @brief VFS identificator used for esp_vfs_register_with_id()
@@ -91,7 +100,7 @@ typedef struct
  */
 typedef struct
 {
-    int flags;      /*!< ESP_VFS_FLAG_CONTEXT_PTR or ESP_VFS_FLAG_DEFAULT */
+    int flags;      /*!< ESP_VFS_FLAG_CONTEXT_PTR and/or ESP_VFS_FLAG_READONLY_FS or ESP_VFS_FLAG_DEFAULT */
     union {
         ssize_t (*write_p)(void* p, int fd, const void * data, size_t size);                         /*!< Write with context pointer */
         ssize_t (*write)(int fd, const void * data, size_t size);                                    /*!< Write without context pointer */
@@ -463,6 +472,25 @@ ssize_t esp_vfs_pread(int fd, void *dst, size_t size, off_t offset);
  *                   set accordingly.
  */
 ssize_t esp_vfs_pwrite(int fd, const void *src, size_t size, off_t offset);
+
+/**
+ *
+ * @brief Dump the existing VFS FDs data to FILE* fp
+ *
+ * Dump the FDs in the format:
+ @verbatim
+         <VFS Path Prefix>-<FD seen by App>-<FD seen by driver>
+
+    where:
+     VFS Path Prefix   : file prefix used in the esp_vfs_register call
+     FD seen by App    : file descriptor returned by the vfs to the application for the path prefix
+     FD seen by driver : file descriptor used by the driver for the same file prefix.
+
+ @endverbatim
+ *
+ * @param fp         File descriptor where data will be dumped
+ */
+void esp_vfs_dump_fds(FILE *fp);
 
 #ifdef __cplusplus
 } // extern "C"

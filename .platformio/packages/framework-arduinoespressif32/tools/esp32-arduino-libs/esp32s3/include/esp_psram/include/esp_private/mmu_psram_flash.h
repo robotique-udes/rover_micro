@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2021-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -60,10 +60,21 @@ esp_err_t mmu_config_psram_text_segment(uint32_t start_page, uint32_t psram_size
 esp_err_t mmu_config_psram_rodata_segment(uint32_t start_page, uint32_t psram_size, uint32_t *out_page);
 #endif  //#if CONFIG_SPIRAM_RODATA
 
-
 /*----------------------------------------------------------------------------
                     Part 2 APIs (See @Backgrounds on top of this file)
 -------------------------------------------------------------------------------*/
+#if CONFIG_SPIRAM_FLASH_LOAD_TO_PSRAM
+/**
+ * TODO: IDF-9049
+ * @brief Vaddr to paddr, when XIP on PSRAM
+ * @note This API only works for the original flash.text and flash.rodata, others vaddrs will return UINT32_MAX
+ *
+ * @param[in] ptr  Pointer
+ *
+ * @return Pointer corresponding physical addr
+ */
+size_t mmu_xip_psram_flash_vaddr_to_paddr(const void *ptr);
+#else
 #if CONFIG_SPIRAM_FETCH_INSTRUCTIONS
 /**
  * @brief Init other file requested MMU variables
@@ -131,7 +142,7 @@ uint32_t rodata_flash_end_page_get(void);
  */
 int rodata_flash2spiram_offset(void);
 #endif  // #if CONFIG_SPIRAM_RODATA
-
+#endif  // #if CONFIG_SPIRAM_FLASH_LOAD_TO_PSRAM
 
 #ifdef __cplusplus
 }

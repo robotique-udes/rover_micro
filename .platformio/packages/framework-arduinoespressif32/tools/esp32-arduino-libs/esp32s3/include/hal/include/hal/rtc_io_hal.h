@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -19,6 +19,7 @@
 
 #include "soc/soc_caps.h"
 #if SOC_RTCIO_PIN_COUNT > 0
+#include "soc/rtc_io_periph.h"
 #include "hal/rtc_io_ll.h"
 #if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 #include "hal/rtc_io_types.h"
@@ -30,6 +31,14 @@ extern "C" {
 #endif
 
 #if SOC_RTCIO_PIN_COUNT > 0
+
+#if SOC_LP_IO_CLOCK_IS_INDEPENDENT
+/**
+ * Enable rtcio module clock.
+ */
+#define rtcio_hal_enable_io_clock(enable) rtcio_ll_output_enable(enable)
+#endif
+
 /**
  * Select the rtcio function.
  *
@@ -130,8 +139,8 @@ void rtcio_hal_set_direction(int rtcio_num, rtc_gpio_mode_t mode);
 /**
  * Set RTC IO direction in deep sleep or disable sleep status.
  *
- * NOTE: ESP32 support INPUT_ONLY mode.
- *       ESP32S2 support INPUT_ONLY, OUTPUT_ONLY, INPUT_OUTPUT mode.
+ * NOTE: ESP32 supports INPUT_ONLY mode.
+ *       The rest targets support INPUT_ONLY, OUTPUT_ONLY, INPUT_OUTPUT mode.
  *
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  * @param mode IO direction.
@@ -165,6 +174,35 @@ void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode);
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  */
 #define rtcio_hal_pulldown_disable(rtcio_num) rtcio_ll_pulldown_disable(rtcio_num)
+
+/**
+ * Select a RTC IOMUX function for the RTC IO
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @param func Function to assign to the pin
+ */
+#define rtcio_hal_iomux_func_sel(rtcio_num, func) rtcio_ll_iomux_func_sel(rtcio_num, func)
+
+#if SOC_LP_GPIO_MATRIX_SUPPORTED
+/**
+ * Select RTC GPIO input to a signal
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @param signal_idx LP peripheral signal index.
+ * @param inv inv True to invert input signal; False then no invert.
+ */
+#define rtcio_hal_matrix_in(rtcio_num, signal_idx, inv) rtcio_ll_matrix_in(rtcio_num, signal_idx, inv)
+
+/**
+ * Select signal output to a RTC GPIO
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
+ * @param signal_idx LP peripheral signal index.
+ * @param out_inv True to invert output signal; False then no invert.
+ * @param oen_inv True to invert output enable signal; False then no invert.
+ */
+#define rtcio_hal_matrix_out(rtcio_num, signal_idx, out_inv, oen_inv) rtcio_ll_matrix_out(rtcio_num, signal_idx, out_inv, oen_inv)
+#endif // SOC_LP_GPIO_MATRIX_SUPPORTED
 
 #endif // SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 
@@ -229,7 +267,7 @@ void rtcio_hal_set_direction_in_sleep(int rtcio_num, rtc_gpio_mode_t mode);
 #define rtcio_hal_wakeup_disable(rtcio_num) rtcio_ll_wakeup_disable(rtcio_num)
 
 /**
- * Set specific logic level on an RTC IO pin as a wakeup trigger.
+ * Set specific logic level on an RTC IO pin as a ext0 wakeup trigger.
  *
  * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  * @param level Logic level (0)
@@ -261,9 +299,9 @@ void rtcio_hal_isolate(int rtc_num);
 
 #if SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP && (SOC_RTCIO_PIN_COUNT > 0)
 
-#define gpio_hal_deepsleep_wakeup_enable(hal, gpio_num, intr_type)  rtcio_hal_wakeup_enable(gpio_num, intr_type)
-#define gpio_hal_deepsleep_wakeup_disable(hal, gpio_num)            rtcio_hal_wakeup_disable(gpio_num)
-#define gpio_hal_deepsleep_wakeup_is_enabled(hal, gpio_num)         rtcio_hal_wakeup_is_enabled(gpio_num)
+#define gpio_hal_deepsleep_wakeup_enable(hal, gpio_num, intr_type)  rtcio_hal_wakeup_enable(rtc_io_num_map[gpio_num], intr_type)
+#define gpio_hal_deepsleep_wakeup_disable(hal, gpio_num)            rtcio_hal_wakeup_disable(rtc_io_num_map[gpio_num])
+#define gpio_hal_deepsleep_wakeup_is_enabled(hal, gpio_num)         rtcio_hal_wakeup_is_enabled(rtc_io_num_map[gpio_num])
 #define rtc_hal_gpio_get_wakeup_status()                            rtcio_hal_get_interrupt_status()
 #define rtc_hal_gpio_clear_wakeup_status()                          rtcio_hal_clear_interrupt_status()
 
@@ -271,7 +309,7 @@ void rtcio_hal_isolate(int rtc_num);
  * @brief Get the status of whether an IO is used for sleep wake-up.
  *
  * @param hw Peripheral GPIO hardware instance address.
- * @param rtcio_num GPIO number
+ * @param rtcio_num The index of rtcio. 0 ~ SOC_RTCIO_PIN_COUNT.
  * @return True if the pin is enabled to wake up from deep-sleep
  */
 #define rtcio_hal_wakeup_is_enabled(rtcio_num) rtcio_ll_wakeup_is_enabled(rtcio_num)

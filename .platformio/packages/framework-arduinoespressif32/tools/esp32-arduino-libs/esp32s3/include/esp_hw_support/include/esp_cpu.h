@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2020-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2020-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,7 +12,7 @@
 #include <assert.h>
 #include "soc/soc_caps.h"
 #ifdef __XTENSA__
-#include "xtensa/xtensa_api.h"
+#include "xtensa_api.h"
 #include "xt_utils.h"
 #elif __riscv
 #include "riscv/rv_utils.h"
@@ -233,6 +233,20 @@ FORCE_INLINE_ATTR void esp_cpu_intr_set_ivt_addr(const void *ivt_addr)
 #endif
 }
 
+#if SOC_INT_CLIC_SUPPORTED
+/**
+ * @brief Set the base address of the current CPU's Interrupt Vector Table (MTVT)
+ *
+ * @param mtvt_addr Interrupt Vector Table's base address
+ *
+ * @note The MTVT table is only applicable when CLIC is supported
+ */
+FORCE_INLINE_ATTR void esp_cpu_intr_set_mtvt_addr(const void *mtvt_addr)
+{
+    rv_utils_set_mtvt((uint32_t)mtvt_addr);
+}
+#endif  //#if SOC_INT_CLIC_SUPPORTED
+
 #if SOC_CPU_HAS_FLEXIBLE_INTC
 /**
  * @brief Set the interrupt type of a particular interrupt
@@ -247,7 +261,7 @@ FORCE_INLINE_ATTR void esp_cpu_intr_set_type(int intr_num, esp_cpu_intr_type_t i
 {
     assert(intr_num >= 0 && intr_num < SOC_CPU_INTR_NUM);
     enum intr_type type = (intr_type == ESP_CPU_INTR_TYPE_LEVEL) ? INTR_TYPE_LEVEL : INTR_TYPE_EDGE;
-    esprv_intc_int_set_type(intr_num, type);
+    esprv_int_set_type(intr_num, type);
 }
 
 /**
@@ -262,7 +276,7 @@ FORCE_INLINE_ATTR void esp_cpu_intr_set_type(int intr_num, esp_cpu_intr_type_t i
 FORCE_INLINE_ATTR esp_cpu_intr_type_t esp_cpu_intr_get_type(int intr_num)
 {
     assert(intr_num >= 0 && intr_num < SOC_CPU_INTR_NUM);
-    enum intr_type type = esprv_intc_int_get_type(intr_num);
+    enum intr_type type = esprv_int_get_type(intr_num);
     return (type == INTR_TYPE_LEVEL) ? ESP_CPU_INTR_TYPE_LEVEL : ESP_CPU_INTR_TYPE_EDGE;
 }
 
@@ -277,7 +291,7 @@ FORCE_INLINE_ATTR esp_cpu_intr_type_t esp_cpu_intr_get_type(int intr_num)
 FORCE_INLINE_ATTR void esp_cpu_intr_set_priority(int intr_num, int intr_priority)
 {
     assert(intr_num >= 0 && intr_num < SOC_CPU_INTR_NUM);
-    esprv_intc_int_set_priority(intr_num, intr_priority);
+    esprv_int_set_priority(intr_num, intr_priority);
 }
 
 /**
@@ -292,7 +306,7 @@ FORCE_INLINE_ATTR void esp_cpu_intr_set_priority(int intr_num, int intr_priority
 FORCE_INLINE_ATTR int esp_cpu_intr_get_priority(int intr_num)
 {
     assert(intr_num >= 0 && intr_num < SOC_CPU_INTR_NUM);
-    return esprv_intc_int_get_priority(intr_num);
+    return esprv_int_get_priority(intr_num);
 }
 #endif // SOC_CPU_HAS_FLEXIBLE_INTC
 
@@ -555,6 +569,24 @@ FORCE_INLINE_ATTR intptr_t esp_cpu_get_call_addr(intptr_t return_address)
  * @return Whether the atomic variable was set or not
  */
 bool esp_cpu_compare_and_set(volatile uint32_t *addr, uint32_t compare_value, uint32_t new_value);
+
+#if SOC_BRANCH_PREDICTOR_SUPPORTED
+/**
+ * @brief Enable branch prediction
+ */
+FORCE_INLINE_ATTR void esp_cpu_branch_prediction_enable(void)
+{
+    rv_utils_en_branch_predictor();
+}
+
+/**
+ * @brief Disable branch prediction
+ */
+FORCE_INLINE_ATTR void esp_cpu_branch_prediction_disable(void)
+{
+    rv_utils_dis_branch_predictor();
+}
+#endif  //#if SOC_BRANCH_PREDICTOR_SUPPORTED
 
 #ifdef __cplusplus
 }

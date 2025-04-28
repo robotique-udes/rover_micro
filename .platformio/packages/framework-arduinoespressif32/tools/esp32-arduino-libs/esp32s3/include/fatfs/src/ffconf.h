@@ -40,7 +40,7 @@
 /* This option switches fast seek function. (0:Disable or 1:Enable) */
 
 
-#define FF_USE_EXPAND	0
+#define FF_USE_EXPAND	1
 /* This option switches f_expand function. (0:Disable or 1:Enable) */
 
 
@@ -49,7 +49,7 @@
 /  (0:Disable or 1:Enable) Also FF_FS_READONLY needs to be 0 to enable this option. */
 
 
-#define FF_USE_LABEL	0
+#define FF_USE_LABEL	CONFIG_FATFS_USE_LABEL
 /* This option switches volume label functions, f_getlabel() and f_setlabel().
 /  (0:Disable or 1:Enable) */
 
@@ -309,6 +309,13 @@
 /      function, must be added to the project. Samples are available in ffsystem.c.
 /
 /  The FF_FS_TIMEOUT defines timeout period in unit of O/S time tick.
+*/
+
+#define FF_USE_DYN_BUFFER CONFIG_FATFS_USE_DYN_BUFFERS
+/* The option FF_USE_DYN_BUFFER controls source of size used for buffers in the FS and FIL objects.
+/
+/   0: Disable dynamic buffer size and use static size buffers defined by FF_MAX_SS.
+/   1: Enable dynamic buffer size and use ff_memmalloc() to allocate buffers.
 */
 
 #include <sys/param.h>

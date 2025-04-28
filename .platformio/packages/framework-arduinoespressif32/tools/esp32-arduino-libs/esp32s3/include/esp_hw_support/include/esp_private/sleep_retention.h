@@ -15,6 +15,9 @@ extern "C" {
 
 #if SOC_PAU_SUPPORTED
 #include "esp_regdma.h"
+#include "soc/retention_periph_defs.h"
+
+#define SLEEP_RETENTION_MODULE_BITMAP_SZ    ((SLEEP_RETENTION_MODULE_MAX >> 5) + 1)
 
 /**
  * @file sleep_retention.h
@@ -22,64 +25,13 @@ extern "C" {
  * This file contains declarations of sleep retention related functions, it
  * includes sleep retention list creation, destruction and debugging interfaces.
  */
-
-typedef enum sleep_retention_module {
-    SLEEP_RETENTION_MODULE_MIN          = 0,
-    /* clock module, which includes system and modem */
-    SLEEP_RETENTION_MODULE_CLOCK_SYSTEM = 1,
-    SLEEP_RETENTION_MODULE_CLOCK_MODEM  = 2,
-
-    /* modem module, which includes WiFi, BLE and 802.15.4 */
-    SLEEP_RETENTION_MODULE_WIFI_MAC     = 10,
-    SLEEP_RETENTION_MODULE_WIFI_BB      = 11,
-    SLEEP_RETENTION_MODULE_BLE_MAC      = 12,
-    SLEEP_RETENTION_MODULE_BT_BB        = 13,
-    SLEEP_RETENTION_MODULE_802154_MAC   = 14,
-
-    /* digital peripheral module, which includes Interrupt Matrix, HP_SYSTEM,
-     * TEE, APM, UART, Timer Group, IOMUX, SPIMEM, SysTimer, etc.. */
-    SLEEP_RETENTION_MODULE_SYS_PERIPH   = 16,
-
-    SLEEP_RETENTION_MODULE_ADC          = 17,
-
-    SLEEP_RETENTION_MODULE_GDMA_CH0     = 24,
-    SLEEP_RETENTION_MODULE_GDMA_CH1     = 25,
-    SLEEP_RETENTION_MODULE_GDMA_CH2     = 26,
-
-    SLEEP_RETENTION_MODULE_MAX          = 31
-} sleep_retention_module_t;
-
-typedef enum sleep_retention_module_bitmap {
-    /* clock module, which includes system and modem */
-    SLEEP_RETENTION_MODULE_BM_CLOCK_SYSTEM = BIT(SLEEP_RETENTION_MODULE_CLOCK_SYSTEM),
-    SLEEP_RETENTION_MODULE_BM_CLOCK_MODEM  = BIT(SLEEP_RETENTION_MODULE_CLOCK_MODEM),
-
-    /* modem module, which includes WiFi, BLE and 802.15.4 */
-    SLEEP_RETENTION_MODULE_BM_WIFI_MAC     = BIT(SLEEP_RETENTION_MODULE_WIFI_MAC),
-    SLEEP_RETENTION_MODULE_BM_WIFI_BB      = BIT(SLEEP_RETENTION_MODULE_WIFI_BB),
-    SLEEP_RETENTION_MODULE_BM_BLE_MAC      = BIT(SLEEP_RETENTION_MODULE_BLE_MAC),
-    SLEEP_RETENTION_MODULE_BM_BT_BB        = BIT(SLEEP_RETENTION_MODULE_BT_BB),
-    SLEEP_RETENTION_MODULE_BM_802154_MAC   = BIT(SLEEP_RETENTION_MODULE_802154_MAC),
-
-    /* digital peripheral module, which includes Interrupt Matrix, HP_SYSTEM,
-     * TEE, APM, UART, Timer Group, IOMUX, SPIMEM, SysTimer, etc.. */
-    SLEEP_RETENTION_MODULE_BM_SYS_PERIPH   = BIT(SLEEP_RETENTION_MODULE_SYS_PERIPH),
-
-    SLEEP_RETENTION_MODULE_BM_ADC          = BIT(SLEEP_RETENTION_MODULE_ADC),
-
-    SLEEP_RETENTION_MODULE_BM_GDMA_CH0     = BIT(SLEEP_RETENTION_MODULE_GDMA_CH0),
-    SLEEP_RETENTION_MODULE_BM_GDMA_CH1     = BIT(SLEEP_RETENTION_MODULE_GDMA_CH1),
-    SLEEP_RETENTION_MODULE_BM_GDMA_CH2     = BIT(SLEEP_RETENTION_MODULE_GDMA_CH2),
-
-    SLEEP_RETENTION_MODULE_BM_ALL          = (uint32_t)-1
-} sleep_retention_module_bitmap_t;
-
-typedef regdma_entry_buf_t sleep_retention_entries_t;
-
+typedef periph_retention_module_t           sleep_retention_module_t;
 typedef struct {
-    regdma_link_config_t    config;
-    uint32_t                owner;  /**< Indicates which regdma entries the current node will insert into */
-} sleep_retention_entries_config_t;
+#define RETENTION_MODULE_BITMAP_INIT(module) { .bitmap[(SLEEP_RETENTION_MODULE_ ## module) >> 5] = BIT((SLEEP_RETENTION_MODULE_ ## module) % 32) }
+    uint32_t bitmap[SLEEP_RETENTION_MODULE_BITMAP_SZ];
+} sleep_retention_module_bitmap_t;
+typedef regdma_entry_buf_t                  sleep_retention_entries_t;
+typedef regdma_entries_config_t             sleep_retention_entries_config_t;
 
 typedef esp_err_t (*sleep_retention_callback_t)(void *args);
 
@@ -202,7 +154,7 @@ esp_err_t sleep_retention_module_free(sleep_retention_module_t module);
  *
  * @return the bitmap for all modules that require sleep retention
  */
-uint32_t sleep_retention_get_inited_modules(void);
+sleep_retention_module_bitmap_t sleep_retention_get_inited_modules(void);
 
 /**
  * @brief Get all created modules that require sleep retention
@@ -215,7 +167,74 @@ uint32_t sleep_retention_get_inited_modules(void);
  * @return the bitmap for all modules that have successfully created a sleep
  * retention context
  */
-uint32_t sleep_retention_get_created_modules(void);
+sleep_retention_module_bitmap_t sleep_retention_get_created_modules(void);
+
+/**
+ * @brief Get the initialization state of module
+ *
+ * @param module   module number
+ *
+ * @return false if the module is not initialized or the module number is
+ * invalid, otherwise return true
+ */
+bool sleep_retention_is_module_inited(sleep_retention_module_t module);
+
+/**
+ * @brief Get the creation state of module
+ *
+ * @param module   module number
+ *
+ * @return false if the module is not created or the module number is
+ * invalid, otherwise return true
+ */
+bool sleep_retention_is_module_created(sleep_retention_module_t module);
+
+/**
+ * @brief Calculates the bitwise logical and of the module bitmap and return results
+ *
+ * This is an unprotected interface. It can only be called by the sleep procedure.
+ *
+ * @param op0   module bitmap operator 0
+ * @param op1   module bitmap operator 1
+ *
+ * @return the bitwise logical and result of module bitmap
+ */
+sleep_retention_module_bitmap_t sleep_retention_module_bitmap_and(sleep_retention_module_bitmap_t op0, sleep_retention_module_bitmap_t op1);
+
+/**
+ * @brief Calculates the bitwise logical or of the module bitmap and return results
+ *
+ * This is an unprotected interface. It can only be called by the sleep procedure.
+ *
+ * @param op0   module bitmap operator 0
+ * @param op1   module bitmap operator 1
+ *
+ * @return the bitwise logical or result of module bitmap
+ */
+sleep_retention_module_bitmap_t sleep_retention_module_bitmap_or(sleep_retention_module_bitmap_t op0, sleep_retention_module_bitmap_t op1);
+
+/**
+ * @brief Calculates the bitwise logical not of the module bitmap and return results
+ *
+ * This is an unprotected interface. It can only be called by the sleep procedure.
+ *
+ * @param op0   module bitmap operator
+ *
+ * @return the bitwise logical not result of module bitmap
+ */
+sleep_retention_module_bitmap_t sleep_retention_module_bitmap_not(sleep_retention_module_bitmap_t op);
+
+/**
+ * @brief Compares the module bitmap values are equal and return results
+ *
+ * This is an unprotected interface. It can only be called by the sleep procedure.
+ *
+ * @param op0   module bitmap operator 0
+ * @param op1   module bitmap operator 1
+ *
+ * @return If the module bitmap values are equal then return true, otherwise return false
+ */
+bool sleep_retention_module_bitmap_eq(sleep_retention_module_bitmap_t op0, sleep_retention_module_bitmap_t op1);
 
 #if SOC_PM_RETENTION_HAS_CLOCK_BUG
 /**
