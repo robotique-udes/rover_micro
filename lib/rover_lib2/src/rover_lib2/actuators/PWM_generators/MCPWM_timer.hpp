@@ -9,7 +9,7 @@
 DEFINE_LOG_NODE(MCPWMTimer, Logger::eNodeState::ON);
 
 /**
- * @brief Each timer instance can generate up to two distrinct PWM output at the same frequency
+ * @brief Each timer instance can generate up to two distinct PWM output at the same frequency
  *
  * @note Necessary to create MCPWM Pwm Generator
  */
