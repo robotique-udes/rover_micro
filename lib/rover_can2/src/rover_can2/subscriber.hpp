@@ -58,7 +58,7 @@ namespace RoverCan2
                     LOG_WARN(Logger::Nodes::Subscriber, "Received invalid message, possible transport layer error");
                     break;
                 case Msgs::eLoadMsgCode::ERROR_MISMATCH:
-                    LOG_ERROR(Logger::Nodes::Subscriber, "Missmatch between sender and receiver, dropping message");
+                    LOG_ERROR(Logger::Nodes::Subscriber, "Mismatch between sender and receiver, dropping message");
                     break;
                 case Msgs::eLoadMsgCode::ERROR_IMPLEMENTATION:
                     ASSERT_MSG("Message implementation is erroneous, expect undefined behavior");

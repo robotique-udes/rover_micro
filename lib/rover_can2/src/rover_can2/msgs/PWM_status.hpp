@@ -64,7 +64,7 @@ namespace RoverCan2::Msgs
         if (!VALID_MSG_IDS.contains(msgContentId))
         {
             LOG_DEBUG(Logger::Nodes::PwmStatus_msg,
-                      "Missmatch between received message and local message definition. Received msgContentId: (%u), "
+                      "Mismatch between received message and local message definition. Received msgContentId: (%u), "
                       "expected lower than (%u) and none zero",
                       TO_UNDERLYING(msgContentId),
                       TO_UNDERLYING(eMsgContentID::eLAST));

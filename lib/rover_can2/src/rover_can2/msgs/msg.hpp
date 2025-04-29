@@ -44,7 +44,7 @@ namespace RoverCan2::Msgs
          *    SUCCESS_COMPLETE: Successfully loaded the last element of a msg
          *    SUCCESS_INCOMPLETE: Successfully loaded any element of a msg other than the last
          *    NOT_CONCERNED: Msg ID doesn't match
-         *    ERROR_MISMATCH: Missmatching message definition between the one received and the local on the device
+         *    ERROR_MISMATCH: Mismatching message definition between the one received and the local on the device
          *    ERROR_IMPLEMENTATION: Shouldn't return this error code, it mean the message definition itself is erronous
          */
         eLoadMsgCode loadMsg(const CanMsg& canMsg_)
