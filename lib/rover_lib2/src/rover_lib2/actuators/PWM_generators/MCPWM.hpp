@@ -9,7 +9,7 @@
 #include "driver/mcpwm_prelude.h"
 #include "driver/gpio.h"
 
-DEFINE_LOG_NODE(MCPWM, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(MCPWM, Logger::eNodeState::OFF);
 
 namespace PWMGenerators
 {

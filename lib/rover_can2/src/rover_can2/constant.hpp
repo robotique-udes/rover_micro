@@ -73,17 +73,30 @@ namespace RoverCan2::Constant
     _FREE = 0x10,
         ERROR_STATE,
         HEARTBEAT,
-        GPS,
-        PROPULSION_MOTOR_CMD,
-        PROPULSION_MOTOR_STATUS,
-        CAM_CONTROL,
-        CAM_CONTROL_A2,
-        LIGHT_CONTROL,
-        SCIENCE,
-        COMPASS,
-        ARM_CMD,
-        ARM_STATUS,
-        CAM_PAN,
+        
+        POWER_CMD,
+        POWER_STATUS,
+        
+        PWM_CMD,
+        PWM_STATUS,
+        PWM_INFO,
+
+        PROP_SPEED_CMD,
+        PROP_SPEED_STATUS,
+        
+        ARM_SPEED_CMD,
+        ARM_POSITION_STATUS,
+        ARM_JOINT_CONFIG,
+        
+        FIX_POSITION,
+        FIX_HEADING,
+        FIX_INFO,
+        
+        CAM_POSITION_CMD,
+        CAM_POSITION_STATUS,
+
+        DDB_CMD,
+        DDB_STATUS,
         // clang-format on
     };
 
@@ -91,7 +104,17 @@ namespace RoverCan2::Constant
      * @brief Array holding all valid and implemented msgs used on the network.
      *
      */
-    constexpr CompileTimeArray<eMsgId, 3UL> SUPPORTED_MSGS = {eMsgId::TEST_MSG, eMsgId::TEST_MSG_2, eMsgId::ERROR_STATE};
+    constexpr CompileTimeArray<eMsgId, 11UL> SUPPORTED_MSGS = {eMsgId::TEST_MSG,
+                                                               eMsgId::TEST_MSG_2,
+                                                               eMsgId::ERROR_STATE,
+                                                               eMsgId::HEARTBEAT,
+                                                               eMsgId::POWER_CMD,
+                                                               eMsgId::POWER_STATUS,
+                                                               eMsgId::PWM_CMD,
+                                                               eMsgId::PWM_STATUS,
+                                                               eMsgId::PWM_INFO,
+                                                               eMsgId::DDB_CMD,
+                                                               eMsgId::DDB_STATUS};
 
     /**
      * @brief
