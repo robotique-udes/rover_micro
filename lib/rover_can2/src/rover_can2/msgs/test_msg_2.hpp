@@ -67,7 +67,7 @@ namespace RoverCan2::Msgs
                       "expected lower than (%u) and none zero",
                       TO_UNDERLYING(msgContentId),
                       TO_UNDERLYING(eMsgContentID::eLAST));
-            return eLoadMsgCode::ERROR_MISSMATCH;
+            return eLoadMsgCode::ERROR_MISMATCH;
         }
 
         bool success = false;
@@ -93,7 +93,7 @@ namespace RoverCan2::Msgs
 
         if (!success)
         {
-            return eLoadMsgCode::ERROR_MISSMATCH;
+            return eLoadMsgCode::ERROR_MISMATCH;
         }
 
         if (Helpers::MSG_CONTENT_IS_LAST_ELEM<eMsgContentID>(msg_))

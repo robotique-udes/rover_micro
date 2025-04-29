@@ -163,7 +163,7 @@ namespace RoverCan2
                         break;
                     case Msgs::eLoadMsgCode::ERROR_INVALID_MSG:
                         [[fallthrough]];
-                    case Msgs::eLoadMsgCode::ERROR_MISSMATCH:
+                    case Msgs::eLoadMsgCode::ERROR_MISMATCH:
                         [[fallthrough]];
                     case Msgs::eLoadMsgCode::ERROR_IMPLEMENTATION:
                         success = false;
