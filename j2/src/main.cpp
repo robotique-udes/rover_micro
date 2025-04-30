@@ -9,6 +9,9 @@
 HardwareSerial motorSerial(2); 
 J2Controller controller(&motorSerial);
 
+float desiredRPM = 0.0;
+float vitesse = 1.0;
+
 void setup()
 {
   Serial.begin(115200);  // Start Serial Monitor
@@ -20,19 +23,20 @@ void setup()
 
 void loop()
 {
-  float desiredRPM = 0;
+  controller.setSpeed(0.0);
   if (controller.isJogButtonPressed(0))
   {
-    Serial.println("super skibidi pizza");
-    desiredRPM = -1;
+    controller.setSpeed(-vitesse);
+    //controller.sendSpeedCommand(-vitesse);
   }
 
   if (controller.isJogButtonPressed(1))
   {
-    Serial.println("BOMBOCLAT");
-    desiredRPM = 1;
+    controller.setSpeed(vitesse);
+    //controller.sendSpeedCommand(vitesse);
   }
 
-  controller.sendSpeedCommand(desiredRPM);
+  controller.update();
+  controller.readMotorParameters(true);
   delay(100);
 }

@@ -2,7 +2,7 @@
 #define J2_CONTROLLER_H
 
 #include <Arduino.h>
-#include "rover_helpers/log.hpp"
+#include "rover_lib2/helpers/log.hpp"
 
 /**
  * @brief 
@@ -54,17 +54,19 @@ private:
     static constexpr int32_t RATED_SPEED_ERPM = 19572;
     static constexpr int32_t MAX_SPEED_ERPM = 26880; //no load
 
-    // Speed set/get
-    float speedNowRadS;
-    float speedNowRPM;
-    float newSpeedRads;
+    // Ramp variable
+    float current_rpm = 0.0f;
+    float target_rpm = 0.0f;
+    float ramp_rate = 1.0f; // RPM per second
+    uint32_t last_ramp_time = 0;
+
 
 public:
     J2Controller(Stream *serial_);
     void sendSpeedCommand(float rpm_);
     unsigned short calculateCRC16(unsigned char *buf_, unsigned int len_);
     void readMotorParameters(bool verbose = false);
-    void setSpeed(float newSpeedRadS_);
+    void setSpeed(float rpm_);
     float getSpeed(void);
     void update(void);
     bool isJogButtonPressed(bool plus_moins_);
