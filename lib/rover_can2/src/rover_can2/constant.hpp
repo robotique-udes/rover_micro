@@ -130,7 +130,6 @@ namespace RoverCan2::Constant
                                                              LED::BlinkPatternStep(50UL, 100U),
                                                              LED::BlinkPatternStep(50UL, 0U)};
         constexpr LED::BlinkingPattern WATCHDOG_TRIGGER = TX_QUEUE_FULL;
-        
     }  // namespace LedPatterns
 
 }  // namespace RoverCan2::Constant

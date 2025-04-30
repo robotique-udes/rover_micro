@@ -96,3 +96,40 @@ TEST(SUITE_HELPER_Macro, _CONSTRAIN)
     GTEST_ASSERT_TRUE(CONSTRAIN(-3.0F, min, max) == -2.0F);
     GTEST_ASSERT_TRUE(CONSTRAIN(3.0F, min, max) == 2.0F);
 }
+
+TEST(SUITE_HELPER_Macro, _ROUND)
+{
+    GTEST_ASSERT_TRUE(ROUND(3.4) == 3.0);
+    GTEST_ASSERT_TRUE(ROUND(3.5) == 4.0);  // Halfway case rounds up
+    GTEST_ASSERT_TRUE(ROUND(-2.3) == -2.0);
+    GTEST_ASSERT_TRUE(ROUND(-2.6) == -3.0);
+    GTEST_ASSERT_TRUE(ROUND(0.0) == 0.0);
+}
+
+TEST(SUITE_HELPER_Macro, _ROUND_UP)
+{
+    EXPECT_DOUBLE_EQ(ROUND_UP(3.1), 4.0);
+    EXPECT_DOUBLE_EQ(ROUND_UP(-2.9), -2.0);  // Towards +∞ (less negative)
+    EXPECT_DOUBLE_EQ(ROUND_UP(0.0), 0.0);
+    EXPECT_DOUBLE_EQ(ROUND_UP(5.0), 5.0);  // Exact integer remains unchanged
+}
+
+TEST(SUITE_HELPER_Macro, _ROUND_DOWN)
+{
+    EXPECT_DOUBLE_EQ(ROUND_DOWN(3.9), 3.0);
+    EXPECT_DOUBLE_EQ(ROUND_DOWN(-2.1), -3.0);  // Towards -∞ (more negative)
+    EXPECT_DOUBLE_EQ(ROUND_DOWN(0.0), 0.0);
+    EXPECT_DOUBLE_EQ(ROUND_DOWN(5.0), 5.0);  // Exact integer remains unchanged
+}
+
+TEST(SUITE_HELPER_Macro, _MAP)
+{
+    EXPECT_FLOAT_EQ(MAP(5, 0, 10, 0, 100), 50.0f);
+    EXPECT_FLOAT_EQ(MAP(0, 0, 10, 0, 100), 0.0f);
+    EXPECT_FLOAT_EQ(MAP(10, 0, 10, 0, 100), 100.0f);
+    EXPECT_FLOAT_EQ(MAP(-5, -10, 0, 0, 100), 50.0f);
+    EXPECT_FLOAT_EQ(MAP(0, 0, 10, 100, 0), 100.0f);
+    EXPECT_FLOAT_EQ(MAP(10, 0, 10, 100, 0), 0.0f);
+    EXPECT_FLOAT_EQ(MAP(15, 0, 10, 0, 100), 150.0f);
+    EXPECT_FLOAT_EQ(MAP(-5, 0, 10, 0, 100), -50.0f);
+}

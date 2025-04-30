@@ -1,20 +1,19 @@
 #ifndef ASSERT_HPP
 #define ASSERT_HPP
-
 #if defined(ARDUINO_ESP32S3_DEV)
-#include "driver/ledc.h"
 #include "rover_lib2/helpers/log.hpp"
+#include "driver/ledc.h"
+#include "soc/mcpwm_periph.h"
+#include "esp_system.h"
+#include "esp_private/periph_ctrl.h"
 #include <cstdarg>
-
 #elif defined(__linux__)
 #include <cstdarg>
 #include <iostream>
-
 #endif  // defined(ARDUINO_ESP32S3_DEV)
 
 #if defined(ARDUINO_ESP32S3_DEV)
 DEFINE_LOG_NODE(ASSERTS, Logger::eNodeState::ON);
-
 namespace
 {
     constexpr void SHUTDOWN_PWM(void)
@@ -26,43 +25,83 @@ namespace
                 ledc_stop((ledc_mode_t)speed_mode, (ledc_channel_t)channel, 0);
             }
         }
+
+        for (int i = 0; i < SOC_MCPWM_GROUPS; i++)
+        {
+            periph_module_disable(mcpwm_periph_signals.groups[i].module);
+            periph_module_reset(mcpwm_periph_signals.groups[i].module);
+        }
     }
 
     inline void ABORT(void)
     {
-
         SHUTDOWN_PWM();
+#if defined(DEBUG)
         LOG_FLUSH();
         abort();
+
+#endif  // defined(DEBUG)
     }
 }  // namespace
 
-inline void ASSERT(void)
-{
-    LOG_FATAL(Logger::Nodes::ASSERTS, "Explicit assertion");
-    ABORT();
-}
+// Implementation macros for ESP32
+#define ASSERT()                                                 \
+    do                                                           \
+    {                                                            \
+        LOG_FATAL(Logger::Nodes::ASSERTS, "Explicit assertion"); \
+        ABORT();                                                 \
+    }                                                            \
+    while (0)
 
-inline void ASSERT(const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    LOG_FATAL(Logger::Nodes::ASSERTS, "Explicit assertion: %s", format, args);
-    va_end(args);
-    ABORT();
-}
+#define ASSERT_MSG(msg)                                                  \
+    do                                                                   \
+    {                                                                    \
+        LOG_FATAL(Logger::Nodes::ASSERTS, "Explicit assertion:\n", msg); \
+        ABORT();                                                         \
+    }                                                                    \
+    while (0)
 
-inline void ASSERT(bool condition, const char* format, ...)
-{
-    if (!condition)
-    {
-        va_list args;
-        va_start(args, format);
-        LOG_FATAL(Logger::Nodes::ASSERTS, "Assertion failed: %s", format, args);
-        va_end(args);
-        ABORT();
-    }
-}
+#define ASSERT_MSG_ARGS(format, ...)                                                      \
+    do                                                                                    \
+    {                                                                                     \
+        LOG_FATAL(Logger::Nodes::ASSERTS, "Explicit assertion:\n" format, ##__VA_ARGS__); \
+        ABORT();                                                                          \
+    }                                                                                     \
+    while (0)
+
+#define ASSERT_COND(condition)                                                     \
+    do                                                                             \
+    {                                                                              \
+        if (!(condition))                                                          \
+        {                                                                          \
+            LOG_FATAL(Logger::Nodes::ASSERTS, "Assertion failed: %s", #condition); \
+            ABORT();                                                               \
+        }                                                                          \
+    }                                                                              \
+    while (0)
+
+#define ASSERT_COND_MSG(condition, msg)                                                        \
+    do                                                                                         \
+    {                                                                                          \
+        if (!(condition))                                                                      \
+        {                                                                                      \
+            LOG_FATAL(Logger::Nodes::ASSERTS, "Assertion failed: (%s)\n %s", #condition, msg); \
+            ABORT();                                                                           \
+        }                                                                                      \
+    }                                                                                          \
+    while (0)
+
+#define ASSERT_COND_MSG_ARGS(condition, format, ...)                                                       \
+    do                                                                                                     \
+    {                                                                                                      \
+        if (!(condition))                                                                                  \
+        {                                                                                                  \
+            LOG_FATAL(Logger::Nodes::ASSERTS, "Assertion failed: %s\n" format, #condition, ##__VA_ARGS__); \
+            ABORT();                                                                                       \
+        }                                                                                                  \
+    }                                                                                                      \
+    while (0)
+
 #elif defined(__linux__)  // defined(ARDUINO_ESP32S3_DEV)
 namespace
 {
@@ -74,36 +113,61 @@ namespace
     }
 }  // namespace
 
-inline void ASSERT(void)
-{
-    ABORT("Explicit assertion failure.");
-}
+// Implementation macros for Linux
+#define ASSERT()                              \
+    do                                        \
+    {                                         \
+        ABORT("Explicit assertion failure."); \
+    }                                         \
+    while (0)
 
-inline void ASSERT(const char* format, ...)
-{
-    char buffer[256];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
+#define ASSERT_MSG(msg)                                     \
+    do                                                      \
+    {                                                       \
+        ABORT(std::string("Explicit assertion: ") + (msg)); \
+    }                                                       \
+    while (0)
 
-    ABORT(std::string("Explicit assertion: ") + buffer);
-}
+#define ASSERT_MSG_ARGS(format, ...)                             \
+    do                                                           \
+    {                                                            \
+        char buffer[256];                                        \
+        snprintf(buffer, sizeof(buffer), format, ##__VA_ARGS__); \
+        ABORT(std::string("Explicit assertion: ") + buffer);     \
+    }                                                            \
+    while (0)
 
-inline void ASSERT(bool condition, const char* format, ...)
-{
-    if (!condition)
-    {
-        char buffer[256];
-        va_list args;
-        va_start(args, format);
-        vsnprintf(buffer, sizeof(buffer), format, args);
-        va_end(args);
+#define ASSERT_COND(condition)                                     \
+    do                                                             \
+    {                                                              \
+        if (!(condition))                                          \
+        {                                                          \
+            ABORT(std::string("Assertion failed: ") + #condition); \
+        }                                                          \
+    }                                                              \
+    while (0)
 
-        ABORT(std::string("Assertion failed: ") + buffer);
-    }
-}
+#define ASSERT_COND_MSG(condition, msg)                                           \
+    do                                                                            \
+    {                                                                             \
+        if (!(condition))                                                         \
+        {                                                                         \
+            ABORT(std::string("Assertion failed: ") + #condition + ", " + (msg)); \
+        }                                                                         \
+    }                                                                             \
+    while (0)
+
+#define ASSERT_COND_MSG_ARGS(condition, format, ...)                               \
+    do                                                                             \
+    {                                                                              \
+        if (!(condition))                                                          \
+        {                                                                          \
+            char buffer[256];                                                      \
+            snprintf(buffer, sizeof(buffer), format, ##__VA_ARGS__);               \
+            ABORT(std::string("Assertion failed: ") + #condition + ", " + buffer); \
+        }                                                                          \
+    }                                                                              \
+    while (0)
 
 #endif  // defined(ARDUINO_ESP32S3_DEV)
-
 #endif  // ASSERT_HPP
