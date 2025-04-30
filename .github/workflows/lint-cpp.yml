@@ -42,7 +42,7 @@ jobs:
         run: |
           echo "=== Checking for formatting changes... ==="
           if git diff --quiet; then
-            echo "Code is properly formatted."
+            echo "=== \e[0;32m[SUCCESS]\e[0m Code is properly formatted ==="
           else
             echo -e "=== \e[0;31m[FAILED]\e[0m Formatting is not conform ==="
             echo ""
