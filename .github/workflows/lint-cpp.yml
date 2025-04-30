@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Lint check
+      - name: Installing clang-format
         run: |
           echo "=== Installing clang-format ... ==="
           if ! command -v clang-format &> /dev/null; then
@@ -28,12 +28,13 @@ jobs:
 
       - name: Run lint-apply.sh
         run: |
+          script_path=scripts/lint-apply.sh
           echo "=== Running lint-apply.sh script... ==="
-          if [ -f "rover_micro/scripts/lint-apply.sh" ]; then
-            chmod +x rover_micro/scripts/lint-apply.sh
-            rover_micro/scripts/lint-apply.sh
+          if [ -f "$script_path" ]; then
+            chmod +x $script_path
+            $script_path
           else
-            echo -e "\e[0;31m[ERROR] lint-apply.sh not found at rover_micro/scripts/lint-apply.sh\e[0m"
+            echo -e "\e[0;31m[ERROR] lint-apply.sh not found at $script_path\e[0m"
             exit 1
           fi
 
