@@ -8,11 +8,11 @@
 #include "rover_helpers/log.hpp"
 #include "sensors/WT901.hpp"
 
-void noActions(RoverCanLib::CanBusManager *dontUse0_, const twai_message_t *dontUse1_);
+void noActions(RoverCanLib::CanBusManager* dontUse0_, const twai_message_t* dontUse1_);
 void parseAnglePacket();
 void calibrate();
 
-void setup() 
+void setup()
 {
     delay(2500);
     Serial.begin(115200);
@@ -28,11 +28,11 @@ void setup()
 
     LOG(INFO, "Init done, starting loop!");
 
-    for(;;)
+    for (;;)
     {
         compass.updateOrientation();
         canBus.update();
-        
+
         if (timerFeedback.isDone())
         {
             compassMsg.data.heading = compass.getYaw();
@@ -43,13 +43,12 @@ void setup()
     }
 }
 
-
 void loop() {}
 
-void noActions(RoverCanLib::CanBusManager *dontUse0_, const twai_message_t *dontUse1_)
+void noActions(RoverCanLib::CanBusManager* dontUse0_, const twai_message_t* dontUse1_)
 {
     REMOVE_UNUSED(&dontUse0_);
     REMOVE_UNUSED(dontUse1_);
 
     return;
-} 
+}

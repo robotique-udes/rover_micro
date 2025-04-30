@@ -12,7 +12,7 @@
 
 class IFX007T : public MotorDriver
 {
-public:
+  public:
     static constexpr uint32_t PWM_FREQUENCY = 1'000;
     static constexpr ledc_timer_bit_t LEDC_TIMER_RESOLUTION = LEDC_TIMER_14_BIT;
 
@@ -29,8 +29,8 @@ public:
             bool reversed_ = false,
             ledc_timer_t timerNumber_ = LEDC_TIMER_0,
             ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
-            ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
-        : MotorDriver(eBrakeMode::NONE)
+            ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1):
+        MotorDriver(eBrakeMode::NONE)
     {
         ASSERT(brakeMode_ != eBrakeMode::COAST && brakeMode_ != eBrakeMode::BRAKE,
                "IFX007T doesn't support specified brake mode");
@@ -49,7 +49,7 @@ public:
 
         _ledc_motorTimer = timerNumber_;
         ASSERT(channelNumber1_ == channelNumber2_,
-         "Using the same channel for both half-bridge will result in constant braking of the motor");
+               "Using the same channel for both half-bridge will result in constant braking of the motor");
         _ledc_motorChannel_1 = channelNumber1_;
         _ledc_motorChannel_2 = channelNumber2_;
     };
@@ -129,7 +129,7 @@ public:
             _currentSpd = 0.0f;
             ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
             ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
-            
+
             if (_brakeMode == MotorDriver::eBrakeMode::COAST)
             {
                 digitalWrite(_en_1, LOW);
@@ -256,7 +256,7 @@ public:
         }
     }
 
-private:
+  private:
     gpio_num_t _en_1 = GPIO_NUM_NC;
     gpio_num_t _en_2 = GPIO_NUM_NC;
     gpio_num_t _in_1 = GPIO_NUM_NC;
@@ -273,5 +273,5 @@ private:
     float _currentSpd = 0.0f;
 };
 
-#endif // !defined(ESP32)
-#endif // __IFX007T_HPP__
+#endif  // !defined(ESP32)
+#endif  // __IFX007T_HPP__

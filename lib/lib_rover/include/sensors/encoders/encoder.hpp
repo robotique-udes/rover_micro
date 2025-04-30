@@ -10,18 +10,18 @@
 
 class Encoder
 {
-public:
+  public:
     enum class eEncoderType : uint8_t
     {
         ABSOLUTE_SINGLE_TURN,
         ABSOLUTE_MULTI_TURN
     };
 
-protected:
+  protected:
     Encoder(bool reversed_);
 
-public:
-    virtual ~Encoder() {};
+  public:
+    virtual ~Encoder(){};
 
     virtual void init(void) = 0;
     // Units should be rads for angular joint and meters for linear joints
@@ -32,7 +32,7 @@ public:
     float getPosition(bool raw_ = false);
     float getSpeed(void);
 
-protected:
+  protected:
     bool _inited = false;
     bool _reversed = false;
 
@@ -86,5 +86,5 @@ void Encoder::checkInit(void)
     ASSERT(!this->isInited());
 }
 
-#endif // !defined(ESP32)
-#endif // __ENCODER_HPP__
+#endif  // !defined(ESP32)
+#endif  // __ENCODER_HPP__

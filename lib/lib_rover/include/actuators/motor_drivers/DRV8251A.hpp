@@ -16,7 +16,7 @@
 
 class DRV8251A : public MotorDriver
 {
-public:
+  public:
     static constexpr uint32_t PWM_FREQUENCY = 1'000;
     static constexpr ledc_timer_bit_t LEDC_TIMER_RESOLUTION = LEDC_TIMER_14_BIT;
 
@@ -25,17 +25,15 @@ public:
         return (uint32_t)round(abs(percent_) / 100.0f * (float)(1u << LEDC_TIMER_RESOLUTION) - 1.0f);
     }
 
-    DRV8251A(
-        gpio_num_t in_1_,
-        gpio_num_t in_2_,
-        MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::BRAKE,
-        bool reversed_ = false,
-        ledc_timer_t timerNumber_ = LEDC_TIMER_0,
-        ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
-        ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
+    DRV8251A(gpio_num_t in_1_,
+             gpio_num_t in_2_,
+             MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::BRAKE,
+             bool reversed_ = false,
+             ledc_timer_t timerNumber_ = LEDC_TIMER_0,
+             ledc_channel_t channelNumber1_ = LEDC_CHANNEL_0,
+             ledc_channel_t channelNumber2_ = LEDC_CHANNEL_1)
     {
-        ASSERT(brakeMode_ == eBrakeMode::NONE,
-               "DRV8251A cannot have NONE brake mode");
+        ASSERT(brakeMode_ == eBrakeMode::NONE, "DRV8251A cannot have NONE brake mode");
         this->setBrakeMode(brakeMode_);
 
         ASSERT(in_1_ == GPIO_NUM_NC);
@@ -47,7 +45,8 @@ public:
         _reversed = reversed_;
 
         _ledc_motorTimer = timerNumber_;
-        ASSERT(channelNumber1_ == channelNumber2_, "Using the same channel for both inputs will result in constant braking of the motor")
+        ASSERT(channelNumber1_ == channelNumber2_,
+               "Using the same channel for both inputs will result in constant braking of the motor")
         _ledc_motorChannel_1 = channelNumber1_;
         _ledc_motorChannel_2 = channelNumber2_;
     }
@@ -127,7 +126,7 @@ public:
                     ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(0.0f));
                     ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(0.0f));
                 }
-                else // Since outputs are reversed, 100.0f pwm means GND
+                else  // Since outputs are reversed, 100.0f pwm means GND
                 {
                     ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_1, PERCENT_TO_DUTY(100.0f));
                     ledc_set_duty(LEDC_LOW_SPEED_MODE, _ledc_motorChannel_2, PERCENT_TO_DUTY(100.0f));
@@ -228,7 +227,7 @@ public:
         }
     }
 
-private:
+  private:
     gpio_num_t _in_1 = GPIO_NUM_NC;
     gpio_num_t _in_2 = GPIO_NUM_NC;
 
@@ -246,5 +245,5 @@ private:
     RoverHelpers::MovingAverage<float, 100> cmdAvg;
 };
 
-#endif // !defined(ESP32)
-#endif // __DRV8251A_HPP__
+#endif  // !defined(ESP32)
+#endif  // __DRV8251A_HPP__

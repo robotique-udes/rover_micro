@@ -23,4 +23,4 @@ constexpr gpio_num_t PIN_LED_B = GPIO_NUM_10;
 constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_47;
 constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_48;
 
-#endif // __CONFIG_LOCAL_HPP__
+#endif  // __CONFIG_LOCAL_HPP__

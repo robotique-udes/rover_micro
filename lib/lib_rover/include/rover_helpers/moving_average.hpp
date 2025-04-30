@@ -26,10 +26,10 @@ namespace RoverHelpers
     /// }
     ///
     /// Output: "1.0, 2.0, 3.0, ... 10.0"
-    template <typename TYPE, uint16_t COEFF_NB>
+    template<typename TYPE, uint16_t COEFF_NB>
     class MovingAverage
     {
-    public:
+      public:
         /// @brief MovingAverage's constructor.
         /// @param startingValue_ The average will start at this specific value,
         /// default is 0.
@@ -46,13 +46,13 @@ namespace RoverHelpers
         /// @return Current average.
         float getAverage(void);
 
-    private:
+      private:
         TYPE _avgTable[COEFF_NB] = {0};
         uint16_t _cursor = 0;
         float _avg = 0.0f;
     };
-}
+}  // namespace RoverHelpers
 
 #include "rover_helpers/moving_average.cpp"
 
-#endif // __MOVING_AVERAGE_HPP__
+#endif  // __MOVING_AVERAGE_HPP__

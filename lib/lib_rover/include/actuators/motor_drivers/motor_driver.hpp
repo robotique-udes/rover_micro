@@ -24,7 +24,7 @@
 
 class MotorDriver
 {
-public:
+  public:
     static constexpr float MAX_SPEED = 100.0f;
 
     enum class eDriverType : uint8_t
@@ -41,7 +41,7 @@ public:
         NONE
     };
 
-protected:
+  protected:
     static constexpr float PROTECTION_MAX_VOLTAGE = 12.0f;
 
     MotorDriver(MotorDriver::eBrakeMode brakeMode_ = MotorDriver::eBrakeMode::NONE)
@@ -50,7 +50,7 @@ protected:
         this->setMaxVoltage(25.2f, PROTECTION_MAX_VOLTAGE, false);
     };
 
-public:
+  public:
     virtual ~MotorDriver(void){};
 
     virtual void init(void) = 0;
@@ -60,7 +60,10 @@ public:
     virtual bool isMoving(void) = 0;
     virtual float getCmd(void) = 0;
     virtual void setBrakeMode(eBrakeMode brakeMode_) = 0;
-    eBrakeMode getBrakeMode(void) { return _brakeMode; }
+    eBrakeMode getBrakeMode(void)
+    {
+        return _brakeMode;
+    }
 
     // -100.0 to 100.0 for cmd
     void setCmd(float cmd_)
@@ -69,7 +72,7 @@ public:
 
         cmd_ = MAP(cmd_, -MAX_SPEED, MAX_SPEED, -_protectionSpeed, _protectionSpeed);
         cmd_ = constrain(cmd_, -_protectionSpeed, _protectionSpeed);
-        
+
         this->setCmdInternal(cmd_);
     }
 
@@ -127,7 +130,7 @@ public:
         return _protectionSpeed;
     }
 
-protected:
+  protected:
     bool _inited = false;
     float _protectionSpeed = 0.0f;
     bool _withLed = false;
@@ -159,7 +162,7 @@ protected:
         ASSERT(!this->isInited());
     }
 
-private:
+  private:
     // Does the job for now, but would be cleaner with hardware led instead
     void updateLed(void)
     {
@@ -235,5 +238,5 @@ private:
     }
 };
 
-#endif // !defined(ESP32)
-#endif // __MOTOR_DRIVER_HPP__
+#endif  // !defined(ESP32)
+#endif  // __MOTOR_DRIVER_HPP__
