@@ -54,7 +54,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, No_Callback_On_Not_Last_Elem)
     ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::SUCCESS_INCOMPLETE);
 }
 
-TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Not_Concerned_Msg)
+TEST(SUITE_ROVER_CAN2_Subscriber, Mismatch_On_Not_Concerned_Msg)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
@@ -68,7 +68,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Not_Concerned_Msg)
     ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::NOT_CONCERNED);
 }
 
-TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Msg)
+TEST(SUITE_ROVER_CAN2_Subscriber, Mismatch_On_Invalid_Msg)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
@@ -82,7 +82,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Msg)
     ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_INVALID_MSG);
 }
 
-TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Length)
+TEST(SUITE_ROVER_CAN2_Subscriber, Mismatch_On_Invalid_Length)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
@@ -93,10 +93,10 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_Length)
     RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == false);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_MISSMATCH);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_MISMATCH);
 }
 
-TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_MsgContentID)
+TEST(SUITE_ROVER_CAN2_Subscriber, Mismatch_On_Invalid_MsgContentID)
 {
     RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestSubscriber::CB_Helper)> sub(TestSubscriber::CB_Helper);
 
@@ -107,7 +107,7 @@ TEST(SUITE_ROVER_CAN2_Subscriber, Missmatch_On_Invalid_MsgContentID)
     RoverCan2::Msgs::eLoadMsgCode parseCode = sub.parseMsg(msg);
 
     ASSERT_TRUE(TestSubscriber::g_callbackSuccess == false);
-    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_MISSMATCH);
+    ASSERT_TRUE(parseCode == RoverCan2::Msgs::eLoadMsgCode::ERROR_MISMATCH);
 }
 
 TEST(SUITE_ROVER_CAN2_Subscriber, Callback_Value_Valid)

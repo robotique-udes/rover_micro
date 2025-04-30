@@ -1,35 +1,35 @@
-#ifndef TEST_MSG_HPP
-#define TEST_MSG_HPP
+#ifndef PWM_INFO_HPP
+#define PWM_INFO_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
 
-DEFINE_LOG_NODE(TestMsg_msg, Logger::eNodeState::OFF)
+DEFINE_LOG_NODE(PwmInfo_msg, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
 {
-    class TestMsg : public Msg<TestMsg>
+    class PwmInfo : public Msg<PwmInfo>
     {
       public:
         enum class eMsgContentID : uint8_t
         {
-            CMD,
-            CLOSE_LOOP,
+            FREQUENCY_CTRL_EN,
+            DUTY_CYCLE_CTRL_EN,
             eLAST,
         };
 
       private:
         struct sMsgData
         {
-            float cmd;
-            bool closeLoop;
+            bool frequencyCtrlEn;
+            bool dutyCycleCtrlEn;
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
-            = {eMsgContentID::CMD, eMsgContentID::CLOSE_LOOP};
+            = {eMsgContentID::FREQUENCY_CTRL_EN, eMsgContentID::DUTY_CYCLE_CTRL_EN};
 
       public:
-        TestMsg();
+        PwmInfo();
 
         eLoadMsgCode _loadMsg(const CanMsg& msg_);
         std::optional<CanMsg> _getCanMsg(const uint8_t msgContentId_) const;
@@ -41,14 +41,14 @@ namespace RoverCan2::Msgs
         sMsgData _data;
     };
 
-    TestMsg::TestMsg():
-        Msg(Constant::eMsgId::TEST_MSG)
+    PwmInfo::PwmInfo():
+        Msg(Constant::eMsgId::PWM_INFO)
     {
-        _data.cmd = static_cast<decltype(_data.cmd)>(0);
-        _data.closeLoop = static_cast<decltype(_data.closeLoop)>(0);
+        _data.frequencyCtrlEn = static_cast<decltype(_data.frequencyCtrlEn)>(0);
+        _data.dutyCycleCtrlEn = static_cast<decltype(_data.dutyCycleCtrlEn)>(0);
     }
 
-    eLoadMsgCode TestMsg::_loadMsg(const CanMsg& msg_)
+    eLoadMsgCode PwmInfo::_loadMsg(const CanMsg& msg_)
     {
         if (msg_.getMsgID() == Constant::eMsgId::INVALID)
         {
@@ -63,7 +63,7 @@ namespace RoverCan2::Msgs
         eMsgContentID msgContentId = static_cast<eMsgContentID>(msg_.getMsgContentID());
         if (!VALID_MSG_IDS.contains(msgContentId))
         {
-            LOG_DEBUG(Logger::Nodes::TestMsg_msg,
+            LOG_DEBUG(Logger::Nodes::PwmInfo_msg,
                       "Mismatch between received message and local message definition. Received msgContentId: (%u), "
                       "expected lower than (%u) and none zero",
                       TO_UNDERLYING(msgContentId),
@@ -74,17 +74,17 @@ namespace RoverCan2::Msgs
         bool success = false;
         switch (msgContentId)
         {
-            case eMsgContentID::CMD:
-                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.cmd);
-                LOG_DEBUG(Logger::Nodes::TestMsg_msg,
-                          "switch (msgContentId) case eMsgContentID::CMD: %s",
+            case eMsgContentID::FREQUENCY_CTRL_EN:
+                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.frequencyCtrlEn);
+                LOG_DEBUG(Logger::Nodes::PwmInfo_msg,
+                          "switch (msgContentId) case eMsgContentID::FREQUENCY_CTRL_EN: %s",
                           success ? "success" : "failed");
                 break;
 
-            case eMsgContentID::CLOSE_LOOP:
-                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.closeLoop);
-                LOG_DEBUG(Logger::Nodes::TestMsg_msg,
-                          "switch (msgContentId) case eMsgContentID::CLOSE_LOOP: %s",
+            case eMsgContentID::DUTY_CYCLE_CTRL_EN:
+                success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.dutyCycleCtrlEn);
+                LOG_DEBUG(Logger::Nodes::PwmInfo_msg,
+                          "switch (msgContentId) case eMsgContentID::DUTY_CYCLE_CTRL_EN: %s",
                           success ? "success" : "failed");
                 break;
 
@@ -107,7 +107,7 @@ namespace RoverCan2::Msgs
         }
     }
 
-    std::optional<CanMsg> TestMsg::_getCanMsg(const uint8_t msgContentId_) const
+    std::optional<CanMsg> PwmInfo::_getCanMsg(const uint8_t msgContentId_) const
     {
         eMsgContentID msgContentID = static_cast<eMsgContentID>(msgContentId_);
 
@@ -119,12 +119,12 @@ namespace RoverCan2::Msgs
         CanMsg msg_;
         switch (static_cast<eMsgContentID>(msgContentId_))
         {
-            case eMsgContentID::CMD:
-                Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.cmd, msg_);
+            case eMsgContentID::FREQUENCY_CTRL_EN:
+                Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.frequencyCtrlEn, msg_);
                 break;
 
-            case eMsgContentID::CLOSE_LOOP:
-                Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.closeLoop, msg_);
+            case eMsgContentID::DUTY_CYCLE_CTRL_EN:
+                Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.dutyCycleCtrlEn, msg_);
                 break;
 
             case eMsgContentID::eLAST:
@@ -134,20 +134,20 @@ namespace RoverCan2::Msgs
         return msg_;
     }
 
-    uint8_t TestMsg::_getMsgContentCount(void) const
+    uint8_t PwmInfo::_getMsgContentCount(void) const
     {
         return TO_UNDERLYING(eMsgContentID::eLAST);
     }
 
-    TestMsg::sMsgData& TestMsg::data(void)
+    PwmInfo::sMsgData& PwmInfo::data(void)
     {
         return _data;
     }
     
-    const TestMsg::sMsgData& TestMsg::getData(void) const
+    const PwmInfo::sMsgData& PwmInfo::getData(void) const
     {
-        return static_cast<const TestMsg::sMsgData&>(_data);
+        return static_cast<const PwmInfo::sMsgData&>(_data);
     }
 }  // namespace RoverCan2::Msgs
 
-#endif  // TEST_MSG_HPP
+#endif  // PWM_INFO_HPP

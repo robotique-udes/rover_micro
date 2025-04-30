@@ -32,7 +32,6 @@
     {                                                               \
         inline constexpr Logger::Nodes::Node name_{#name_, state_}; \
     }
-
 namespace Logger
 {
 #if defined(ARDUINO_ESP32S3_DEV)
@@ -135,6 +134,12 @@ namespace Logger
  *
  */
 #define LOG_FLUSH() Logger::loggerStream.flush();
+
+/**
+ * @brief Default node for debug purposes
+ * 
+ */
+DEFINE_LOG_NODE(Debug, Logger::eNodeState::ON);
 
 #else  // defined(VERBOSE)
 

@@ -10,6 +10,8 @@
 
 #include <cstring>
 
+DEFINE_LOG_NODE(CanMsg, Logger::eNodeState::OFF);
+
 namespace RoverCan2
 {
     /**
@@ -93,6 +95,7 @@ namespace RoverCan2
             }
             else
             {
+                LOG_WARN(Logger::Nodes::CanMsg, "Handling unsupported type: %u, returning invalid", TO_UNDERLYING(msgID));
                 return RoverCan2::Constant::eMsgId::INVALID;
             }
         };
