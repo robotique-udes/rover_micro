@@ -26,22 +26,22 @@ jobs:
             echo -e "\e[0;32m[OK]\e[0m clang-format already installed"
           fi
 
-          echo "=== Finding .clang-format file... ==="
-          if [ -z "$(find . -name '.clang-format' -print -quit)" ]; then
-            echo "[FAILED] .clang-format file not found in the repository!"
-            exit 1
+      - name: Run lint-apply.sh
+        run: |
+          echo "=== Running lint-apply.sh script... ==="
+          if [ -f "rover_micro/scripts/lint-apply.sh" ]; then
+            chmod +x rover_micro/scripts/lint-apply.sh
+            rover_micro/scripts/lint-apply.sh
           else
-            echo -e "\e[0;32m[OK]\e[0m .clang-format file found"
+            echo -e "\e[0;31m[ERROR] lint-apply.sh not found at rover_micro/scripts/lint-apply.sh\e[0m"
+            exit 1
           fi
-          
-          echo "=== Detecting lint... ==="
-          set -e  # Stop the script if any command fails
-          find . \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \) -exec clang-format -style=file -i {} \;
 
+      - name: Check for formatting changes
+        run: |
           echo "=== Checking for formatting changes... ==="
           if git diff --quiet; then
             echo "Code is properly formatted."
-            exit 0
           else
             echo -e "=== \e[0;31m[FAILED]\e[0m Formatting is not conform ==="
             echo ""
@@ -49,7 +49,6 @@ jobs:
             git diff
             echo ""
             echo ""
-            echo -e "\e[0;31m=== [FAILED] Run scripts/lint-apply.sh to fix formatting ===\e[0m"
+            echo -e "\e[0;31m=== [FAILED] Run rover_micro/scripts/lint-apply.sh to fix formatting ===\e[0m"
+            exit 1
           fi
-
-          exit 1
