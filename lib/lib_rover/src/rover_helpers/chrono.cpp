@@ -5,9 +5,8 @@
 
 namespace RoverHelpers
 {
-    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    Chrono<TYPE, CLOCK_FUNC>::
-        Chrono(void)
+    template<typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    Chrono<TYPE, CLOCK_FUNC>::Chrono(void)
     {
         _paused = false;
         _accumulatedTime = 0;
@@ -15,23 +14,20 @@ namespace RoverHelpers
         this->init();
     }
 
-    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    Chrono<TYPE, CLOCK_FUNC>::
-        ~Chrono(void)
+    template<typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    Chrono<TYPE, CLOCK_FUNC>::~Chrono(void)
     {
     }
 
-    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    void Chrono<TYPE, CLOCK_FUNC>::
-        init(void)
+    template<typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Chrono<TYPE, CLOCK_FUNC>::init(void)
     {
         _accumulatedTime = 0;
         _startClock = CLOCK_FUNC();
     }
 
-    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    void Chrono<TYPE, CLOCK_FUNC>::
-        pause(void)
+    template<typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Chrono<TYPE, CLOCK_FUNC>::pause(void)
     {
         if (!_paused)
         {
@@ -40,9 +36,8 @@ namespace RoverHelpers
         }
     }
 
-    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    void Chrono<TYPE, CLOCK_FUNC>::
-        resume(void)
+    template<typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Chrono<TYPE, CLOCK_FUNC>::resume(void)
     {
         if (_paused)
         {
@@ -51,9 +46,8 @@ namespace RoverHelpers
         }
     }
 
-    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    TYPE Chrono<TYPE, CLOCK_FUNC>::
-        getTime(void)
+    template<typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    TYPE Chrono<TYPE, CLOCK_FUNC>::getTime(void)
     {
         if (_paused)
         {
@@ -65,12 +59,11 @@ namespace RoverHelpers
         }
     }
 
-    template <typename TYPE, TYPE (*CLOCK_FUNC)(void)>
-    void Chrono<TYPE, CLOCK_FUNC>::
-        restart(void)
+    template<typename TYPE, TYPE (*CLOCK_FUNC)(void)>
+    void Chrono<TYPE, CLOCK_FUNC>::restart(void)
     {
         this->init();
     }
-}
+}  // namespace RoverHelpers
 
-#endif // __CHRONO_CPP__
+#endif  // __CHRONO_CPP__

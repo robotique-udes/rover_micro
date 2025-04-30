@@ -29,7 +29,7 @@ namespace RoverHelpers
     ///     }
     class SoftLedBlinker
     {
-    public:
+      public:
         SoftLedBlinker(void) {}
         ~SoftLedBlinker(void) {}
 
@@ -50,13 +50,12 @@ namespace RoverHelpers
         // Need to be called as often as possible
         void update(void);
 
-    private:
+      private:
         gpio_num_t _ledPin = GPIO_NUM_NC;
         float _highPulseTime = 100.0f;
         bool _highCycle = LOW;
         uint8_t _frequency = 0.0f;
         uint8_t _brightness = 0.0f;
-
 
         RoverHelpers::Timer<unsigned long, micros> _timerBrightness = RoverHelpers::Timer<unsigned long, micros>(100u);
         RoverHelpers::Chrono<unsigned long, micros> _chronoHighPulse;
@@ -82,7 +81,7 @@ namespace RoverHelpers
     void SoftLedBlinker::setBrightness(float brightness_)
     {
         _brightness = constrain(brightness_, 0.0f, 100.0f);
-        _highPulseTime = _brightness/100.0f * _timerBrightness.getInterval();
+        _highPulseTime = _brightness / 100.0f * _timerBrightness.getInterval();
 
         if (brightness_ == 0.0f)
         {
@@ -113,7 +112,7 @@ namespace RoverHelpers
             _highCycle = !_highCycle;
         }
     }
-}
+}  // namespace RoverHelpers
 
-#endif // ESP32
-#endif // __SOFT_LED_BLINKER_HPP__
+#endif  // ESP32
+#endif  // __SOFT_LED_BLINKER_HPP__

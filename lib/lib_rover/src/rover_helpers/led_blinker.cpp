@@ -56,6 +56,6 @@ void LedBlinker::setOff(void)
 void LedBlinker::setBlink(uint32_t frequencyHz_, float dutyCycle_)
 {
     ledc_set_freq(LEDC_LOW_SPEED_MODE, _timer, frequencyHz_);
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, _channel, static_cast<uint32_t>(round(dutyCycle_/100.0f * 8096.0f)));
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, _channel, static_cast<uint32_t>(round(dutyCycle_ / 100.0f * 8096.0f)));
     ledc_update_duty(LEDC_LOW_SPEED_MODE, _channel);
 }

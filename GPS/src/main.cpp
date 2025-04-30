@@ -20,7 +20,7 @@
 float getLatitude(char latData_[SIZE_ELEMENTS], char latSign_[SIZE_ELEMENTS]);
 void splitData(const char gpsData_[BUFFER_SIZE]);
 float getLongitude(char longData_[SIZE_ELEMENTS], char longSign_[SIZE_ELEMENTS]);
-void noActions(RoverCanLib::CanBusManager *canBusManager_, const twai_message_t *msg_);
+void noActions(RoverCanLib::CanBusManager* canBusManager_, const twai_message_t* msg_);
 
 float g_latitude;
 float g_longitude;
@@ -33,7 +33,7 @@ void setup()
     Serial1.begin(9600, SERIAL_8N1, RX1PIN, TX1PIN);
 
     RoverCanLib::CanBusManager canBus(DEVICE_ID, CAN_TX, CAN_RX, noActions, false);
-    
+
     canBus.init();
 
     RoverCanLib::Msgs::GPS gpsMsg;
@@ -51,12 +51,15 @@ void setup()
         if (dataSize > 0)
         {
             bufferGpsReceive[dataSize] = '\0';
-            const char *pGpsData = bufferGpsReceive;
+            const char* pGpsData = bufferGpsReceive;
 
             // Test data
             // Good Received data: $GNGGA,201427.00,4522.65273,N,07155.50339,W,2,12,0.71,282.0,M,-31.5,M,,0000*78
-            // char gpsDataTest[BUFFER_SIZE] = {'$', 'G', 'N', 'G', 'G', 'A', ',', '2', '0', '1', '4', '2', '7', '.', '0', '0', ',', '4', '5', '2', '2', '.', '6', '5', '2', '7', '3', ',', 'N', ',', '0', '7', '1', '5', '5', '.', '5', '0', '3', '3', '9', ',', 'W', ',', '2', ',', '1', '2', ',', '0', '.', '7', '1', ',', '2', '8', '2', '.', '0', ',', 'M', ',', '-', '3', '1', '.', '5', ',', 'M', ',', ',', '0', '0', '0', '0', '*', '7', '8', '\0'};
-            // const char *pGpsDataTest = gpsDataTest;
+            // char gpsDataTest[BUFFER_SIZE] = {'$', 'G', 'N', 'G', 'G', 'A', ',', '2', '0', '1', '4', '2', '7', '.', '0', '0',
+            // ',', '4', '5', '2', '2', '.', '6', '5', '2', '7', '3', ',', 'N', ',', '0', '7', '1', '5', '5', '.', '5', '0', '3',
+            // '3', '9', ',', 'W', ',', '2', ',', '1', '2', ',', '0', '.', '7', '1', ',', '2', '8', '2', '.', '0', ',', 'M', ',',
+            // '-', '3', '1', '.', '5', ',', 'M', ',', ',', '0', '0', '0', '0', '*', '7', '8', '\0'}; const char *pGpsDataTest =
+            // gpsDataTest;
 
             splitData(pGpsData);
         }
@@ -88,7 +91,9 @@ void splitData(const char pGpsData[BUFFER_SIZE])
     }
     else
     {
-        for (uint8_t i = 0; pGpsData[i] != '\n' && pGpsData[i] != '\0' && i < BUFFER_SIZE && indexElements + 1 < NB_ELEMENTS && indexChar + 1 < SIZE_ELEMENTS; i++)
+        for (uint8_t i = 0; pGpsData[i] != '\n' && pGpsData[i] != '\0' && i < BUFFER_SIZE && indexElements + 1 < NB_ELEMENTS
+                            && indexChar + 1 < SIZE_ELEMENTS;
+             i++)
         {
             if (pGpsData[i] == ',')
             {
@@ -161,7 +166,6 @@ float getLatitude(char latData[SIZE_ELEMENTS], char latSign[SIZE_ELEMENTS])
             temp = latData[i] - '0';
             if (iDeg >= 0)
             {
-
                 allDegrees += temp * pow(10, iDeg);
                 iDeg--;
             }
@@ -195,7 +199,6 @@ float getLongitude(char longData[SIZE_ELEMENTS], char longSign[SIZE_ELEMENTS])
             temp = longData[i] - '0';
             if (iDeg >= 0)
             {
-
                 allDegrees += temp * pow(10, iDeg);
                 iDeg--;
             }
@@ -220,7 +223,7 @@ float getLongitude(char longData[SIZE_ELEMENTS], char longSign[SIZE_ELEMENTS])
     return longitude;
 }
 
-void noActions(RoverCanLib::CanBusManager *dontUse0_, const twai_message_t *dontUse1_)
+void noActions(RoverCanLib::CanBusManager* dontUse0_, const twai_message_t* dontUse1_)
 {
     REMOVE_UNUSED(&dontUse0_);
     REMOVE_UNUSED(dontUse1_);

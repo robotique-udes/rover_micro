@@ -62,7 +62,7 @@ namespace TestIntegrationTests
 
 TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgReception)
 {
-    HealthState::getInstance().setInError(false); // Disabling error state reporting to get accurate sentMsg buffer
+    HealthState::getInstance().setInError(false);  // Disabling error state reporting to get accurate sentMsg buffer
 
     // Inits
     RoverCan2::Drivers::DriverMock canDriver;

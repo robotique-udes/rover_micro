@@ -12,8 +12,8 @@
 
 class TalonSrx : public MotorDriver
 {
-private:
-    static constexpr float SIGNAL_FULL_STOP_MS = 1500.0f; // Middle of deadband
+  private:
+    static constexpr float SIGNAL_FULL_STOP_MS = 1500.0f;  // Middle of deadband
     static constexpr float SIGNAL_FULL_REVERSE_MS = 1000.0f;
     static constexpr float SIGNAL_MIN_REVERSE_MS = 1480.0f;
     static constexpr float SIGNAL_FULL_FORWARD_MS = 2000.0f;
@@ -29,13 +29,13 @@ private:
 #endif
     }
 
-public:
+  public:
     // Try using the same timer for all same frequency signal. Don't use the same channel
     TalonSrx(gpio_num_t pinPWM_,
              ledc_timer_t timerNumber_ = LEDC_TIMER_0,
              ledc_channel_t channelNumber_ = LEDC_CHANNEL_0,
-             float signalFrequencyHz_ = 50.0f)
-        : MotorDriver(eBrakeMode::NONE)
+             float signalFrequencyHz_ = 50.0f):
+        MotorDriver(eBrakeMode::NONE)
     {
 #error The TalonSRX class has been updated and cleaned blindly (no available working board to test on): please take the time to test it before using
 
@@ -62,7 +62,7 @@ public:
         ledc_timer.duty_resolution = LEDC_TIMER_20_BIT;
 #elif defined(ARDUINO_ESP32S3_DEV)
         ledc_timer.duty_resolution = LEDC_TIMER_14_BIT;
-#endif // defined(ARDUINO_ESP32S2_DEV)
+#endif  // defined(ARDUINO_ESP32S2_DEV)
         ledc_timer.freq_hz = _freqSignal;
         ledc_timer.clk_cfg = LEDC_AUTO_CLK;
         ledc_timer_config(&ledc_timer);
@@ -147,7 +147,7 @@ public:
         LOG(WARN, "TalonSRX brake mode can only be changed with the hardware button, refer to the TalonSRX's documentation")
     }
 
-private:
+  private:
     void writeMicroseconds(float microseconds_)
     {
         ledc_set_duty(LEDC_LOW_SPEED_MODE, _channel, MS_TO_DUTY(_freqSignal, microseconds_));
@@ -167,5 +167,5 @@ private:
     float _speed;
 };
 
-#endif // !defined(ARDUINO_ESP32S2_DEV) && !defined(ARDUINO_ESP32S3_DEV)
-#endif // __DC_MOTOR_HPP__
+#endif  // !defined(ARDUINO_ESP32S2_DEV) && !defined(ARDUINO_ESP32S3_DEV)
+#endif  // __DC_MOTOR_HPP__

@@ -16,7 +16,7 @@ namespace RoverCanLib
     /// network easily
     class CanBusManager
     {
-    public:
+      public:
         /// @brief Internal status of the can node in relation to it's network
         enum eCanBusStatus : uint8_t
         {
@@ -45,7 +45,7 @@ namespace RoverCanLib
         CanBusManager(uint16_t deviceId_,
                       gpio_num_t txPin_,
                       gpio_num_t rxPin_,
-                      void (*canMsgCallbackFunc_)(CanBusManager *canBusManager_, const twai_message_t *msgPtr_),
+                      void (*canMsgCallbackFunc_)(CanBusManager* canBusManager_, const twai_message_t* msgPtr_),
                       bool disableMasterWatchdog_,
                       gpio_num_t pinStatusLED_ = GPIO_NUM_NC,
                       twai_mode_t nodeMode_ = twai_mode_t::TWAI_MODE_NORMAL,
@@ -62,16 +62,16 @@ namespace RoverCanLib
         /// @param msg Pointer to the message RoverCanLib::Msgs::Msg child object
         /// @param validateIntegrity_ Will automatically retry the message
         /// transmission until some node AKC the msg
-        void sendMsg(RoverCanLib::Msgs::Msg *msg, bool validateIntegrity_ = false);
+        void sendMsg(RoverCanLib::Msgs::Msg* msg, bool validateIntegrity_ = false);
 
         /// @brief Send all required can msgs to send a whole RoverCanLib::Msgs
         /// and allows the user to send them with a custom CanDeviceID
         /// @param msg Pointer to the message RoverCanLib::Msgs::Msg child object
         /// @param validateIntegrity_ Will automatically retry the message
         /// transmission until some node AKC the msg
-        /// @param customCanID_ Overwrites the default CanDeviceId with the one 
+        /// @param customCanID_ Overwrites the default CanDeviceId with the one
         /// specified for this transmission
-        void sendMsg(RoverCanLib::Msgs::Msg *msg, uint32_t customCanID_, bool validateIntegrity_ = false);
+        void sendMsg(RoverCanLib::Msgs::Msg* msg, uint32_t customCanID_, bool validateIntegrity_ = false);
 
         /// @brief Send a message with parameters for automatic initialisation
         /// of the twai_message_t (can frame)
@@ -80,16 +80,16 @@ namespace RoverCanLib
         /// @param dataLenght_ length of data_
         /// @param validateIntegrity_ Will automatically retry the message
         /// transmission until some node AKC the msg
-        void sendMsg(uint32_t id, uint8_t *data_, uint8_t dataLenght_, bool validateIntegrity_ = false);
+        void sendMsg(uint32_t id, uint8_t* data_, uint8_t dataLenght_, bool validateIntegrity_ = false);
 
         /// @brief Send a already initialised twai_message_t (can frame)
         /// @param msg_ pointer to already initialised twai_message_t
-        void sendMsg(twai_message_t *msg_);
+        void sendMsg(twai_message_t* msg_);
 
         /// @brief Check if some message are available and return them if there
         /// are or return an empty message with ID = 0x00 if not
         /// @param msg
-        void readMsg(OUT twai_message_t *msg);
+        void readMsg(OUT twai_message_t* msg);
 
         /// @brief Internal calculation, Should be called at each code loop
         void update(void);
@@ -110,7 +110,7 @@ namespace RoverCanLib
         /// this will allow us to see which node is having problems
         void sendErrorCode(RoverCanLib::Constant::eInternalErrorCode errCode);
 
-    private:
+      private:
         void updateLedStatus(void);
         void updateHeartbeat(void);
         void updateCallbackMsg(void);
@@ -127,9 +127,10 @@ namespace RoverCanLib
 
         bool _watchDogAlive = false;
         bool _disableMasterWatchdog = false;
-        RoverHelpers::Timer<unsigned long, millis> _timerWatchdog = RoverHelpers::Timer<unsigned long, millis>(RoverCanLib::Constant::WATCHDOG_TIMEOUT_MS);
+        RoverHelpers::Timer<unsigned long, millis> _timerWatchdog
+            = RoverHelpers::Timer<unsigned long, millis>(RoverCanLib::Constant::WATCHDOG_TIMEOUT_MS);
 
-        void (*_canMsgCallbackFunc)(CanBusManager *canBusManager_, const twai_message_t *msgPtr_) = NULL;
+        void (*_canMsgCallbackFunc)(CanBusManager* canBusManager_, const twai_message_t* msgPtr_) = NULL;
 
         RoverCanLib::Msgs::ErrorState _errorStateMsg;
 
@@ -140,13 +141,13 @@ namespace RoverCanLib
     CanBusManager::CanBusManager(uint16_t deviceId_,
                                  gpio_num_t txPin_,
                                  gpio_num_t rxPin_,
-                                 void (*canMsgCallbackFunc_)(CanBusManager *canBusManager_, const twai_message_t *msgPtr_),
+                                 void (*canMsgCallbackFunc_)(CanBusManager* canBusManager_, const twai_message_t* msgPtr_),
                                  bool disableMasterWatchdog_,
                                  gpio_num_t pinStatusLED_,
                                  twai_mode_t nodeMode_,
-                                 twai_timing_config_t configSpeed_)
-        : _timerHeartbeat(static_cast<unsigned long>(1000.0f / static_cast<float>(RoverCanLib::Constant::HEARTBEAT_FREQ))),
-          _statusLed(pinStatusLED_)
+                                 twai_timing_config_t configSpeed_):
+        _timerHeartbeat(static_cast<unsigned long>(1000.0f / static_cast<float>(RoverCanLib::Constant::HEARTBEAT_FREQ))),
+        _statusLed(pinStatusLED_)
     {
         _id = deviceId_;
 
@@ -187,52 +188,52 @@ namespace RoverCanLib
         }
     }
 
-    void CanBusManager::sendMsg(twai_message_t *msg_)
+    void CanBusManager::sendMsg(twai_message_t* msg_)
     {
         // Sending msg with very small timeout, as a guideline we don't execute
         // blocking call with motors as it can lead to security issues. But 1ms
         // maximum block should be safe.
         switch (twai_transmit(msg_, pdMS_TO_TICKS(0)))
         {
-        case ESP_OK:
-            // Follow execution
-            break;
+            case ESP_OK:
+                // Follow execution
+                break;
 
-        case ESP_ERR_TIMEOUT:
-            _canBusState = eCanBusStatus::error;
-            LOG(ERROR, "TX queue is full!");
-            return;
+            case ESP_ERR_TIMEOUT:
+                _canBusState = eCanBusStatus::error;
+                LOG(ERROR, "TX queue is full!");
+                return;
 
-        case ESP_FAIL:
-            LOG(ERROR, "Race condition! esp is already sending a msg and the queue is disable");
-            _canBusState = eCanBusStatus::error;
-            return;
+            case ESP_FAIL:
+                LOG(ERROR, "Race condition! esp is already sending a msg and the queue is disable");
+                _canBusState = eCanBusStatus::error;
+                return;
 
-        case ESP_ERR_NOT_SUPPORTED:
-            // See twai_general_config_t in constructor to change mode
-            LOG(WARN, "CanBus manager is configured in read only mode, can't send message");
-            return;
+            case ESP_ERR_NOT_SUPPORTED:
+                // See twai_general_config_t in constructor to change mode
+                LOG(WARN, "CanBus manager is configured in read only mode, can't send message");
+                return;
 
-        case ESP_ERR_INVALID_ARG:
-            _canBusState = eCanBusStatus::error;
-            ASSERT(true, "Invalid arguments in function call");
-            break;
+            case ESP_ERR_INVALID_ARG:
+                _canBusState = eCanBusStatus::error;
+                ASSERT(true, "Invalid arguments in function call");
+                break;
 
-        case ESP_ERR_INVALID_STATE:
-            _canBusState = eCanBusStatus::error;
-            if (twai_initiate_recovery() != ESP_OK)
-            {
-                ASSERT(true, "Canbus/Twai controller has fallen in an invalid state");
-            }
-            break;
+            case ESP_ERR_INVALID_STATE:
+                _canBusState = eCanBusStatus::error;
+                if (twai_initiate_recovery() != ESP_OK)
+                {
+                    ASSERT(true, "Canbus/Twai controller has fallen in an invalid state");
+                }
+                break;
 
-        default:
-            _canBusState = eCanBusStatus::error;
-            ASSERT(true, "Unknowned error, shouldn't ever fall here");
+            default:
+                _canBusState = eCanBusStatus::error;
+                ASSERT(true, "Unknowned error, shouldn't ever fall here");
         }
     }
 
-    void CanBusManager::sendMsg(uint32_t id_, uint8_t *data_, uint8_t dataLenght_, bool validateIntegrity_)
+    void CanBusManager::sendMsg(uint32_t id_, uint8_t* data_, uint8_t dataLenght_, bool validateIntegrity_)
     {
         if (dataLenght_ > 8)
         {
@@ -254,12 +255,12 @@ namespace RoverCanLib
         this->sendMsg(&msg);
     }
 
-    void CanBusManager::sendMsg(RoverCanLib::Msgs::Msg *msg, bool validateIntegrity_)
+    void CanBusManager::sendMsg(RoverCanLib::Msgs::Msg* msg, bool validateIntegrity_)
     {
         this->sendMsg(msg, _id, validateIntegrity_);
     }
 
-    void CanBusManager::sendMsg(RoverCanLib::Msgs::Msg *msg, uint32_t customCanID_, bool validateIntegrity_)
+    void CanBusManager::sendMsg(RoverCanLib::Msgs::Msg* msg, uint32_t customCanID_, bool validateIntegrity_)
     {
         twai_message_t canMsg;
         canMsg.identifier = customCanID_;
@@ -277,33 +278,33 @@ namespace RoverCanLib
         }
     }
 
-    void CanBusManager::readMsg(OUT twai_message_t *msg)
+    void CanBusManager::readMsg(OUT twai_message_t* msg)
     {
         twai_message_t message;
         switch (twai_receive(&message, pdMS_TO_TICKS(0u)))
         {
-        case ESP_OK:
-            // Follow execution
-            break;
+            case ESP_OK:
+                // Follow execution
+                break;
 
-        case ESP_ERR_TIMEOUT:
-            // No new msgs
-            *msg = RoverCanLib::Helpers::getErrorIdMsg();
-            return;
+            case ESP_ERR_TIMEOUT:
+                // No new msgs
+                *msg = RoverCanLib::Helpers::getErrorIdMsg();
+                return;
 
-        case ESP_ERR_INVALID_ARG:
-            _canBusState = eCanBusStatus::error;
-            ASSERT(true, "Invalid arguments in function call");
-            break;
+            case ESP_ERR_INVALID_ARG:
+                _canBusState = eCanBusStatus::error;
+                ASSERT(true, "Invalid arguments in function call");
+                break;
 
-        case ESP_ERR_INVALID_STATE:
-            _canBusState = eCanBusStatus::error;
-            ASSERT(true, "Canbus/Twai controller has fallen in an invalid state");
-            break;
+            case ESP_ERR_INVALID_STATE:
+                _canBusState = eCanBusStatus::error;
+                ASSERT(true, "Canbus/Twai controller has fallen in an invalid state");
+                break;
 
-        default:
-            _canBusState = eCanBusStatus::error;
-            ASSERT(true, "Unknowned error, shoudln't ever fall here");
+            default:
+                _canBusState = eCanBusStatus::error;
+                ASSERT(true, "Unknowned error, shoudln't ever fall here");
         }
 
         // Process received message
@@ -338,32 +339,32 @@ namespace RoverCanLib
         {
             switch (_canBusState)
             {
-            case notInit:
-                _statusLed.setOff();
-                break;
+                case notInit:
+                    _statusLed.setOff();
+                    break;
 
-            case idle:
-                _statusLed.setOn();
-                break;
+                case idle:
+                    _statusLed.setOn();
+                    break;
 
-            case running:
-                _statusLed.setBlink(1, 50.0f);
-                break;
+                case running:
+                    _statusLed.setBlink(1, 50.0f);
+                    break;
 
-            case warning:
-                _statusLed.setBlink(2, 50.0f);
-                break;
+                case warning:
+                    _statusLed.setBlink(2, 50.0f);
+                    break;
 
-            case watchdogError:
-                _statusLed.setBlink(20, 25.0f);
-                break;
+                case watchdogError:
+                    _statusLed.setBlink(20, 25.0f);
+                    break;
 
-            case error:
-                _statusLed.setBlink(10, 50.0f);
-                break;
+                case error:
+                    _statusLed.setBlink(10, 50.0f);
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
             }
         }
 
@@ -385,11 +386,11 @@ namespace RoverCanLib
         {
             this->readMsg(&msg);
 
-            if (msg.identifier == 0x00) // No more msgs
+            if (msg.identifier == 0x00)  // No more msgs
             {
                 break;
             }
-            else if (msg.identifier == (uint8_t)Constant::eDeviceId::MASTER_COMPUTER_UNIT) // Global msg coming from Master
+            else if (msg.identifier == (uint8_t)Constant::eDeviceId::MASTER_COMPUTER_UNIT)  // Global msg coming from Master
             {
                 if (!_disableMasterWatchdog)
                 {
@@ -402,8 +403,8 @@ namespace RoverCanLib
                 // When receiving ErrorState from master, each node must send back their current status, this will then
                 // be forwarded to a ros topic by the master. But only answer on a last element of a message to not
                 // flood the network for no reasons
-                if (msg.data[(uint8_t)Constant::eDataIndex::MSG_ID] == (uint8_t)Constant::eMsgId::ERROR_STATE &&
-                    RoverCanLib::Helpers::msgContentIsLastElement<Msgs::ErrorState>(&msg))
+                if (msg.data[(uint8_t)Constant::eDataIndex::MSG_ID] == (uint8_t)Constant::eMsgId::ERROR_STATE
+                    && RoverCanLib::Helpers::msgContentIsLastElement<Msgs::ErrorState>(&msg))
                 {
                     LOG(INFO, "Asked by master to send error code, sending...");
                     if (_canBusState > eCanBusStatus::ERROR_DELIMITER)
@@ -421,7 +422,7 @@ namespace RoverCanLib
                     LOG(INFO, "Done sending");
                 }
             }
-            else // Msgs for this node with custom execution
+            else  // Msgs for this node with custom execution
             {
                 if (msg.data_length_code < (uint8_t)RoverCanLib::Constant::eDataIndex::START_OF_DATA + 1u)
                 {
@@ -485,7 +486,7 @@ namespace RoverCanLib
             this->sendMsg(&_errorStateMsg, false);
         }
     }
-}
+}  // namespace RoverCanLib
 
-#endif // !defined(ESP32)
-#endif // __CAN_BUS_MANAGER_HPP__
+#endif  // !defined(ESP32)
+#endif  // __CAN_BUS_MANAGER_HPP__

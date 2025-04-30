@@ -7,9 +7,12 @@
 
 class WT901
 {
-public:
-    WT901(gpio_num_t RX_pin_, gpio_num_t TX_pin_)
-        : _RX_pin{RX_pin_}, _TX_pin{TX_pin_} {}
+  public:
+    WT901(gpio_num_t RX_pin_, gpio_num_t TX_pin_):
+        _RX_pin{RX_pin_},
+        _TX_pin{TX_pin_}
+    {
+    }
 
     void init()
     {
@@ -34,11 +37,20 @@ public:
         }
     }
 
-    float getRoll() const { return _roll; }
-    float getPitch() const { return _pitch; }
-    float getYaw() const { return _yaw; }
+    float getRoll() const
+    {
+        return _roll;
+    }
+    float getPitch() const
+    {
+        return _pitch;
+    }
+    float getYaw() const
+    {
+        return _yaw;
+    }
 
-private:
+  private:
     static constexpr uint8_t BUFFER_SIZE = 11;
     uint8_t _bufferIndex = 0;
     uint8_t _buffer[BUFFER_SIZE];
@@ -78,4 +90,4 @@ private:
     }
 };
 
-#endif // _WT901_HPP_
+#endif  // _WT901_HPP_

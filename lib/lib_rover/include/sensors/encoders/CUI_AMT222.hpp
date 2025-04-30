@@ -17,7 +17,7 @@
 
 class CUI_AMT222 : public Encoder
 {
-public:
+  public:
     static constexpr uint16_t INVALID_POSITION = 0xFFFF;
     static constexpr uint8_t REG_START = 0x00;
     static constexpr uint8_t REG_READ_SINGLE = 0x00;
@@ -36,8 +36,11 @@ public:
     /// @brief Constructor
     /// @param spiBus_ Must call SPI*.begin() before passing to encoder
     /// @param pinCs_ Chip select low pin
-    CUI_AMT222(SPIClass *spiBus_, gpio_num_t pinCs_, bool reverse_ = false, eEncoderType encoderType_ = eEncoderType::ABSOLUTE_SINGLE_TURN);
-    ~CUI_AMT222() {};
+    CUI_AMT222(SPIClass* spiBus_,
+               gpio_num_t pinCs_,
+               bool reverse_ = false,
+               eEncoderType encoderType_ = eEncoderType::ABSOLUTE_SINGLE_TURN);
+    ~CUI_AMT222(){};
     void init(void);
     void updateInternal(void);
     float getPositionInternal(bool raw_ = false);
@@ -45,8 +48,8 @@ public:
     void calib(float zeroPosition_ = 0.0f, bool fromEEPROM = false);
     void reset(void);
 
-private:
-    SPIClass *_pSpiBus = NULL;
+  private:
+    SPIClass* _pSpiBus = NULL;
     gpio_num_t _pinCs = GPIO_NUM_NC;
     eEncoderType _encoderType;
     float _positionCalibOffset = 0.0f;
@@ -67,7 +70,8 @@ private:
     bool validateChecksum(uint16_t positionRaw);
 };
 
-CUI_AMT222::CUI_AMT222(SPIClass *spiBus_, gpio_num_t pinCs_, bool reverse_, eEncoderType encoderType_) : Encoder(reverse_)
+CUI_AMT222::CUI_AMT222(SPIClass* spiBus_, gpio_num_t pinCs_, bool reverse_, eEncoderType encoderType_):
+    Encoder(reverse_)
 {
     ASSERT(spiBus_ == NULL);
     _pSpiBus = spiBus_;
@@ -99,7 +103,8 @@ void CUI_AMT222::updateInternal(void)
 
     if (_timerSpeedCalc.isDone())
     {
-        _currentSpeed = _speedAvg.addValue((_lastPosition - _currentPosition) / ((float)_chronoSpeedCalc.getTime() / 1'000'000.0f));
+        _currentSpeed
+            = _speedAvg.addValue((_lastPosition - _currentPosition) / ((float)_chronoSpeedCalc.getTime() / 1'000'000.0f));
         _chronoSpeedCalc.restart();
         _lastPosition = _currentPosition;
     }
@@ -268,9 +273,9 @@ bool CUI_AMT222::validateChecksum(uint16_t data)
         bits[i] = (0x01) & (data >> (i));
     }
 
-    return ((bits[15] == !(bits[13] ^ bits[11] ^ bits[9] ^ bits[7] ^ bits[5] ^ bits[3] ^ bits[1])) &&
-            (bits[14] == !(bits[12] ^ bits[10] ^ bits[8] ^ bits[6] ^ bits[4] ^ bits[2] ^ bits[0])));
+    return ((bits[15] == !(bits[13] ^ bits[11] ^ bits[9] ^ bits[7] ^ bits[5] ^ bits[3] ^ bits[1]))
+            && (bits[14] == !(bits[12] ^ bits[10] ^ bits[8] ^ bits[6] ^ bits[4] ^ bits[2] ^ bits[0])));
 }
 
-#endif // !defined(ESP32)
-#endif // __CUI_AMT222A_V_HPP__
+#endif  // !defined(ESP32)
+#endif  // __CUI_AMT222A_V_HPP__

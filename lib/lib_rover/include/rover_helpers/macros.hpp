@@ -96,39 +96,40 @@
 #define OUT
 #define INOUT
 
-#define MAP(x, in_min, in_max, out_min, out_max) \
-    (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) + (float)(out_min))
+#define MAP(x, in_min, in_max, out_min, out_max)                                                                  \
+    (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) \
+     + (float)(out_min))
 
 #define IN_ERROR(VAR, ERROR, GOAL) ((abs(VAR) < (abs(GOAL) + ERROR) && abs(VAR) > (abs(GOAL) - ERROR)))
 
-// Removes unused argument warning 
+// Removes unused argument warning
 #define REMOVE_UNUSED(x) (void)(x)
 
 // Return specified angle value in the range set, default [0.0f and TWO_PI]
 static constexpr float CONSTRAIN_ANGLE(float angle, float rangeMin_ = -PI, float rangeMax_ = PI)
 {
-    while(angle < rangeMin_)
+    while (angle < rangeMin_)
     {
         angle += TWO_PI;
     }
 
-    while(angle > rangeMax_)
+    while (angle > rangeMax_)
     {
         angle -= TWO_PI;
     }
 
     return angle;
-} 
+}
 
 // Return specified angle value in the range set, default [0.0f and 360.0f]
 static constexpr float CONSTRAIN_ANGLE_DEG(float angle, float rangeMin_ = 0.0f, float rangeMax_ = 360.0f)
 {
-    while(angle < rangeMin_)
+    while (angle < rangeMin_)
     {
         angle += 360.0f;
     }
 
-    while(angle > rangeMax_)
+    while (angle > rangeMax_)
     {
         angle -= 360.0f;
     }
@@ -136,4 +137,4 @@ static constexpr float CONSTRAIN_ANGLE_DEG(float angle, float rangeMin_ = 0.0f, 
     return angle;
 }
 
-#endif // __MACROS_HPP__
+#endif  // __MACROS_HPP__
