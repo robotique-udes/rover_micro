@@ -49,6 +49,6 @@ jobs:
             git diff
             echo ""
             echo ""
-            echo -e "\e[0;31m=== [FAILED] Run rover_micro/scripts/lint-apply.sh to fix formatting ===\e[0m"
+            echo -e "\e[0;31m=== [FAILED] Run scripts/lint-apply.sh to fix formatting ===\e[0m"
             exit 1
           fi
