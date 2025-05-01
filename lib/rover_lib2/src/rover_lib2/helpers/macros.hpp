@@ -141,4 +141,26 @@ constexpr T ROUND_DOWN(T value_)
     (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) \
      + (float)(out_min))
 
+constexpr double SIN(double x)
+{
+#warning TODO Test
+    x = std::remainder(x, 2.0 * std::numbers::pi);
+    if (x < -std::numbers::pi)
+    {
+        x += 2.0 * std::numbers::pi;
+    }
+
+    if (x > std::numbers::pi)
+    {
+        x -= 2.0 * std::numbers::pi;
+    }
+
+    const double x2 = x * x;
+    const double x3 = x * x2;
+    const double x5 = x3 * x2;
+    const double x7 = x5 * x2;
+
+    return x - x3 / 6.0 + x5 / 120.0 - x7 / 5040.0;
+}
+
 #endif  // MACROS_HPP
