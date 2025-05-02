@@ -35,14 +35,14 @@
 
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_NC;
 
-constexpr gpio_num_t PIN_PHASE_A_EN = GPIO_NUM_8;
-constexpr gpio_num_t PIN_PHASE_A_PWM = GPIO_NUM_7;
+constexpr gpio_num_t PIN_PHASE_A_PWM = GPIO_NUM_11;
+constexpr gpio_num_t PIN_PHASE_A_EN = GPIO_NUM_12;
 
-constexpr gpio_num_t PIN_PHASE_B_EN = GPIO_NUM_10;
 constexpr gpio_num_t PIN_PHASE_B_PWM = GPIO_NUM_9;
+constexpr gpio_num_t PIN_PHASE_B_EN = GPIO_NUM_10;
 
-constexpr gpio_num_t PIN_PHASE_C_EN = GPIO_NUM_12;
-constexpr gpio_num_t PIN_PHASE_C_PWM = GPIO_NUM_11;
+constexpr gpio_num_t PIN_PHASE_C_PWM = GPIO_NUM_7;
+constexpr gpio_num_t PIN_PHASE_C_EN = GPIO_NUM_8;
 
 constexpr std::array FIXED_SINE_TABLE = {
     0.500000F, 0.508726F, 0.517450F, 0.526168F, 0.534878F, 0.543578F, 0.552264F, 0.560935F, 0.569587F, 0.578217F, 0.586824F,
@@ -116,38 +116,45 @@ void setup(void)
 
     LED::LedBlinkerSoft led = LED::LedBlinkerSoft(IO::DigitalOutput(PIN_USER_LED), LED::BlinkPatterns::HEARTBEAT, 10);
 
-    LoopTimer<uint64_t, Time::micros> timerCoilUpdate(500);
-
     size_t currentIndex = 0;
     LOG_INFO(Logger::Nodes::Main, "Init done, starting loop!");
+    OneShotTimer<uint64_t, Time::millis> timerRun(3'000ULL);
+    LoopTimer<uint64_t, Time::micros> timerCoilUpdate((1'000'000ULL / (360ULL * 7ULL)) / 5);
     for (EVER)
     {
-        FIXED_SINE_TABLE.size();
-        if (timerCoilUpdate.isReady())
+        if (timerRun.isReady())
+        {
+            phaseA.setDutyCycle(0.0F);
+            phaseB.setDutyCycle(0.0F);
+            phaseC.setDutyCycle(0.0F);
+
+            while (true)
+                ;
+        }
+        else if (timerCoilUpdate.isReady())
         {
             size_t indexPhaseA = currentIndex;
             size_t indexPhaseB = currentIndex + 120;
             size_t indexPhaseC = currentIndex + 240;
 
-            while (indexPhaseA > FIXED_SINE_TABLE.size())
+            while (indexPhaseA >= FIXED_SINE_TABLE.size())
             {
                 indexPhaseA -= FIXED_SINE_TABLE.size();
             }
 
-            while (indexPhaseB > FIXED_SINE_TABLE.size())
+            while (indexPhaseB >= FIXED_SINE_TABLE.size())
             {
                 indexPhaseB -= FIXED_SINE_TABLE.size();
             }
 
-            while (indexPhaseC > FIXED_SINE_TABLE.size())
+            while (indexPhaseC >= FIXED_SINE_TABLE.size())
             {
                 indexPhaseC -= FIXED_SINE_TABLE.size();
             }
 
-            phaseA.setDutyCycle(FIXED_SINE_TABLE[indexPhaseA] * 20.0F);  
-            phaseB.setDutyCycle(FIXED_SINE_TABLE[indexPhaseB] * 20.0F);
-            phaseC.setDutyCycle(FIXED_SINE_TABLE[indexPhaseC] * 20.0F);
-
+            phaseA.setDutyCycle(FIXED_SINE_TABLE[indexPhaseA] * 100.0F);
+            phaseB.setDutyCycle(FIXED_SINE_TABLE[indexPhaseB] * 100.0F);
+            phaseC.setDutyCycle(FIXED_SINE_TABLE[indexPhaseC] * 100.0F);
 
             // LOG_INFO(Logger::Nodes::Main,
             //          "A: %f, B: %f, C: %f",
@@ -155,7 +162,7 @@ void setup(void)
             //          phaseB.getDutyCycle(),
             //          phaseC.getDutyCycle());
 
-            if (currentIndex++ >= FIXED_SINE_TABLE.size())
+            if ((currentIndex += 1) >= FIXED_SINE_TABLE.size())
             {
                 currentIndex = 0;
             }
