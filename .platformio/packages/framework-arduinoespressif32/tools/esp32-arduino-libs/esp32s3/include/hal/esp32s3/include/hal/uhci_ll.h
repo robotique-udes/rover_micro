@@ -1,25 +1,17 @@
-// Copyright 2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2020-2024 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 // The LL layer for UHCI register operations.
 // Note that most of the register operations in this layer are non-atomic operations.
-
 
 #pragma once
 #include <stdio.h>
 #include "hal/uhci_types.h"
 #include "soc/uhci_struct.h"
+#include "soc/system_struct.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +26,38 @@ typedef enum {
     UHCI_RX_EOF_MAX       = 0x7,
 } uhci_rxeof_cfg_t;
 
+/**
+ * @brief Enable the bus clock for UHCI module
+ *
+ * @param group_id Group ID
+ * @param enable true to enable, false to disable
+ */
+static inline void _uhci_ll_enable_bus_clock(int group_id, bool enable)
+{
+    (void)group_id;
+    SYSTEM.perip_clk_en0.uhci0_clk_en = enable;
+}
+
+/// use a macro to wrap the function, force the caller to use it in a critical section
+/// the critical section needs to declare the __DECLARE_RCC_ATOMIC_ENV variable in advance
+#define uhci_ll_enable_bus_clock(...) (void)__DECLARE_RCC_ATOMIC_ENV; _uhci_ll_enable_bus_clock(__VA_ARGS__)
+
+/**
+ * @brief Reset the UHCI module
+ *
+ * @param group_id Group ID
+ */
+static inline void _uhci_ll_reset_register(int group_id)
+{
+    (void)group_id;
+    SYSTEM.perip_rst_en0.uhci0_rst = 1;
+    SYSTEM.perip_rst_en0.uhci0_rst = 0;
+}
+
+/// use a macro to wrap the function, force the caller to use it in a critical section
+/// the critical section needs to declare the __DECLARE_RCC_ATOMIC_ENV variable in advance
+#define uhci_ll_reset_register(...) (void)__DECLARE_RCC_ATOMIC_ENV; _uhci_ll_reset_register(__VA_ARGS__)
+
 static inline void uhci_ll_init(uhci_dev_t *hw)
 {
     typeof(hw->conf0) conf0_reg;
@@ -46,15 +70,17 @@ static inline void uhci_ll_init(uhci_dev_t *hw)
 
 static inline void uhci_ll_attach_uart_port(uhci_dev_t *hw, int uart_num)
 {
-    hw->conf0.uart0_ce = (uart_num == 0)? 1: 0;
-    hw->conf0.uart1_ce = (uart_num == 1)? 1: 0;
-    hw->conf0.uart2_ce = (uart_num == 2)? 1: 0;
+    hw->conf0.uart0_ce = (uart_num == 0) ? 1 : 0;
+    hw->conf0.uart1_ce = (uart_num == 1) ? 1 : 0;
+    hw->conf0.uart2_ce = (uart_num == 2) ? 1 : 0;
 }
 
 static inline void uhci_ll_set_seper_chr(uhci_dev_t *hw, uhci_seper_chr_t *seper_char)
 {
     if (seper_char->sub_chr_en) {
-        typeof(hw->esc_conf0) esc_conf0_reg = hw->esc_conf0;
+        typeof(hw->esc_conf0) esc_conf0_reg;
+        esc_conf0_reg.val = hw->esc_conf0.val;
+
         esc_conf0_reg.seper_char = seper_char->seper_chr;
         esc_conf0_reg.seper_esc_char0 = seper_char->sub_chr1;
         esc_conf0_reg.seper_esc_char1 = seper_char->sub_chr2;
@@ -75,10 +101,15 @@ static inline void uhci_ll_get_seper_chr(uhci_dev_t *hw, uhci_seper_chr_t *seper
 
 static inline void uhci_ll_set_swflow_ctrl_sub_chr(uhci_dev_t *hw, uhci_swflow_ctrl_sub_chr_t *sub_ctr)
 {
-    typeof(hw->escape_conf) escape_conf_reg = hw->escape_conf;
+    typeof(hw->escape_conf) escape_conf_reg;
+    escape_conf_reg.val = hw->escape_conf.val;
+
     if (sub_ctr->flow_en == 1) {
-        typeof(hw->esc_conf2) esc_conf2_reg = hw->esc_conf2;
-        typeof(hw->esc_conf3) esc_conf3_reg = hw->esc_conf3;
+        typeof(hw->esc_conf2) esc_conf2_reg;
+        esc_conf2_reg.val = hw->esc_conf2.val;
+        typeof(hw->esc_conf3) esc_conf3_reg;
+        esc_conf3_reg.val = hw->esc_conf3.val;
+
         esc_conf2_reg.seq1 = sub_ctr->xon_chr;
         esc_conf2_reg.seq1_char0 = sub_ctr->xon_sub1;
         esc_conf2_reg.seq1_char1 = sub_ctr->xon_sub2;
@@ -119,7 +150,6 @@ static inline uint32_t uhci_ll_get_intr(uhci_dev_t *hw)
 {
     return hw->int_st.val;
 }
-
 
 static inline void uhci_ll_set_eof_mode(uhci_dev_t *hw, uint32_t eof_mode)
 {

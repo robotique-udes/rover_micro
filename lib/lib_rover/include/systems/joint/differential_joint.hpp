@@ -16,8 +16,8 @@
 
 class DifferentialJoint
 {
-public:
-    DifferentialJoint(Joint *jointA_, Joint *jointB_, Joint::eControlMode controlMode_)
+  public:
+    DifferentialJoint(Joint* jointA_, Joint* jointB_, Joint::eControlMode controlMode_)
     {
         ASSERT(jointA_ == NULL || jointB_ == NULL, "Joints pointer aren't optionnal");
         _jointA = jointA_;
@@ -82,7 +82,8 @@ public:
 
     void printDebugInfo()
     {
-        LOG(DEBUG, "Current UP|DOWN: %f, GOAL UP|DOWN: %f, Current ROT: %f, Goal ROT: %f",
+        LOG(DEBUG,
+            "Current UP|DOWN: %f, GOAL UP|DOWN: %f, Current ROT: %f, Goal ROT: %f",
             _currentPosUpDown,
             _goalPosUpDown,
             _currentPosRot,
@@ -102,8 +103,8 @@ public:
         float deltaPosUpDown = _goalPosUpDown - _currentPosUpDown;
         float deltaPosRot = _goalPosRot - _currentPosRot;
 
-        _jointA->setPosition(_jointA->getPosition() + deltaPosUpDown - deltaPosRot/2.0f);
-        _jointB->setPosition(_jointB->getPosition() + deltaPosUpDown + deltaPosRot/2.0f);
+        _jointA->setPosition(_jointA->getPosition() + deltaPosUpDown - deltaPosRot / 2.0f);
+        _jointB->setPosition(_jointB->getPosition() + deltaPosUpDown + deltaPosRot / 2.0f);
     }
 
     void setControlMode(Joint::eControlMode newControlMode_)
@@ -140,12 +141,12 @@ public:
         {
             LOG(WARN, "Warning renabling joint limits on Rotation but some are at initial values and might have been set...");
         }
-        
+
         _withJointLimitUpDown = true;
         _withJointLimitRot = true;
     }
 
-    void applyJointLimits(float *newPosUpDown_, float *newPosRot_)
+    void applyJointLimits(float* newPosUpDown_, float* newPosRot_)
     {
         if (_withJointLimitUpDown)
         {
@@ -158,9 +159,9 @@ public:
         }
     };
 
-private:
-    Joint *_jointA = NULL;
-    Joint *_jointB = NULL;
+  private:
+    Joint* _jointA = NULL;
+    Joint* _jointB = NULL;
 
     Joint::eControlMode _controlMode = Joint::eControlMode::POSITION;
 
@@ -182,5 +183,5 @@ private:
     float _jointlimitRotMax = 0.0f;
 };
 
-#endif // !defined(ESP32)
-#endif // __DIFFERENTIAL_JOINT_HPP__
+#endif  // !defined(ESP32)
+#endif  // __DIFFERENTIAL_JOINT_HPP__

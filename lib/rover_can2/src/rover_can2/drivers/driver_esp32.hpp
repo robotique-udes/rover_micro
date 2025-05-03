@@ -26,6 +26,7 @@ namespace RoverCan2::Drivers
         static constexpr twai_filter_config_t TWAI_ID_FILTER = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
         static constexpr TickType_t MESSAGE_RECV_TIMEOUT = 0U;  // Doesn't wait if no msg available
+        static constexpr uint16_t DEFAULT_TX_QUEUE_LENGTH = 5UL;
 
         static constexpr size_t CAN_DATA_LENGTH = TWAI_FRAME_MAX_DLC;
         static_assert(Constant::CAN_MAX_DATA_LENGTH == CAN_DATA_LENGTH);
@@ -40,9 +41,13 @@ namespace RoverCan2::Drivers
         };
 
       public:
-        DriverESP32(gpio_num_t ioRx_, gpio_num_t ioTx_, LedBlinkerT_* led_ = nullptr):
+        DriverESP32(gpio_num_t ioRx_,
+                    gpio_num_t ioTx_,
+                    LedBlinkerT_* led_ = nullptr,
+                    uint16_t txQueueLength_ = DEFAULT_TX_QUEUE_LENGTH):
             _ioRx(ioRx_),
             _ioTx(ioTx_),
+            _txQueueLength(static_cast<uint32_t>(txQueueLength_)),
             _state(eState::UNINSTALLED),
             _led(led_),
             _recvWatchdog(2ULL * 1'000ULL / static_cast<uint64_t>(Constant::MASTER_HEARTBEAT_RATE_HZ))
@@ -118,7 +123,7 @@ namespace RoverCan2::Drivers
             twaiMsg.ss = 0U;            // Not single shot, retry if bus not ready
             twaiMsg.self = 0U;          // Echo mode off
             twaiMsg.dlc_non_comp = 0U;  // Classic frames
-            twaiMsg.data_length_code = canMsg_.dataLength + TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA);
+            twaiMsg.data_length_code = canMsg_.dataLength;
 
             if (twaiMsg.data_length_code > Constant::CAN_MAX_DATA_LENGTH)
             {
@@ -224,7 +229,7 @@ namespace RoverCan2::Drivers
                         break;
 
                     case ESP_ERR_INVALID_ARG:
-                        ASSERT(
+                        ASSERT_MSG(
                             "In recovery handling, can't get current twai state with specified arguments. Implementation error");
                         break;
                     case ESP_ERR_INVALID_STATE:
@@ -270,6 +275,7 @@ namespace RoverCan2::Drivers
         void installDriver(void)
         {
             twai_general_config_t genConfig = TWAI_GENERAL_CONFIG_DEFAULT(_ioTx, _ioRx, TWAI_MODE);
+            genConfig.tx_queue_len = _txQueueLength;
             twai_timing_config_t timingConfig = CAN_SPEED_CONFIG;
             twai_filter_config_t IDFilterConfig = TWAI_ID_FILTER;
 
@@ -291,15 +297,15 @@ namespace RoverCan2::Drivers
                              TO_UNDERLYING(_state));
                     break;
                 case ESP_ERR_INVALID_ARG:
-                    ASSERT("Can't install twai driver with specified arguments");
+                    ASSERT_MSG("Can't install twai driver with specified arguments");
                     _state = eState::UNINSTALLED;
                     break;
                 case ESP_ERR_NO_MEM:
-                    ASSERT("Can't install twai driver... no more memory");
+                    ASSERT_MSG("Can't install twai driver... no more memory");
                     _state = eState::UNINSTALLED;
                     break;
                 default:
-                    ASSERT("Can't install twai driver... Unknown error: %d", successCode);
+                    ASSERT_MSG_ARGS("Can't install twai driver... Unknown error: %d", successCode);
                     _state = eState::UNINSTALLED;
                     break;
             }
@@ -318,7 +324,7 @@ namespace RoverCan2::Drivers
                     LOG_WARN(Logger::Nodes::DriverESP32, "Can't install twai driver in current state %u", TO_UNDERLYING(_state));
                     break;
                 default:
-                    ASSERT("Can't start twai driver... Unknown error: %d", successCode);
+                    ASSERT_MSG_ARGS("Can't start twai driver... Unknown error: %d", successCode);
                     break;
             }
         }
@@ -340,7 +346,7 @@ namespace RoverCan2::Drivers
                     _state = eState::INVALID_STATE;
                     return;
                 case ESP_ERR_INVALID_ARG:
-                    ASSERT("Invalid arguments, implementation error");
+                    ASSERT_MSG("Invalid arguments, implementation error");
                     _state = eState::UNINSTALLED;
                     return;
             }
@@ -395,6 +401,7 @@ namespace RoverCan2::Drivers
 
         const gpio_num_t _ioRx;
         const gpio_num_t _ioTx;
+        const uint32_t _txQueueLength;
 
         eState _state;
         LedBlinkerT_* const _led;

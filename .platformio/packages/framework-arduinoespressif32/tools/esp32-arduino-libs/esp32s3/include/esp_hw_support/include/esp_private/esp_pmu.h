@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2019-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2019-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,13 +13,27 @@
 
 #include "soc/soc_caps.h"
 
+#if SOC_PMU_SUPPORTED
+#include "hal/pmu_hal.h"
+#include "pmu_param.h"
+#include "pmu_bit_defs.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * @brief PMU ICG modem code of HP system
+ * @note  This type is required in rtc_clk_init.c when PMU not fully supported
+ */
+typedef enum {
+    PMU_HP_ICG_MODEM_CODE_SLEEP = 0,
+    PMU_HP_ICG_MODEM_CODE_MODEM = 1,
+    PMU_HP_ICG_MODEM_CODE_ACTIVE = 2,
+} pmu_hp_icg_modem_mode_t;
+
 #if SOC_PMU_SUPPORTED
-#include "hal/pmu_hal.h"
-#include "pmu_param.h"
 
 #define RTC_SLEEP_PD_DIG                PMU_SLEEP_PD_TOP        //!< Deep sleep (power down digital domain, includes all power domains
                                                                 //   except CPU, Modem, LP peripheral, AON，VDDSDIO, MEM and clock power domains)
@@ -37,7 +51,7 @@ extern "C" {
 #define RTC_SLEEP_NO_ULTRA_LOW          BIT(18) //!< Avoid using ultra low power in deep sleep, in which RTCIO cannot be used as input, and RTCMEM can't work under high temperature
 
 #if SOC_PM_SUPPORT_EXT0_WAKEUP
-#define RTC_EXT0_TRIG_EN            PMU_EXT0_WAKEUP_EN                       //!< EXT0 wakeup
+#define RTC_EXT0_TRIG_EN            PMU_EXT0_WAKEUP_EN      //!< EXT0 wakeup
 #else
 #define RTC_EXT0_TRIG_EN            0
 #endif
@@ -48,7 +62,11 @@ extern "C" {
 #define RTC_EXT1_TRIG_EN            0
 #endif
 
-#define RTC_GPIO_TRIG_EN            PMU_GPIO_WAKEUP_EN      //!< GPIO wakeup
+#if SOC_LP_IO_HAS_INDEPENDENT_WAKEUP_SOURCE
+#define RTC_GPIO_TRIG_EN            (PMU_GPIO_WAKEUP_EN | PMU_LP_GPIO_WAKEUP_EN)      //!< GPIO & LP_GPIO wakeup
+#else
+#define RTC_GPIO_TRIG_EN            (PMU_GPIO_WAKEUP_EN)
+#endif
 
 #if SOC_LP_TIMER_SUPPORTED
 #define RTC_TIMER_TRIG_EN           PMU_LP_TIMER_WAKEUP_EN  //!< Timer wakeup
@@ -76,6 +94,12 @@ extern "C" {
 #define RTC_BT_TRIG_EN              0
 #endif
 
+#if SOC_TOUCH_SENSOR_SUPPORTED
+#define RTC_TOUCH_TRIG_EN           PMU_TOUCH_WAKEUP_EN     //!< TOUCH wakeup
+#else
+#define RTC_TOUCH_TRIG_EN           0
+#endif
+
 #define RTC_USB_TRIG_EN             PMU_USB_WAKEUP_EN
 
 #if SOC_LP_CORE_SUPPORTED
@@ -99,29 +123,10 @@ extern "C" {
                                RTC_UART1_TRIG_EN        | \
                                RTC_BT_TRIG_EN           | \
                                RTC_LP_CORE_TRIG_EN      | \
+                               RTC_TOUCH_TRIG_EN        | \
                                RTC_XTAL32K_DEAD_TRIG_EN | \
                                RTC_USB_TRIG_EN          | \
                                RTC_BROWNOUT_DET_TRIG_EN)
-
-#if SOC_PM_SUPPORT_EXT0_WAKEUP
-#define PMU_EXT0_WAKEUP_EN          BIT(0)
-#endif
-#if SOC_PM_SUPPORT_EXT1_WAKEUP
-#define PMU_EXT1_WAKEUP_EN          BIT(1)
-#endif
-
-#define PMU_GPIO_WAKEUP_EN          BIT(2)
-#define PMU_WIFI_BEACON_WAKEUP_EN   BIT(3)
-#define PMU_LP_TIMER_WAKEUP_EN      BIT(4)
-#define PMU_WIFI_SOC_WAKEUP_EN      BIT(5)
-#define PMU_UART0_WAKEUP_EN         BIT(6)
-#define PMU_UART1_WAKEUP_EN         BIT(7)
-#define PMU_SDIO_WAKEUP_EN          BIT(8)
-#define PMU_BLE_SOC_WAKEUP_EN       BIT(10)
-#if SOC_LP_CORE_SUPPORTED
-#define PMU_LP_CORE_WAKEUP_EN       BIT(11)
-#endif //SOC_LP_CORE_SUPPORTED
-#define PMU_USB_WAKEUP_EN           BIT(14)
 
 
 #define PMU_SLEEP_PD_TOP            BIT(0)
@@ -144,6 +149,10 @@ extern "C" {
 #define PMU_SLEEP_PD_XTAL32K        BIT(12)
 #define PMU_SLEEP_PD_RC32K          BIT(13)
 #define PMU_SLEEP_PD_LP_PERIPH      BIT(14)
+
+#if SOC_PM_SUPPORT_CNNT_PD
+#define PMU_SLEEP_PD_CNNT           BIT(15)
+#endif
 
 typedef struct {
     pmu_hal_context_t *hal;
@@ -174,16 +183,6 @@ typedef enum pmu_sleep_regdma_entry {
 } pmu_sleep_regdma_entry_t;
 
 /**
- * @brief PMU ICG modem code of HP system
- */
-typedef enum {
-    PMU_HP_ICG_MODEM_CODE_SLEEP = 0,
-    PMU_HP_ICG_MODEM_CODE_MODEM = 1,
-    PMU_HP_ICG_MODEM_CODE_ACTIVE = 2,
-} pmu_hp_icg_modem_mode_t;
-
-
-/**
   * @brief  Enable_regdma_backup.
   */
 void pmu_sleep_enable_regdma_backup(void);
@@ -199,6 +198,28 @@ void pmu_sleep_disable_regdma_backup(void);
  * @return true if PLL is enabled by PMU in modem state
  */
 bool pmu_sleep_pll_already_enabled(void);
+
+/**
+ * @brief Calculate the LP system hardware time overhead during sleep
+ *
+ * @param pd_flags flags indicates the power domain that will be powered down
+ * @param slowclk_period re-calibrated slow clock period
+ * @param fastclk_period re-calibrated fast clock period
+ *
+ * @return hardware time overhead in us
+ */
+uint32_t pmu_sleep_calculate_lp_hw_wait_time(uint32_t pd_flags, uint32_t slowclk_period, uint32_t fastclk_period);
+
+/**
+ * @brief Calculate the HP system hardware time overhead during sleep
+ *
+ * @param pd_flags flags indicates the power domain that will be powered down
+ * @param slowclk_period re-calibrated slow clock period
+ * @param fastclk_period re-calibrated fast clock period
+ *
+ * @return hardware time overhead in us
+ */
+uint32_t pmu_sleep_calculate_hp_hw_wait_time(uint32_t pd_flags, uint32_t slowclk_period, uint32_t fastclk_period);
 
 /**
  * @brief Calculate the hardware time overhead during sleep to compensate for sleep time
@@ -243,6 +264,20 @@ const pmu_sleep_config_t* pmu_sleep_config_default(pmu_sleep_config_t *config, u
  */
 void pmu_sleep_init(const pmu_sleep_config_t *config, bool dslp);
 
+#if SOC_DCDC_SUPPORTED
+/**
+ * @brief Increase hp_ldo voltage, in preparation for taking over the power supply from DCDC
+ */
+void pmu_sleep_increase_ldo_volt(void);
+
+/**
+ * @brief LDO has taken over power supply, shut down DCDC to save power consumption and goto sleep
+ *        and after shutdown the DCDC, it is also necessary to decrease the LDO voltage to save
+ *        power in the sleep and wake-up processes.
+ */
+void pmu_sleep_shutdown_dcdc(void);
+#endif // SOC_DCDC_SUPPORTED
+
 /**
  * @brief Enter deep or light sleep mode
  *
@@ -273,9 +308,10 @@ uint32_t pmu_sleep_start(uint32_t wakeup_opt, uint32_t reject_opt, uint32_t lslp
 
 /**
  * @brief   Finish sleep process settings and get sleep reject status
+ * @param   dslp True if sleep requests id deep-sleep
  * @return  return sleep reject status
  */
-bool pmu_sleep_finish(void);
+bool pmu_sleep_finish(bool dslp);
 
 /**
  * @brief Initialize PMU related power/clock/digital parameters and functions

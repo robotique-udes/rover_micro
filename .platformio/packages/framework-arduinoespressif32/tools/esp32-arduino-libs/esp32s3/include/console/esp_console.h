@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2016-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2016-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -11,7 +11,9 @@ extern "C" {
 
 #include <stddef.h>
 #include "sdkconfig.h"
+#include "esp_heap_caps.h"
 #include "esp_err.h"
+#include "freertos/FreeRTOS.h"
 
 // Forward declaration. Definition in linenoise/linenoise.h.
 typedef struct linenoiseCompletions linenoiseCompletions;
@@ -22,6 +24,7 @@ typedef struct linenoiseCompletions linenoiseCompletions;
 typedef struct {
     size_t max_cmdline_length;  //!< length of command line buffer, in bytes
     size_t max_cmdline_args;    //!< maximum number of command line arguments to parse
+    uint32_t heap_alloc_caps;   //!< where to (e.g. MALLOC_CAP_SPIRAM) allocate heap objects such as cmds used by esp_console
     int hint_color;             //!< ASCII color code of hint text
     int hint_bold;              //!< Set to 1 to print hint text in bold
 } esp_console_config_t;
@@ -30,12 +33,13 @@ typedef struct {
  * @brief Default console configuration value
  *
  */
-#define ESP_CONSOLE_CONFIG_DEFAULT() \
-    {                                \
-        .max_cmdline_length = 256,   \
-        .max_cmdline_args = 32,      \
-        .hint_color = 39,            \
-        .hint_bold = 0               \
+#define ESP_CONSOLE_CONFIG_DEFAULT()           \
+    {                                          \
+        .max_cmdline_length = 256,             \
+        .max_cmdline_args = 32,                \
+        .heap_alloc_caps = MALLOC_CAP_DEFAULT, \
+        .hint_color = 39,                      \
+        .hint_bold = 0                         \
     }
 
 /**
@@ -47,6 +51,7 @@ typedef struct {
     const char *history_save_path; //!< file path used to save history commands, set to NULL won't save to file system
     uint32_t task_stack_size;      //!< repl task stack size
     uint32_t task_priority;        //!< repl task priority
+    BaseType_t task_core_id;       //!< repl task affinity, i.e. which core the task is pinned to
     const char *prompt;            //!< prompt (NULL represents default: "esp> ")
     size_t max_cmdline_length;     //!< maximum length of a command line. If 0, default value will be used
 } esp_console_repl_config_t;
@@ -61,6 +66,7 @@ typedef struct {
         .history_save_path = NULL,        \
         .task_stack_size = 4096,          \
         .task_priority = 2,               \
+        .task_core_id = tskNO_AFFINITY,   \
         .prompt = NULL,                   \
         .max_cmdline_length = 0,          \
 }
@@ -154,6 +160,15 @@ esp_err_t esp_console_deinit(void);
 typedef int (*esp_console_cmd_func_t)(int argc, char **argv);
 
 /**
+ * @brief Console command main function, with context
+ * @param context a user context given at invocation
+ * @param argc number of arguments
+ * @param argv array with argc entries, each pointing to a zero-terminated string argument
+ * @return console command return code, 0 indicates "success"
+ */
+typedef int (*esp_console_cmd_func_with_context_t)(void *context, int argc, char **argv);
+
+/**
  * @brief Console command description
  */
 typedef struct {
@@ -176,6 +191,7 @@ typedef struct {
     const char *hint;
     /**
      * Pointer to a function which implements the command.
+     * @note: Setting both \c func and \c func_w_context is not allowed.
      */
     esp_console_cmd_func_t func;
     /**
@@ -185,15 +201,31 @@ typedef struct {
      * Only used for the duration of esp_console_cmd_register call.
      */
     void *argtable;
+    /**
+     * Pointer to a context aware function which implements the command.
+     * @note: Setting both \c func and \c func_w_context is not allowed.
+     */
+    esp_console_cmd_func_with_context_t func_w_context;
+    /**
+     * Context pointer to user-defined per-command context data.
+     * This is used if context aware function \c func_w_context is set.
+     */
+    void *context;
 } esp_console_cmd_t;
 
 /**
  * @brief Register console command
  * @param cmd pointer to the command description; can point to a temporary value
+ *
+ * @note If the member \c func_w_context of cmd is set instead of func, then the member \c context
+ *       is passed to the function pointed to by \c func_w_context.
+ *
  * @return
  *      - ESP_OK on success
  *      - ESP_ERR_NO_MEM if out of memory
  *      - ESP_ERR_INVALID_ARG if command description includes invalid arguments
+ *      - ESP_ERR_INVALID_ARG if both func and func_w_context members of cmd are non-NULL
+ *      - ESP_ERR_INVALID_ARG if both func and func_w_context members of cmd are NULL
  */
 esp_err_t esp_console_cmd_register(const esp_console_cmd_t *cmd);
 
@@ -272,7 +304,9 @@ const char *esp_console_get_hint(const char *buf, int *color, int *bold);
  * @brief Register a 'help' command
  *
  * Default 'help' command prints the list of registered commands along with
- * hints and help strings.
+ * hints and help strings if no additional argument is given. If an additional
+ * argument is given, the help command will look for a command with the same
+ * name and only print the hints and help strings of that command.
  *
  * @return
  *      - ESP_OK on success

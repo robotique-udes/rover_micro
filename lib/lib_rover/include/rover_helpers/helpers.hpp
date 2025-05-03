@@ -14,4 +14,4 @@
 #include "rover_helpers/moving_average.hpp"
 #include "rover_helpers/chrono.hpp"
 
-#endif // __HELPER_HPP__
+#endif  // __HELPER_HPP__

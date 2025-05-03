@@ -12,6 +12,10 @@
 #include "soc/clk_tree_defs.h"
 #include "esp_attr.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief ADC unit
  */
@@ -86,6 +90,9 @@ typedef soc_periph_adc_digi_clk_src_t    adc_continuous_clk_src_t;  ///< Clock s
 #elif SOC_ADC_RTC_CTRL_SUPPORTED
 typedef soc_periph_adc_rtc_clk_src_t     adc_oneshot_clk_src_t;     ///< Clock source type of oneshot mode which uses RTC controller
 typedef soc_periph_adc_digi_clk_src_t    adc_continuous_clk_src_t;  ///< Clock source type of continuous mode which uses digital controller
+#else
+typedef int                              adc_oneshot_clk_src_t;     ///< Default type
+typedef int                              adc_continuous_clk_src_t;  ///< Default type
 #endif
 
 /**
@@ -116,6 +123,25 @@ typedef enum {
     ADC_DIGI_IIR_FILTER_COEFF_16,    ///< The filter coefficient is 16
     ADC_DIGI_IIR_FILTER_COEFF_64,    ///< The filter coefficient is 64
 } adc_digi_iir_filter_coeff_t;
+
+/*---------------------------------------------------------------
+                        ADC Monitor
+---------------------------------------------------------------*/
+/**
+ * @brief ADC monitor (continuous mode) ID
+ */
+typedef enum {
+    ADC_MONITOR_0,          ///< The monitor index 0.
+    ADC_MONITOR_1,          ///< The monitor index 1.
+} adc_monitor_id_t;
+
+/**
+ * @brief Monitor config/event mode type
+ */
+typedef enum {
+    ADC_MONITOR_MODE_HIGH = 0,      ///< ADC raw_result > threshold value, monitor interrupt will be generated.
+    ADC_MONITOR_MODE_LOW,           ///< ADC raw_result < threshold value, monitor interrupt will be generated.
+} adc_monitor_mode_t;
 
 /*---------------------------------------------------------------
                     Output Format
@@ -165,7 +191,7 @@ typedef struct {
     };
 } adc_digi_output_data_t;
 
-#elif CONFIG_IDF_TARGET_ESP32S3
+#elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
 /**
  * @brief ADC digital controller (DMA mode) output data format.
  *        Used to analyze the acquired ADC (DMA) data.
@@ -206,6 +232,7 @@ typedef struct {
 
 #endif
 
+
 #if CONFIG_IDF_TARGET_ESP32S2
 /**
  * @brief ADC digital controller (DMA mode) clock system setting.
@@ -221,4 +248,8 @@ typedef struct {
     uint32_t div_b;     /*!<Division factor. Range: 1 ~ 63. */
     uint32_t div_a;     /*!<Division factor. Range: 0 ~ 63. */
 } adc_digi_clk_t;
+#endif
+
+#ifdef __cplusplus
+}
 #endif

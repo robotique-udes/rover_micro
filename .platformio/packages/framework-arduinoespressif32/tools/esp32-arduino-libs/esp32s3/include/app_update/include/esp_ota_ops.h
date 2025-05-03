@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,6 +13,7 @@
 #include "esp_err.h"
 #include "esp_partition.h"
 #include "esp_app_desc.h"
+#include "esp_bootloader_desc.h"
 #include "esp_flash_partitions.h"
 #include "soc/soc_caps.h"
 
@@ -97,6 +98,32 @@ int esp_ota_get_app_elf_sha256(char* dst, size_t size) __attribute__((deprecated
  *    - ESP_ERR_OTA_ROLLBACK_INVALID_STATE: If the running app has not confirmed state. Before performing an update, the application must be valid.
  */
 esp_err_t esp_ota_begin(const esp_partition_t* partition, size_t image_size, esp_ota_handle_t* out_handle);
+
+/**
+ * @brief   Resume an interrupted OTA update by continuing to write to the specified partition.
+ *
+ * This function is used when an OTA update was previously started and needs to be resumed after an interruption.
+ * It continues the OTA process from the specified offset within the partition.
+ *
+ * Unlike esp_ota_begin(), this function does not erase the partition which receives the OTA update, but rather expects that part of the image
+ * has already been written correctly, and it resumes writing from the given offset.
+ *
+ * @param partition Pointer to info for the partition which is receiving the OTA update. Required.
+ * @param erase_size Specifies how much flash memory to erase before resuming OTA, depending on whether a sequential write or a bulk erase is being used.
+ * @param image_offset Offset from where to resume the OTA process. Should be set to the number of bytes already written.
+ * @param out_handle On success, returns a handle that should be used for subsequent esp_ota_write() and esp_ota_end() calls.
+ *
+ * @return
+ *    - ESP_OK: OTA operation resumed successfully.
+ *    - ESP_ERR_INVALID_ARG: partition, out_handle were NULL or image_offset arguments is negative, or partition doesn't point to an OTA app partition.
+ *    - ESP_ERR_NO_MEM: Cannot allocate memory for OTA operation.
+ *    - ESP_ERR_OTA_PARTITION_CONFLICT: Partition holds the currently running firmware, cannot update in place.
+ *    - ESP_ERR_NOT_FOUND: Partition argument not found in partition table.
+ *    - ESP_ERR_OTA_SELECT_INFO_INVALID: The OTA data partition contains invalid data.
+ *    - ESP_ERR_INVALID_SIZE: Partition doesn't fit in configured flash size.
+ *    - ESP_ERR_FLASH_OP_TIMEOUT or ESP_ERR_FLASH_OP_FAIL: Flash write failed.
+ */
+esp_err_t esp_ota_resume(const esp_partition_t *partition, const size_t erase_size, const size_t image_offset, esp_ota_handle_t *out_handle);
 
 /**
  * @brief   Write OTA update data to partition
@@ -250,6 +277,23 @@ const esp_partition_t* esp_ota_get_next_update_partition(const esp_partition_t *
  *  - or one of error codes from lower-level flash driver.
  */
 esp_err_t esp_ota_get_partition_description(const esp_partition_t *partition, esp_app_desc_t *app_desc);
+
+/**
+ * @brief Returns the description structure of the bootloader.
+ *
+ * @param[in] bootloader_partition Pointer to bootloader partition.
+ *                                 If NULL, then the current bootloader is used (the default location).
+ *                                 offset = CONFIG_BOOTLOADER_OFFSET_IN_FLASH,
+ *                                 size = CONFIG_PARTITION_TABLE_OFFSET - CONFIG_BOOTLOADER_OFFSET_IN_FLASH,
+ * @param[out] desc     Structure of info about bootloader.
+ * @return
+ *  - ESP_OK                Successful.
+ *  - ESP_ERR_NOT_FOUND     Description structure is not found in the bootloader image. Magic byte is incorrect.
+ *  - ESP_ERR_INVALID_ARG   Arguments is NULL.
+ *  - ESP_ERR_INVALID_SIZE  Read would go out of bounds of the partition.
+ *  - or one of error codes from lower-level flash driver.
+ */
+esp_err_t esp_ota_get_bootloader_description(const esp_partition_t *bootloader_partition, esp_bootloader_desc_t *desc);
 
 /**
  * @brief Returns number of ota partitions provided in partition table.

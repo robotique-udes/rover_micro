@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -84,6 +84,9 @@ typedef enum {
 #if SOC_PM_SUPPORT_TOP_PD
     ESP_PD_DOMAIN_TOP,             //!< SoC TOP
 #endif
+#if SOC_PM_SUPPORT_CNNT_PD
+    ESP_PD_DOMAIN_CNNT,            //!< Hight-speed connect peripherals power domain
+#endif
     ESP_PD_DOMAIN_MAX              //!< Number of domains
 } esp_sleep_pd_domain_t;
 
@@ -133,6 +136,8 @@ enum {
     ESP_ERR_SLEEP_TOO_SHORT_SLEEP_DURATION = ESP_ERR_INVALID_ARG,
 };
 
+#define ESP_SLEEP_POWER_DOWN_CPU (CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP || (SOC_CPU_IN_TOP_DOMAIN && CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP))
+
 /**
  * @brief Disable wakeup source
  *
@@ -168,9 +173,13 @@ esp_err_t esp_sleep_enable_ulp_wakeup(void);
 /**
  * @brief Enable wakeup by timer
  * @param time_in_us  time before wakeup, in microseconds
+ * @note  The valid `time_in_us` value depends on the bit width of the lp_timer/rtc_timer counter and the
+ *        current slow clock source selection (Refer RTC clock source configuration in menuconfig).
+ *        Valid values should be positive values less than RTC slow clock period * (2 ^ RTC timer bitwidth).
+ *
  * @return
  *      - ESP_OK on success
- *      - ESP_ERR_INVALID_ARG if value is out of range (TBD)
+ *      - ESP_ERR_INVALID_ARG if value is out of range.
  */
 esp_err_t esp_sleep_enable_timer_wakeup(uint64_t time_in_us);
 
@@ -288,7 +297,7 @@ esp_err_t esp_sleep_enable_ext0_wakeup(gpio_num_t gpio_num, int level);
  *                      - ESP_EXT1_WAKEUP_ANY_HIGH: wake up when any of the selected GPIOs is high
  * @return
  *      - ESP_OK on success
- *      - ESP_ERR_INVALID_ARG if io_mask is zero,
+ *      - ESP_ERR_INVALID_ARG if io_mask is zero,,
  *        or mode is invalid
  */
 esp_err_t esp_sleep_enable_ext1_wakeup(uint64_t io_mask, esp_sleep_ext1_wakeup_mode_t level_mode);
@@ -339,7 +348,7 @@ esp_err_t esp_sleep_enable_ext1_wakeup(uint64_t io_mask, esp_sleep_ext1_wakeup_m
  *      - ESP_OK on success
  *      - ESP_ERR_INVALID_ARG if any of the selected GPIOs is not an RTC GPIO,
  *        or mode is invalid
- *      - ESP_ERR_NOT_SUPPORTED when wakeup level will become different between
+ *      - ESP_ERR_NOT_ALLOWED when wakeup level will become different between
  *        ext1 IOs if !SOC_PM_SUPPORT_EXT1_WAKEUP_MODE_PER_PIN
  */
 esp_err_t esp_sleep_enable_ext1_wakeup_io(uint64_t io_mask, esp_sleep_ext1_wakeup_mode_t level_mode);
@@ -400,7 +409,8 @@ esp_err_t esp_sleep_disable_ext1_wakeup_io(uint64_t io_mask);
  *      - ESP_ERR_INVALID_ARG if any of the selected GPIOs is not an RTC GPIO,
  *        or mode is invalid
  */
-esp_err_t esp_sleep_enable_ext1_wakeup_with_level_mask(uint64_t io_mask, uint64_t level_mask);
+esp_err_t esp_sleep_enable_ext1_wakeup_with_level_mask(uint64_t io_mask, uint64_t level_mask)
+__attribute__((deprecated("please use 'esp_sleep_enable_ext1_wakeup_io' and 'esp_sleep_disable_ext1_wakeup_io' instead")));
 
 #endif // SOC_PM_SUPPORT_EXT1_WAKEUP_MODE_PER_PIN
 #endif // SOC_PM_SUPPORT_EXT1_WAKEUP
@@ -411,8 +421,10 @@ esp_err_t esp_sleep_enable_ext1_wakeup_with_level_mask(uint64_t io_mask, uint64_
  *
  * This function enables an IO pin to wake up the chip from deep sleep.
  *
- * @note This function does not modify pin configuration. The pins are
- *       configured inside esp_deep_sleep_start, immediately before entering sleep mode.
+ * @note 1.This function does not modify pin configuration. The pins are configured
+ *          inside `esp_deep_sleep_start`, immediately before entering sleep mode.
+ *       2.This function is also applicable to waking up the lightsleep when the peripheral
+ *         power domain is powered off, see PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP in menuconfig.
  *
  * @note You don't need to worry about pull-up or pull-down resistors before
  *       using this function because the ESP_SLEEP_GPIO_ENABLE_INTERNAL_RESISTORS
@@ -447,7 +459,12 @@ esp_err_t esp_deep_sleep_enable_gpio_wakeup(uint64_t gpio_pin_mask, esp_deepslee
  * wakeup level, for each GPIO which is used for wakeup.
  * Then call this function to enable wakeup feature.
  *
- * @note On ESP32, GPIO wakeup source can not be used together with touch or ULP wakeup sources.
+ * @note 1. On ESP32, GPIO wakeup source can not be used together with touch or ULP wakeup sources.
+ *       2. If PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP is enabled (if target supported),
+ *          this API is unavailable since the GPIO module is powered down during sleep.
+ *          You can use `esp_deep_sleep_enable_gpio_wakeup` instead, or use EXT1 wakeup source
+ *          by `esp_sleep_enable_ext1_wakeup_io` to achieve the same function.
+ *          (Only GPIOs which have RTC functionality can be used)
  *
  * @return
  *      - ESP_OK on success
@@ -463,7 +480,9 @@ esp_err_t esp_sleep_enable_gpio_wakeup(void);
  * Wakeup from light sleep takes some time, so not every character sent
  * to the UART can be received by the application.
  *
- * @note ESP32 does not support wakeup from UART2.
+ * @note 1. ESP32 does not support wakeup from UART2.
+ *       2. If PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP is enabled (if target supported),
+ *          this API is unavailable since the UART module is powered down during sleep.
  *
  * @param uart_num  UART port to wake up from
  * @return
@@ -594,6 +613,11 @@ esp_err_t esp_light_sleep_start(void);
  * Call to this function is equivalent to a call to esp_deep_sleep_enable_timer_wakeup
  * followed by a call to esp_deep_sleep_start.
  *
+ * @note In general, the function does not return, but if the sleep is rejected,
+ * then it returns from it.
+ *
+ * The reason for the rejection can be such as a short sleep time.
+ *
  * @param time_in_us  deep-sleep time, unit: microsecond
  *
  * @return
@@ -707,7 +731,7 @@ void esp_default_wake_deep_sleep(void);
  */
 void esp_deep_sleep_disable_rom_logging(void);
 
-#ifdef SOC_PM_SUPPORT_CPU_PD
+#if ESP_SLEEP_POWER_DOWN_CPU
 
 #if SOC_PM_CPU_RETENTION_BY_RTCCNTL
 /**
@@ -746,7 +770,7 @@ esp_err_t esp_sleep_cpu_retention_init(void);
  * Release system retention memory.
  */
 esp_err_t esp_sleep_cpu_retention_deinit(void);
-#endif
+#endif // ESP_SLEEP_POWER_DOWN_CPU
 
 /**
  * @brief Configure to isolate all GPIO pins in sleep state

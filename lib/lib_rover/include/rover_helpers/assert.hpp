@@ -74,8 +74,8 @@
         ABORT();      \
     }
 
-#else // defined(VERBOSE)
+#else  // defined(VERBOSE)
 #define ASSERT(condition, ...) condition ? abort() : (void)0;
-#endif // defined(VERBOSE)
+#endif  // defined(VERBOSE)
 
-#endif // __ASSERT_HPP__
+#endif  // __ASSERT_HPP__

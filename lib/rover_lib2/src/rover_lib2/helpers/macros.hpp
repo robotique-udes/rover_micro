@@ -1,6 +1,7 @@
 #ifndef MACROS_HPP
 #define MACROS_HPP
 
+#include <cmath>
 #include <type_traits>
 
 template<typename ENUM_T>
@@ -80,5 +81,64 @@ constexpr T CONSTRAIN(T value_, T min_, T max_)
         return value_;
     }
 }
+
+/**
+ * @brief Truncate a floating-point value (remove fractional part).
+ */
+template<std::floating_point T>
+constexpr T TRUNC(T value_)
+{
+    return (value_ == 0) ? value_ :  // Handle ±0.0
+               (value_ > 0) ? static_cast<T>(static_cast<int64_t>(value_))
+                            : static_cast<T>(static_cast<int64_t>(value_ - static_cast<T>(1.0)) + static_cast<T>(1.0));
+}
+
+/**
+ * @brief Round a floating-point value to the nearest integer
+ */
+template<std::floating_point T>
+constexpr T ROUND(T value_)
+{
+    T absValue = ABS(value_);
+    T fractionalPart = absValue - static_cast<int64_t>(absValue);
+
+    if (fractionalPart >= static_cast<T>(0.5))
+    {
+        return (value_ < 0) ? static_cast<T>(static_cast<int64_t>(value_) - 1) : static_cast<T>(static_cast<int64_t>(value_) + 1);
+    }
+    return static_cast<T>(static_cast<int64_t>(value_));
+}
+
+/**
+ * @brief Round a value up to the next integer (eq of ceil)
+ */
+template<std::floating_point T>
+constexpr T ROUND_UP(T value_)
+{
+    T integerPart = static_cast<T>(static_cast<int64_t>(value_));
+    if (value_ == integerPart)
+    {
+        return integerPart;
+    }
+    return (value_ > 0) ? integerPart + static_cast<T>(1) : integerPart;
+}
+
+/**
+ * @brief Round a value down to the previous integer (eq of floor)
+ */
+template<std::floating_point T>
+constexpr T ROUND_DOWN(T value_)
+{
+    T integerPart = static_cast<T>(static_cast<int64_t>(value_));
+    if (value_ == integerPart)
+    {
+        return integerPart;
+    }
+    return (value_ < 0) ? integerPart - static_cast<T>(1) : integerPart;
+}
+
+#define MAP(x, in_min, in_max, out_min, out_max)                                                                  \
+    (((float)(x) - (float)(in_min)) * ((float)(out_max) - (float)(out_min)) / ((float)(in_max) - (float)(in_min)) \
+     + (float)(out_min))
 
 #endif  // MACROS_HPP

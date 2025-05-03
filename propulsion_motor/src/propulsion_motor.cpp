@@ -97,7 +97,8 @@ void canCB(RoverCanLib::CanBusManager* canBusManager_, const twai_message_t* msg
             }
             break;
 
-        default: break;
+        default:
+            break;
     }
 }
 

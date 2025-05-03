@@ -18,6 +18,7 @@
 
 #define USB_SERIAL_JTAG_LL_INTR_MASK            (0x7ffff)   // All interrupts mask
 #define USB_SERIAL_JTAG_LL_EXT_PHY_SUPPORTED    1   // Can route to an external FSLS PHY
+#define USB_SERIAL_JTAG_LL_PHY_DEPENDS_ON_BBPLL (1)
 
 // Define USB_SERIAL_JTAG interrupts
 // Note the hardware has more interrupts, but they're only useful for debugging
@@ -324,6 +325,9 @@ FORCE_INLINE_ATTR void usb_serial_jtag_ll_enable_bus_clock(bool clk_en)
     SYSTEM.perip_clk_en1.usb_device_clk_en = clk_en;
 }
 
+// SYSTEM.perip_clk_enx are shared registers, so this function must be used in an atomic way
+#define usb_serial_jtag_ll_enable_bus_clock(...) (void)__DECLARE_RCC_ATOMIC_ENV; usb_serial_jtag_ll_enable_bus_clock(__VA_ARGS__)
+
 /**
  * @brief Reset the USJ module
  */
@@ -332,6 +336,9 @@ FORCE_INLINE_ATTR void usb_serial_jtag_ll_reset_register(void)
     SYSTEM.perip_rst_en1.usb_device_rst = 1;
     SYSTEM.perip_rst_en1.usb_device_rst = 0;
 }
+
+// SYSTEM.perip_clk_enx are shared registers, so this function must be used in an atomic way
+#define usb_serial_jtag_ll_reset_register(...) (void)__DECLARE_RCC_ATOMIC_ENV; usb_serial_jtag_ll_reset_register(__VA_ARGS__)
 
 /**
  * Get the enable status of the USJ module
@@ -342,6 +349,12 @@ FORCE_INLINE_ATTR bool usb_serial_jtag_ll_module_is_enabled(void)
 {
     return (SYSTEM.perip_clk_en1.usb_device_clk_en && !SYSTEM.perip_rst_en1.usb_device_rst);
 }
+
+// SYSTEM.perip_clk_enx are shared registers, so this function must be used in an atomic way
+#define usb_serial_jtag_ll_module_is_enabled(...) ({    \
+    (void)__DECLARE_RCC_ATOMIC_ENV;                     \
+    usb_serial_jtag_ll_module_is_enabled(__VA_ARGS__);  \
+})
 
 #ifdef __cplusplus
 }

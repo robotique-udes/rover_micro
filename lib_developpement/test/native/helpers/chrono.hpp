@@ -51,7 +51,6 @@ TEST(SUITE_HELPER_Chrono, Start_Resets_Chrono)
     ASSERT_EQ(chrono.getTime(), static_cast<uint64_t>(2));
 }
 
-
 TEST(SUITE_HELPER_Chrono, Pause_Works)
 {
     Chrono<uint64_t, mock_millis> chrono;
