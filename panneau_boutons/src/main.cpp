@@ -187,41 +187,34 @@ void labyrinthe(void *)
         {
             digitalWrite(LED1, LOW);  // eteindre LED
             ledlaby++;
-            while(etatswitch1 == LOW){
             LED_goal = random(2, 4);
-            //initLaby(nullptr);  // allumer nouvelle LED
-            }
+        
         }
         else if (LED_goal == 2 && etatswitch2 == LOW)
         {                             
             digitalWrite(LED2, LOW);  // eteindre LED
             ledlaby++;
-            while(etatswitch2 == LOW){
             LED_goal = random(1, 4);
-            //initLaby(nullptr);  // allumer nouvelle LED
-            }
+            
         }
         else if (LED_goal == 3 && etatswitch3 == LOW)
         {                             
             digitalWrite(LED3, LOW);  // eteindre LED
             ledlaby++;
-            while(etatswitch3 == LOW){
             LED_goal = random(1, 4);
-            //initLaby(nullptr);  // allumer nouvelle LED
-            }
+            
         }
         else if (LED_goal == 4 && etatswitch4 == LOW)
         {                           
             digitalWrite(LED4, LOW);  // eteindre LED
             ledlaby++;
-            while(etatswitch4 == LOW){
             LED_goal = random(1, 3);
-            //initLaby(nullptr);  // allumer nouvelle LED
-            }
+            
         }
     }
 
-    createAddPointsTask(350);
+    addPoints(350);
+    //createAddPointsTask(350);
     digitalWrite(ledLaby, HIGH);
     digitalWrite(LED1, LOW);
     digitalWrite(LED2, LOW);
@@ -250,7 +243,8 @@ void poignee(void *){
     mcp2.digitalWrite(LEDPoignee,HIGH);
     lcd.setCursor(0,0);
     lcd.print("Poignee unlocked!");
-    createAddPointsTask(150);
+    //createAddPointsTask(150);
+    addPoints(150);
     newStatePoignee = false;
   }
   vTaskDelay(pdMS_TO_TICKS(50));
@@ -263,7 +257,8 @@ void tiroir2(void *){
       mcp2.digitalWrite(LEDTiroir2,HIGH);
       lcd.setCursor(0,0);
       lcd.print("Tiroir ouvert!");
-      createAddPointsTask(100);
+      //createAddPointsTask(100);
+      addPoints(100);
       newStateTiroir2 = false;
     }
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -275,7 +270,8 @@ void usb(void *){
   
   if (mcp2.digitalRead(switch8) == LOW && newStateUSB == true){
     mcp2.digitalWrite(LEDUSB,HIGH);
-    createAddPointsTask(100);
+    //createAddPointsTask(100);
+    addPoints(100);
     newStateUSB = false;
   }
   vTaskDelay(pdMS_TO_TICKS(50));
@@ -294,7 +290,8 @@ void ethernet(void *){
   while(1){
   if (mcp1.digitalRead(switch10) == HIGH && newStateEthernet ==true){
     mcp1.digitalWrite(LEDEthernet,HIGH);
-    createAddPointsTask(150);
+    //createAddPointsTask(150);
+    addPoints(150);
     newStateEthernet = false;
   }
   vTaskDelay(pdMS_TO_TICKS(50));
@@ -332,7 +329,8 @@ void closeColorButtons(void *){ //eteindre le bouton de couleur allume
 void eStop(void *){
   while(1){
   if (mcp2.digitalRead(switch14) == HIGH && newStateEStop ==true){
-    createAddPointsTask(150);
+    //createAddPointsTask(150);
+    addPoints(150);
     lcd.setCursor(0,0);
     lcd.print("FIN DU PANNEAU!");
     newStateEthernet = false;
@@ -347,7 +345,8 @@ void screw(void *){
       mcp1.digitalWrite(LEDScrew,HIGH);
       lcd.setCursor(0,0);
       lcd.print("Termine screw!");
-      createAddPointsTask(150);
+      addPoints(150);
+      //createAddPointsTask(150);
       newStateScrew = false;
     }
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -357,13 +356,14 @@ void screw(void *){
 void unscrew(void *){
   lcd.print("entre fct");
   while(1){
-    lcd.print("boucle");
-  if (mcp1.digitalRead(switch16) == HIGH && newStateUnscrew == true){
+    //lcd.print("boucle");
+  if (mcp1.digitalRead(switch16) == LOW && newStateUnscrew == true){
     lcd.print("switch");
     mcp1.digitalWrite(LEDUnscrew, LOW);
     lcd.setCursor(0,0);
-    lcd.print("Terminé unscrew!");
-    createAddPointsTask(50);
+    lcd.print("Termine unscrew!");
+    addPoints(150);
+    //createAddPointsTask(50);
     newStateUnscrew = false;
   }
   vTaskDelay(pdMS_TO_TICKS(50));
@@ -378,7 +378,8 @@ void twoButtonPressed(void *){
       mcp1.digitalWrite(ledBoutons, HIGH);
       lcd.setCursor(0,0);
       lcd.print("Termine tache!");
-      createAddPointsTask(50);
+      //createAddPointsTask(50);
+      addPoints(50);
       newStateBouton = false;
     }
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -593,8 +594,6 @@ void setup()
     number_goal = random(-20, 20);
 
     // Ecran
-    lcd.setCursor(0, 1);
-    //createAddPointsTask(0);  // compteur points a zero
     lcd.setCursor(0, 2);
     lcd.print("Mettre encodeurs:");
     lcd.print(number_goal);
@@ -610,12 +609,12 @@ void setup()
 
 
       lcd.print("av fct");
-      xTaskCreate(showLEDLaby, "OpenLEDLaby", 4096,NULL,2,NULL);
-      xTaskCreate(labyrinthe,"labyrinthe",4096,NULL,2,NULL);
-      lcd.print("apr fct");
-      xTaskCreate(twoButtonPressed,"twoButtonPressed", 4096,NULL,2,NULL);
+      xTaskCreate(affichageEcran,"affichageEcran",4096, NULL,2,NULL);
       xTaskCreate(screw,"screw", 4096,NULL,2,NULL);
       xTaskCreate(unscrew,"unscrew", 4096,NULL,2,NULL);
+      xTaskCreate(showLEDLaby, "OpenLEDLaby", 4096,NULL,2,NULL);
+      xTaskCreate(labyrinthe,"labyrinthe",4096,NULL,2,NULL);
+      xTaskCreate(twoButtonPressed,"twoButtonPressed", 4096,NULL,2,NULL);
       xTaskCreate(eStop,"eStop", 4096,NULL,2,NULL);
       xTaskCreate(ethernet,"ethernet", 4096,NULL,2,NULL);
       //xTaskCreate(xlr,"xlr", 4096,NULL,2,NULL);
@@ -625,7 +624,6 @@ void setup()
       xTaskCreate(poignee,"poignee", 4096,NULL,2,NULL);
       //xTaskCreate(initLaby, "initLaby", 4096,NULL,2,NULL);
       //xTaskCreate(addPointsTask,"addPoints", 4096, NULL,2,NULL);
-      xTaskCreate(affichageEcran,"affichageEcran",4096, NULL,2,NULL);
 
 }
 
