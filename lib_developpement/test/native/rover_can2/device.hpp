@@ -175,7 +175,7 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubFromDevice)
     RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1);
 
     RoverCan2::Drivers::DriverMock driver;
-    RoverCan2::Manager manager(driver, device);
+    RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
 
     RoverCan2::Msgs::TestMsg msg;
@@ -199,7 +199,7 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubSendMsgFromDevice)
     RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0);
 
     RoverCan2::Drivers::DriverMock driver;
-    RoverCan2::Manager manager(driver, device);
+    RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
 
     RoverCan2::Msgs::TestMsg msg;
@@ -218,7 +218,7 @@ TEST(SUITE_ROVER_CAN2_CanDevice, MultiplePubSendMsgFromDevice)
     RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1);
 
     RoverCan2::Drivers::DriverMock driver;
-    RoverCan2::Manager manager(driver, device);
+    RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
 
     RoverCan2::Msgs::TestMsg msg;
@@ -237,7 +237,7 @@ TEST(SUITE_ROVER_CAN2_CanDevice, SendMsgFromDeviceNoPub)
     RoverCan2::Device<> device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
 
     RoverCan2::Drivers::DriverMock driver;
-    RoverCan2::Manager manager(driver, device);
+    RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
 
     RoverCan2::Msgs::TestMsg msg;
@@ -270,7 +270,7 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubAndSubInDeviceIntegrationTest)
     RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, pub0, pub1, sub0, sub1);
 
     RoverCan2::Drivers::DriverMock driver;
-    RoverCan2::Manager manager(driver, device);
+    RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
 
     // Send msg
