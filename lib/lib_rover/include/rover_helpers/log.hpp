@@ -35,28 +35,28 @@
                 char colorStr[8] = "\033[97m";                                                           \
                 switch (severity)                                                                        \
                 {                                                                                        \
-                case DEBUG:                                                                              \
-                    strcpy(severityStr, "DEBUG");                                                        \
-                    break;                                                                               \
+                    case DEBUG:                                                                          \
+                        strcpy(severityStr, "DEBUG");                                                    \
+                        break;                                                                           \
                                                                                                          \
-                case INFO:                                                                               \
-                    strcpy(severityStr, "INFO");                                                         \
-                    break;                                                                               \
+                    case INFO:                                                                           \
+                        strcpy(severityStr, "INFO");                                                     \
+                        break;                                                                           \
                                                                                                          \
-                case WARN:                                                                               \
-                    strcpy(severityStr, "WARN");                                                         \
-                    strcpy(colorStr, "\033[33m");                                                        \
-                    break;                                                                               \
+                    case WARN:                                                                           \
+                        strcpy(severityStr, "WARN");                                                     \
+                        strcpy(colorStr, "\033[33m");                                                    \
+                        break;                                                                           \
                                                                                                          \
-                case ERROR:                                                                              \
-                    strcpy(severityStr, "ERROR");                                                        \
-                    strcpy(colorStr, "\033[31m");                                                        \
-                    break;                                                                               \
+                    case ERROR:                                                                          \
+                        strcpy(severityStr, "ERROR");                                                    \
+                        strcpy(colorStr, "\033[31m");                                                    \
+                        break;                                                                           \
                                                                                                          \
-                case FATAL:                                                                              \
-                    strcpy(severityStr, "FATAL");                                                        \
-                    strcpy(colorStr, "\033[31m");                                                        \
-                    break;                                                                               \
+                    case FATAL:                                                                          \
+                        strcpy(severityStr, "FATAL");                                                    \
+                        strcpy(colorStr, "\033[31m");                                                    \
+                        break;                                                                           \
                 }                                                                                        \
                                                                                                          \
                 Serial.printf("%s[%s]%s(%d): ", colorStr, severityStr, __FILENAME__, __LINE__);          \
@@ -66,7 +66,7 @@
         }                                                                                                \
     }
 
-#else // defined(MICRO_ROS_LOGGER)
+#else  // defined(MICRO_ROS_LOGGER)
 
 typedef enum eLoggerLevel
 {
@@ -89,28 +89,28 @@ typedef enum eLoggerLevel
             char colorStr[8] = "\033[97m";                                                  \
             switch (severity)                                                               \
             {                                                                               \
-            case DEBUG:                                                                     \
-                strcpy(severityStr, "DEBUG");                                               \
-                break;                                                                      \
+                case DEBUG:                                                                 \
+                    strcpy(severityStr, "DEBUG");                                           \
+                    break;                                                                  \
                                                                                             \
-            case INFO:                                                                      \
-                strcpy(severityStr, "INFO");                                                \
-                break;                                                                      \
+                case INFO:                                                                  \
+                    strcpy(severityStr, "INFO");                                            \
+                    break;                                                                  \
                                                                                             \
-            case WARN:                                                                      \
-                strcpy(severityStr, "WARN");                                                \
-                strcpy(colorStr, "\033[33m");                                               \
-                break;                                                                      \
+                case WARN:                                                                  \
+                    strcpy(severityStr, "WARN");                                            \
+                    strcpy(colorStr, "\033[33m");                                           \
+                    break;                                                                  \
                                                                                             \
-            case ERROR:                                                                     \
-                strcpy(severityStr, "ERROR");                                               \
-                strcpy(colorStr, "\033[31m");                                               \
-                break;                                                                      \
+                case ERROR:                                                                 \
+                    strcpy(severityStr, "ERROR");                                           \
+                    strcpy(colorStr, "\033[31m");                                           \
+                    break;                                                                  \
                                                                                             \
-            case FATAL:                                                                     \
-                strcpy(severityStr, "FATAL");                                               \
-                strcpy(colorStr, "\033[31m");                                               \
-                break;                                                                      \
+                case FATAL:                                                                 \
+                    strcpy(severityStr, "FATAL");                                           \
+                    strcpy(colorStr, "\033[31m");                                           \
+                    break;                                                                  \
             }                                                                               \
                                                                                             \
             Serial.printf("%s[%s]%s(%d): ", colorStr, severityStr, __FILENAME__, __LINE__); \
@@ -118,15 +118,15 @@ typedef enum eLoggerLevel
             Serial.printf("\n\033[97m");                                                    \
         }                                                                                   \
     }
-#endif // defined(MICRO_ROS_LOGGER)
+#endif  // defined(MICRO_ROS_LOGGER)
 
-template <typename T>
-constexpr const char *variable_to_bit_string(T value)
+template<typename T>
+constexpr const char* variable_to_bit_string(T value)
 {
     constexpr size_t bit_count = sizeof(T) * 8;
     static char bit_string[bit_count * 7 + 10] = {};
 
-    char *current = bit_string;
+    char* current = bit_string;
     for (size_t i = 0; i < bit_count; ++i)
     {
         unsigned bit = (value >> (bit_count - 1 - i)) & 1;
@@ -147,11 +147,10 @@ constexpr const char *variable_to_bit_string(T value)
 }
 
 // Macro to log the bits of a variable using the Logger class
-#define LOG_BITS(severity, var) \
-    LOG(severity, "%s = %s", #var, variable_to_bit_string(var))
+#define LOG_BITS(severity, var) LOG(severity, "%s = %s", #var, variable_to_bit_string(var))
 
-#else // VERBOSE
+#else  // VERBOSE
 #define LOG(severity, ...)
-#endif // VERBOSE
+#endif  // VERBOSE
 
-#endif //__LOG_H__
+#endif  //__LOG_H__

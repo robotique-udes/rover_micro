@@ -37,7 +37,7 @@ TEST(SUITE_NAME_Publisher, SimplePublish)
     msg.data().closeLoop = true;
     pub.queueMsg(msg);
 
-    HealthState::getInstance().setInError(false); // Disabling error state reporting to get accurate sentMsg buffer
+    HealthState::getInstance().setInError(false);  // Disabling error state reporting to get accurate sentMsg buffer
     manager.update();
     pub.sendQueuedMsgs(RoverCan2::Constant::eDeviceId::TEST_DEVICE, manager);
 
@@ -60,7 +60,7 @@ TEST(SUITE_NAME_Publisher, MultiplePublish)
     pub.queueMsg(msg);
     pub.queueMsg(msg);
 
-    HealthState::getInstance().setInError(false); // Disabling error state reporting to get accurate sentMsg buffer
+    HealthState::getInstance().setInError(false);  // Disabling error state reporting to get accurate sentMsg buffer
     manager.update();
     pub.sendQueuedMsgs(RoverCan2::Constant::eDeviceId::TEST_DEVICE, manager);
 

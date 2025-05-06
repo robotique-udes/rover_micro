@@ -7,7 +7,7 @@
 
 class LimitSwitch
 {
-public:
+  public:
     enum class eLimitSwitchMode
     {
         PullUp,
@@ -27,11 +27,11 @@ public:
         }
     };
 
-private:
+  private:
     eLimitSwitchMode _mode;
     uint8_t _pin;
 
-public:
+  public:
     LimitSwitch(sSwitchParams);
     LimitSwitch(eLimitSwitchMode mode, gpio_num_t pinCom);
     ~LimitSwitch();
@@ -40,7 +40,8 @@ public:
     bool isClicked();
 };
 
-LimitSwitch::LimitSwitch(sSwitchParams switchParams) : LimitSwitch::LimitSwitch(switchParams.MODE, switchParams.PIN)
+LimitSwitch::LimitSwitch(sSwitchParams switchParams):
+    LimitSwitch::LimitSwitch(switchParams.MODE, switchParams.PIN)
 {
 }
 
@@ -50,9 +51,7 @@ LimitSwitch::LimitSwitch(eLimitSwitchMode mode, gpio_num_t pinCom)
     _pin = pinCom;
 }
 
-LimitSwitch::~LimitSwitch()
-{
-}
+LimitSwitch::~LimitSwitch() {}
 
 void LimitSwitch::init()
 {

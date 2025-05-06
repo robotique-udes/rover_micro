@@ -15,4 +15,4 @@ constexpr gpio_num_t TX1_PIN = GPIO_NUM_13;
 constexpr gpio_num_t CAN_TX = GPIO_NUM_47;
 constexpr gpio_num_t CAN_RX = GPIO_NUM_48;
 
-#endif // __CONFIG_LOCAL_HPP__
+#endif  // __CONFIG_LOCAL_HPP__

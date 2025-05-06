@@ -9,7 +9,7 @@
 #include "rover_helpers/helpers.hpp"
 
 /// @brief Helper wrapper class to make it easier to blink led
-/// @example The follwing code will blink the onboard led at 1Hz with a 
+/// @example The follwing code will blink the onboard led at 1Hz with a
 //  duty_cycle of 50%
 ///     int main(void)
 ///     {
@@ -18,8 +18,8 @@
 ///     }
 class LedBlinker
 {
-public:
-    /// @brief LedBlinker constructor, it's the user's job to make sure to only 
+  public:
+    /// @brief LedBlinker constructor, it's the user's job to make sure to only
     /// connect one element to each timer or channel
     /// @param ledPin_ GPIO connected to the led, example for D2: (gpio_num_t)2
     /// @param timerNumber_ Ranges from 0 to 4, example LEDC_TIMER_3
@@ -32,7 +32,7 @@ public:
     /// @param dutyCycle_ Duty Cycle in percent [0.0f to 100.0f]
     void init(uint32_t frequencyHz_, float dutyCycle_);
 
-    /// @brief Set the led always on 
+    /// @brief Set the led always on
     void setOn(void);
 
     /// @brief Set the led always off
@@ -43,11 +43,11 @@ public:
     /// @param dutyCycle_ Duty Cycle in percent [0.0f to 100.0f]
     void setBlink(uint32_t frequencyHz_, float dutyCycle_);
 
-private:
+  private:
     gpio_num_t _ledPin;
     ledc_timer_t _timer;
     ledc_channel_t _channel;
 };
 
-#endif // defined(ESP32)
-#endif // __LED_CONTROLLER_HPP__
+#endif  // defined(ESP32)
+#endif  // __LED_CONTROLLER_HPP__

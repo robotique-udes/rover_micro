@@ -7,7 +7,7 @@
 
 class PID
 {
-public:
+  public:
     static constexpr unsigned long PERIOD_SPEED_CALC_US = 10'000ul;
 
     PID(float kp_, float ki_, float kd_, float intergalLimit_);
@@ -17,12 +17,12 @@ public:
     void setIntLimit(float limit_);
     /// @brief
     /// @param error_ Error between goal and actual position
-    /// @return New command 
+    /// @return New command
     float computeCommand(float error_);
     /// @brief Resets integral counter and derivative last value to zero
     void reset(void);
 
-private:
+  private:
     float _kp = 0.0f;
     float _ki = 0.0f;
     float _kd = 0.0f;
@@ -119,4 +119,4 @@ void PID::reset(void)
     _previousError = 0.0f;
 }
 
-#endif // __PID_HPP__
+#endif  // __PID_HPP__

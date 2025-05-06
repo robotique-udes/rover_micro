@@ -14,7 +14,7 @@
 
 class Joint
 {
-public:
+  public:
     static constexpr float DEFAULT_PID_DEADBAND_RAD_POSITION = 1.5f * DEG_TO_RAD;
     static constexpr float DEFAULT_PID_DEADBAND_RAD_SPEED = 0.25f * DEG_TO_RAD;
 
@@ -24,7 +24,7 @@ public:
         SPEED
     };
 
-protected:
+  protected:
     /// @brief Parent constructor
     /// @param encoderType_ eEncoderType::ABSOLUTE_SINGLE_TURN or
     /// eEncoderType::ABSOLUTE_MULTI_TURN
@@ -34,10 +34,10 @@ protected:
     /// @param pidPosition_ PID object for position control
     /// @param pidSpeed_ PID object for speed control mode or dualPid position
     /// control mode
-    Joint(Encoder::eEncoderType encoderType_, eControlMode controlMode_, bool dualPID_, PID *pidPosition_, PID *pidSpeed_);
+    Joint(Encoder::eEncoderType encoderType_, eControlMode controlMode_, bool dualPID_, PID* pidPosition_, PID* pidSpeed_);
 
-public:
-    virtual ~Joint() {};
+  public:
+    virtual ~Joint(){};
 
     /// Always call this after constructor
     virtual void init(void) = 0;
@@ -57,7 +57,7 @@ public:
     /// @brief Call in each loop
     void update(void);
     /// @brief Set object to NULL to disable jog
-    void setJogButton(LimitSwitch *switchREV_, float speedREV_, LimitSwitch *switchFWD_, float speedFWD_);
+    void setJogButton(LimitSwitch* switchREV_, float speedREV_, LimitSwitch* switchFWD_, float speedFWD_);
     void setControlMode(Joint::eControlMode controlMode_);
     /// @brief Overwrite default PIDs deadband, deadband is the tolerable error
     /// in positon or speed on which the cmd will be set to zero to keep the
@@ -71,7 +71,7 @@ public:
     void enableJointLimits(void);
     void disableJointLimits(void);
 
-protected:
+  protected:
     bool _inited = false;
     Encoder::eEncoderType _encoderType;
     eControlMode _controlMode;
@@ -79,8 +79,8 @@ protected:
     float _currentMotorCmd = 0.0f;
 
     bool _dualPID;
-    PID *_pidPosition = NULL;
-    PID *_pidSpeed = NULL;
+    PID* _pidPosition = NULL;
+    PID* _pidSpeed = NULL;
     float _pidDeadBandPosition = DEFAULT_PID_DEADBAND_RAD_POSITION;
     float _pidDeadBandSpeed = DEFAULT_PID_DEADBAND_RAD_SPEED;
 
@@ -90,8 +90,8 @@ protected:
 
     float _speedREV = 0.0f;
     float _speedFWD = 0.0f;
-    LimitSwitch *_switchFWD = NULL;
-    LimitSwitch *_switchREV = NULL;
+    LimitSwitch* _switchFWD = NULL;
+    LimitSwitch* _switchREV = NULL;
 
     virtual void updateInternal(void) = 0;
 
@@ -107,10 +107,9 @@ protected:
     float applyJointLimits(float cmd_, float currentPosition_);
 };
 
-Joint::Joint(Encoder::eEncoderType encoderType_, eControlMode controlMode_, bool dualPID_, PID *pidPosition_, PID *pidSpeed_)
+Joint::Joint(Encoder::eEncoderType encoderType_, eControlMode controlMode_, bool dualPID_, PID* pidPosition_, PID* pidSpeed_)
 {
-    if (encoderType_ == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN ||
-        encoderType_ == Encoder::eEncoderType::ABSOLUTE_MULTI_TURN)
+    if (encoderType_ == Encoder::eEncoderType::ABSOLUTE_SINGLE_TURN || encoderType_ == Encoder::eEncoderType::ABSOLUTE_MULTI_TURN)
     {
         _encoderType = encoderType_;
     }
@@ -168,7 +167,7 @@ void Joint::update(void)
     this->updateInternal();
 }
 
-void Joint::setJogButton(LimitSwitch *switchREV_, float speedREV_, LimitSwitch *switchFWD_, float speedFWD_)
+void Joint::setJogButton(LimitSwitch* switchREV_, float speedREV_, LimitSwitch* switchFWD_, float speedFWD_)
 {
     _switchREV = switchREV_;
     _switchFWD = switchFWD_;
@@ -262,5 +261,5 @@ float Joint::applyJointLimits(float cmd_, float currentPosition_)
     return cmd_;
 };
 
-#endif // !defined(ESP32)
-#endif // __JOINT_HPP__
+#endif  // !defined(ESP32)
+#endif  // __JOINT_HPP__
