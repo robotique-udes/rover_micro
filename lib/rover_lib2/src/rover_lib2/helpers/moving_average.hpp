@@ -4,8 +4,6 @@
 // #include "rover_helper/helpers.hpp"
 #include <cstdint>
 
-#warning TODO test
-
 template<class T, uint16_t COEFF_NB>
 class MovingAverage
 {
