@@ -39,10 +39,10 @@ TEST(SUITE_HELPER_Average, Adding_Negative_Value)
     MovingAverage<int8_t, 3> average(0);
 
     average.addValue(-5);
-    average.addValue(5);
-    average.addValue(3);
+    average.addValue(-5);
+    average.addValue(4);
     
-    ASSERT_EQ(average.getAverage(), static_cast<float>(1));
+    ASSERT_EQ(average.getAverage(), static_cast<float>(-2));
 }
 
 TEST(SUITE_HELPER_Average, Singular_Coefficient)
