@@ -30,7 +30,7 @@ TEST(SUITE_HELPER_Average, Full_Average_Table)
     average.addValue(3);
 
     average.addValue(10);
-    
+
     ASSERT_EQ(average.getAverage(), static_cast<float>(6));
 }
 
@@ -41,7 +41,7 @@ TEST(SUITE_HELPER_Average, Adding_Negative_Value)
     average.addValue(-5);
     average.addValue(-5);
     average.addValue(4);
-    
+
     ASSERT_EQ(average.getAverage(), static_cast<float>(-2));
 }
 
