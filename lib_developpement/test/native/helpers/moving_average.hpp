@@ -54,3 +54,14 @@ TEST(SUITE_HELPER_Average, Singular_Coefficient)
 
     ASSERT_EQ(average.getAverage(), static_cast<float>(30));
 }
+
+TEST(SUITE_HELPER_Average, Floating_Point_Storage)
+{
+    MovingAverage<float, 3> average(0.0f);
+
+    average.addValue(1.5f);
+    average.addValue(2.5f);
+    average.addValue(3.5f);
+
+    ASSERT_EQ(average.getAverage(), 2.5f);
+}
