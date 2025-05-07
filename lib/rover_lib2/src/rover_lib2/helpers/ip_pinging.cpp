@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <unistd.h>
-#endif // defined(__linux__)
+#endif  // defined(__linux__)
 
 namespace RoverLib2
 {

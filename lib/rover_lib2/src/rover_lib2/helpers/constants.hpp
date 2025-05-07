@@ -8,7 +8,7 @@
 
 namespace Constants::CameraInfo
 {
-    #if defined(__linux__)
+#if defined(__linux__)
     const std::map<std::string, std::string> CAMERA_URL_MAP = {
         {"Main", "rtsp://192.168.144.30:554/1/h264major"},
         {"Antenna", "rtsp://192.168.144.31:554/1/h264major"},
@@ -26,7 +26,7 @@ namespace Constants::CameraInfo
      */
 
     bool getNameFromURL(const std::string& url_, std::string& rName_);
-    #endif // defined(__linux__)
+#endif  // defined(__linux__)
 }  // namespace Constants::CameraInfo
 
 #endif  // CONSTANTS_HPP
