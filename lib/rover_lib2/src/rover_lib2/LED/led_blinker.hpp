@@ -138,7 +138,8 @@ namespace LED
                 _targetTimeStep = static_cast<uint64_t>(_pattern[_currentStep].durationMs);
                 _chronoStep.restart();
 
-                uint8_t stepIntensity = RoverLib2::CONSTRAIN(_pattern[_currentStep].intensity, static_cast<uint8_t>(0), _maxIntensity);
+                uint8_t stepIntensity
+                    = RoverLib2::CONSTRAIN(_pattern[_currentStep].intensity, static_cast<uint8_t>(0), _maxIntensity);
 
                 if (stepIntensity == 0)
                 {
