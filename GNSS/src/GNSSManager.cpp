@@ -38,7 +38,11 @@ void GNSSManager::update(void)
 
 void GNSSManager::parseNMEA(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_) 
 {
-  if (length_ < 6 || sentence_[0] != '$') return;
+  if (length_ < 6 || sentence_[0] != '$') 
+  {
+    LOG_ERROR(Logger::Nodes::Main, "Le message reçu est tout cassé bozo")
+    return;
+  }
 
   const char* tokens[15] = { nullptr };
   size_t tokenCount = 0;

@@ -22,16 +22,16 @@ void setup()
   for (EVER)
   {
     gnss.update();
-      GNSSData data = gnss.getData();
+    GNSSData data = gnss.getData();
 
-      if (data.hasValidFix()) {
-        Serial.printf("Lat: %.6f, Lon: %.6f, Heading: %f deg, Quality: %d, Satellites: %d\n",
-          data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
-      } else {
-          Serial.println("Waiting for a valid fix...");
-      }
+    if (data.hasValidFix()) {
+      Serial.printf("Lat: %.6f, Lon: %.6f, Heading: %f deg, Quality: %d, Satellites: %d\n",
+        data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
+    } else {
+        Serial.println("Waiting for a valid fix...");
+    }
 
-      delay(500);
+    delay(500);
   }
 }
 
