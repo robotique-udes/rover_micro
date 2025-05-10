@@ -9,8 +9,11 @@ struct GNSSData
 {
     double latitude = 0.0;
     double longitude = 0.0;
-    bool validFix = false;
+    int fixQuality = 0;
     int satellites = 0;
+    double headingDeg = 0.0;
+
+    bool hasValidFix() const { return fixQuality > 0; }
 };
 
 
@@ -25,6 +28,7 @@ private:
     Stream* GNSSSerial;
     String buffer_;
     GNSSData currentData_;
+    static constexpr size_t MAX_SENTENCE_LENGTH = 100;
 
 public:
     explicit GNSSManager(Stream *serial_);
@@ -33,8 +37,8 @@ public:
     ~GNSSManager();
 
 private:
-    void parseNMEA(const String& sentence_);
-    double convertToDecimalDegrees(const String& nmeaCoord_, const char direction_);
+    void parseNMEA(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length);
+    double convertToDecimalDegrees(const char* nmeaCoord_, char direction_);
 };
 
 #endif // GNSS_MANAGER_H
