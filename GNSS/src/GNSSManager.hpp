@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include "rover_lib2/helpers/log.hpp"
+#include <cstring>
+#include <cstdint>
 
 
 struct GNSSData 
@@ -12,6 +14,7 @@ struct GNSSData
     int fixQuality = 0;
     int satellites = 0;
     double headingDeg = 0.0;
+    double rollDeg = 0.0;
 
     bool hasValidFix() const { return fixQuality > 0; }
 };
@@ -38,6 +41,7 @@ public:
 
 private:
     void parseNMEA(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length);
+    void parseUNIHEADING(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_);
     double convertToDecimalDegrees(const char* nmeaCoord_, char direction_);
 };
 

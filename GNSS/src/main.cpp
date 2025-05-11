@@ -4,7 +4,7 @@
 // Configure UART pins
 #define UART_TX_PIN 47
 #define UART_RX_PIN 13
-#define UART_BAUD_RATE 921600
+#define UART_BAUD_RATE 115200
 
 
 void setup()
@@ -25,8 +25,8 @@ void setup()
     GNSSData data = gnss.getData();
 
     if (data.hasValidFix()) {
-      Serial.printf("Lat: %.6f, Lon: %.6f, Heading: %f deg, Quality: %d, Satellites: %d\n",
-        data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
+      Serial.printf("Lat: %.6f, Lon: %.6f, Heading: %f deg, roll: %f, Quality: %d, Satellites: %d\n",
+        data.latitude, data.longitude, data.headingDeg, data.rollDeg, data.fixQuality, data.satellites);
     } else {
         Serial.println("Waiting for a valid fix...");
     }
