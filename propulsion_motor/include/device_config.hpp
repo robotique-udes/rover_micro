@@ -10,6 +10,6 @@
 constexpr RoverCan2::Constant::eDeviceId DEVICE_ID = RoverCan2::Constant::eDeviceId::REARRIGHT_MOTOR;
 
 constexpr float ALIM_VOLTAGE = 24.0F;
-constexpr float MAX_VOLTAGE = 12.0F;
+constexpr float MAX_VOLTAGE = 24.0F;
 
 #endif  // __CONFIG_LOCAL_HPP__

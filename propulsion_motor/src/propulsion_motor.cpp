@@ -6,7 +6,7 @@
 #include <rover_lib2/helpers/loop_timer.hpp>
 #include <rover_lib2/rover_object.hpp>
 
-#include <rover_can2/device.hpp>
+#include <rover_can2/rover_can2.hpp>
 #include <rover_can2/msgs/prop_speed_cmd.hpp>
 #include <rover_can2/msgs/prop_speed_status.hpp>
 
@@ -14,6 +14,10 @@
 #include <rover_lib2/actuators/PWM_generators/MCPWM.hpp>
 #include <rover_lib2/helpers/moving_average.hpp>
 #include <rover_lib2/helpers/watchdog.hpp>
+#include <rover_lib2/LED/led_blinker.hpp>
+#include <rover_lib2/helpers/log.hpp>
+
+DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 
 constexpr gpio_num_t PIN_EN_A = GPIO_NUM_8;
 constexpr gpio_num_t PIN_EN_B = GPIO_NUM_16;
@@ -33,10 +37,12 @@ constexpr uint64_t PERIOD_SEND_PROP_MOTOR_STATUS = 1'000ULL / 20ULL;
 constexpr uint64_t PERIOD_RECV_PROP_MOTOR_STATUS = 1'000ULL / 20ULL;
 constexpr uint64_t PERIOD_WATCHDOG_TRIGGER = 2ULL * PERIOD_RECV_PROP_MOTOR_STATUS;
 
-static_assert(ABS(MAX_VOLTAGE) < ABS(ALIM_VOLTAGE), "Alim tension cannot be lower than limit");
+constexpr float MOTOR_PWM_FREQUENCY = 6'000.0F;
+
+static_assert(ABS(MAX_VOLTAGE) <= ABS(ALIM_VOLTAGE), "Alim tension cannot be lower than limit");
 constexpr float MAX_COMMAND = 100.0F * (ABS(MAX_VOLTAGE) / ABS(ALIM_VOLTAGE));
 
-#warning TODO: Implement watchdog on new data
+float globalTestVal = 0.0F;
 
 class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PropSpeedCmd, PropulsionMotor>,
                                                  RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>>,
@@ -50,10 +56,10 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
         DeviceT(id_,
                 RoverCan2::SubscriberMember(*this, &PropulsionMotor::CB_propMotorCmdRecv),
                 RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>()),
-        _timerSend(PERIOD_SEND_PROP_MOTOR_STATUS),
         _cmdAvg(0.0F),
-        _watchdog(PERIOD_WATCHDOG_TRIGGER),
-        _timerLoop(PERIOD_RECV_PROP_MOTOR_STATUS)
+        _timerSend(PERIOD_SEND_PROP_MOTOR_STATUS),
+        _timerLoop(PERIOD_RECV_PROP_MOTOR_STATUS),
+        _watchdog(PERIOD_WATCHDOG_TRIGGER)
     {
         switch (id_)
         {
@@ -84,19 +90,25 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
 
     void _update(void)
     {
-        _drive.update();
-        _drive.setCmd(CONSTRAIN(_cmdAvg.getAverage(), -MAX_COMMAND, MAX_COMMAND));
-
-        if (!_watchdog.isOk())
+        if (_timerLoop.isReady())
         {
-            _cmdAvg.addValue(0.0F);
-        }
+            _drive.update();
 
-        if (_timerSend.isReady())
-        {
-            RoverCan2::Msgs::PropSpeedStatus statusMsg;
-            statusMsg.data().current_speed = _cmdAvg.getAverage();
-            this->sendMsg(statusMsg);
+            float cmd = CONSTRAIN(_cmdAvg.getAverage(), -MAX_COMMAND, MAX_COMMAND);
+            _drive.setCmd(cmd);
+            LOG_DEBUG(Logger::Nodes::Main, "%f", cmd);
+
+            if (!_watchdog.isOk())
+            {
+                _cmdAvg.addValue(globalTestVal);
+            }
+
+            if (_timerSend.isReady())
+            {
+                RoverCan2::Msgs::PropSpeedStatus statusMsg;
+                statusMsg.data().current_speed = _cmdAvg.getAverage();
+                this->sendMsg(statusMsg);
+            }
         }
     }
 
@@ -111,7 +123,8 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
         = IO::DigitalOutput(PIN_EN_A, IO::eIOState::LOW_, GPIO_MODE_OUTPUT, GPIO_FLOATING, GPIO_DRIVE_CAP_DEFAULT);
     IO::DigitalOutput __enableB
         = IO::DigitalOutput(PIN_EN_B, IO::eIOState::LOW_, GPIO_MODE_OUTPUT, GPIO_FLOATING, GPIO_DRIVE_CAP_DEFAULT);
-    PWMGenerators::MCPWMTimer __pwmTimer = PWMGenerators::MCPWMTimer(10'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
+    PWMGenerators::MCPWMTimer __pwmTimer
+        = PWMGenerators::MCPWMTimer(MOTOR_PWM_FREQUENCY, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
     PWMGenerators::MCPWM __pwmA = PWMGenerators::MCPWM(PIN_IN_A,
                                                        __pwmTimer,
                                                        PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH,
@@ -129,7 +142,7 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
                                                               false,
                                                               MotorDriverT::eBrakeMode::COAST);
 
-    MovingAverage<float, 100> _cmdAvg;
+    MovingAverage<float, 5> _cmdAvg;
     LoopTimer<uint64_t, Time::millis> _timerSend;
     LoopTimer<uint64_t, Time::millis> _timerLoop;
     Watchdog<uint64_t, Time::millis> _watchdog;
@@ -137,11 +150,65 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
 
 void setup()
 {
+    Serial.begin(115200);
+
     PropulsionMotor propMotor(DEVICE_ID);
     propMotor.init();
 
+    LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_LED_CAN), LED::BlinkPatterns::ON);
+    RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &canLed);
+    RoverCan2::ManagerSlave manager(canDriver, propMotor);
+    manager.init();
+
     for (EVER)
     {
+        char c = Serial.read();
+        if (c == '0')
+        {
+            globalTestVal = 0.0F;
+        }
+        else if (c == '1')
+        {
+            globalTestVal = 10.0F;
+        }
+        else if (c == '2')
+        {
+            globalTestVal = 20.0F;
+        }
+        else if (c == '3')
+        {
+            globalTestVal = 30.0F;
+        }
+        else if (c == '4')
+        {
+            globalTestVal = 40.0F;
+        }
+        else if (c == '5')
+        {
+            globalTestVal = 50.0F;
+        }
+        else if (c == '6')
+        {
+            globalTestVal = 60.0F;
+        }
+        else if (c == '7')
+        {
+            globalTestVal = 70.0F;
+        }
+        else if (c == '8')
+        {
+            globalTestVal = 80.0F;
+        }
+        else if (c == '9')
+        {
+            globalTestVal = 90.0F;
+        }
+        else if (c == '+')
+        {
+            globalTestVal = 100.0F;
+        }
+
+        manager.update();
         propMotor.update();
     }
 }
