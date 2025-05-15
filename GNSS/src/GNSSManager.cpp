@@ -77,25 +77,59 @@ void GNSSManager::parseMSG(const std::array<char, MAX_SENTENCE_LENGTH>& sentence
   }
   if (strncmp(buffer, "#UNIHEADING", 6) == 0 && tokenCount >= 8) 
   {
-    currentData_.headingDeg = atof(tokens[12]);
+    updateHeadingFilter(atof(tokens[12]));
+    currentData_.headingDeg = getFilteredHeading();
   }
 }
 
 
-double GNSSManager::convertToDecimalDegrees(const char* nmeaCoord_, char direction_) 
+float GNSSManager::convertToDecimalDegrees(const char* nmeaCoord_, char direction_) 
 {
   if (!nmeaCoord_ || strlen(nmeaCoord_) < 6)
   {
   return 0.0;
   }
 
-  double degMin = atof(nmeaCoord_);
+  float degMin = atof(nmeaCoord_);
   int degrees = static_cast<int>(degMin / 100);
-  double minutes = degMin - degrees * 100;
-  double decimal = degrees + minutes / 60.0;
+  float minutes = degMin - degrees * 100;
+  float decimal = degrees + minutes / 60.0;
 
   if (direction_ == 'S' || direction_ == 'W') decimal *= -1;
   return decimal;
+}
+
+
+void GNSSManager::updateHeadingFilter(float newHeadingDeg) {
+  float newRad = newHeadingDeg * DEG_TO_RAD;
+  float oldRad = headingBuffer_[headingIndex_];
+
+  // If buffer is not yet full, just grow it
+  if (headingCount_ < HEADING_FILTER_WINDOW) {
+      headingCount_++;
+  } else {
+      // Subtract oldest value from sum
+      sinSum_ -= sin(oldRad);
+      cosSum_ -= cos(oldRad);
+  }
+
+  // Replace value in ring buffer
+  headingBuffer_[headingIndex_] = newRad;
+  headingIndex_ = (headingIndex_ + 1) % HEADING_FILTER_WINDOW;
+
+  // Add new value
+  sinSum_ += sin(newRad);
+  cosSum_ += cos(newRad);
+
+  currentData_.headingDeg = getFilteredHeading();
+}
+
+
+float GNSSManager::getFilteredHeading(void) const {
+  if (headingCount_ == 0) return 0.0;
+  float avgRad = atan2(sinSum_ / headingCount_, cosSum_ / headingCount_);
+  if (avgRad < 0) avgRad += 2 * PI;
+  return avgRad * RAD_TO_DEG;
 }
 
 
