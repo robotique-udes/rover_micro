@@ -27,13 +27,9 @@ void GNSSManager::update(void)
         sentenceBuffer[index] = '\0'; // Ensure null-termination
 
         //LOG_INFO(Logger::Nodes::Main, "%s", sentenceBuffer.data());
-        if (sentenceBuffer[0] == '$')
+        if (sentenceBuffer[0] == '$' || sentenceBuffer[0] == '#')
         {
-          parseNMEA(sentenceBuffer, index);
-        }
-        else if (sentenceBuffer[0] == '#' && strncmp(sentenceBuffer.data(), "#UNIHEADING", 11) == 0)
-        {
-          parseUNIHEADING(sentenceBuffer, index);
+          parseMSG(sentenceBuffer, index);
         }
       }
       index = 0;
@@ -47,9 +43,9 @@ void GNSSManager::update(void)
 }
 
 
-void GNSSManager::parseNMEA(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_) 
+void GNSSManager::parseMSG(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_) 
 {
-  if (length_ < 6 || sentence_[0] != '$') 
+  if (length_ < 6 || (sentence_[0] != '$' && sentence_[0] != '#')) 
   {
     LOG_ERROR(Logger::Nodes::Main, "Le message reçu est tout cassé bozo: lenght: %d, sentence 0: %c", length_, sentence_)
     return;
@@ -79,48 +75,9 @@ void GNSSManager::parseNMEA(const std::array<char, MAX_SENTENCE_LENGTH>& sentenc
     currentData_.fixQuality = atoi(tokens[6]);
     currentData_.satellites = atoi(tokens[7]);
   }
-}
-
-
-void GNSSManager::parseUNIHEADING(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_)
-{
-  if (length_ < 11 || strncmp(sentence_.data(), "#UNIHEADING", 11) != 0)
+  if (strncmp(buffer, "#UNIHEADING", 6) == 0 && tokenCount >= 8) 
   {
-    LOG_ERROR(Logger::Nodes::Main, "Invalid UNIHEADING message");
-    return;
-  }
-  
-  // Copy the data to work with
-  char buffer[MAX_SENTENCE_LENGTH];
-  strncpy(buffer, sentence_.data(), length_);
-  buffer[length_] = '\0'; // Ensure null-termination
-  
-  // Parse comma-separated values
-  const char* tokens[32] = { nullptr };
-  size_t tokenCount = 0;
-  tokens[tokenCount++] = buffer;
-  
-  for (size_t i = 0; i < length_ && tokenCount < 32; ++i)
-  {
-    if (buffer[i] == ',') // Handle both commas and semicolons as separators
-    {
-      buffer[i] = '\0';
-      if (i + 1 < length_)
-      {
-        tokens[tokenCount++] = &buffer[i + 1];
-      }
-    }
-  }
-  
-  if (tokenCount > 13) {
-    float heading = atof(tokens[12]);
-    currentData_.headingDeg = heading;
-    
-    //LOG_INFO(Logger::Nodes::Main, "UNIHEADING: Heading=%.4f, Pitch=%.4f", heading, pitch);
-  } 
-  else 
-  {
-    LOG_ERROR(Logger::Nodes::Main, "UNIHEADING: Not enough tokens (%d)", tokenCount);
+    currentData_.headingDeg = atof(tokens[12]);
   }
 }
 

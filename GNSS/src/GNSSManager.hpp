@@ -40,8 +40,7 @@ public:
     ~GNSSManager();
 
 private:
-    void parseNMEA(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length);
-    void parseUNIHEADING(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_);
+    void parseMSG(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length);
     double convertToDecimalDegrees(const char* nmeaCoord_, char direction_);
 };
 
