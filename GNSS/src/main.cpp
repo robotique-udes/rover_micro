@@ -14,7 +14,7 @@ constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_5;
 constexpr gpio_num_t PIN_LED_CAN = GPIO_NUM_2;
 
 #define UART_BAUD_RATE 115200
-DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
 
 
 class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>,
@@ -37,21 +37,21 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
 
     void _init(void){}
 
-    void _update(float latitude, float longitude, float headingDeg,
-                 int fixQuality, int satellites)
+    void _update(float latitude_, float longitude_, float headingDeg_,
+                 int fixQuality_, int satellites_)
     {
       if (!updateTimer.isReady()) return;
 
       RoverCan2::Msgs::FixPosition posMsg;
-      posMsg.data().latitude = latitude;
-      posMsg.data().longitude = longitude;
+      posMsg.data().latitude = latitude_;
+      posMsg.data().longitude = longitude_;
 
       RoverCan2::Msgs::FixHeading headingMsg;
-      headingMsg.data().headingDeg = headingDeg;
+      headingMsg.data().headingDeg = headingDeg_;
 
       RoverCan2::Msgs::FixInfo infoMsg;
-      infoMsg.data().fixQuality = fixQuality;
-      infoMsg.data().satelliteCount = satellites;
+      infoMsg.data().fixQuality = fixQuality_;
+      infoMsg.data().satelliteCount = satellites_;
 
       this->sendMsg(posMsg);
       this->sendMsg(headingMsg);
@@ -75,39 +75,33 @@ void setup()
   RoverCan2::ManagerSlave canManager(canDriver, device);
   canManager.init();
 
-  
   // Initialize HardwareSerial on UART2
   HardwareSerial GNSSSerial(2); 
   GNSSManager gnss(&GNSSSerial);
-
   GNSSSerial.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
 
 
   for (EVER)
   {
     gnss.update();
-    GNSSData data = gnss.getData();
+    GNSS_DATA data = gnss.getData();
 
     device._update(data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
+    
+    if (data.hasValidFix()) 
+    {
+      LOG_INFO(Logger::Nodes::Main, "Lat: %.6f, Lon: %.6f, Heading: %f deg, Quality: %d, Satellites: %d\n",
+               data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
+    } else 
+    {
+      LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
+    }    
+    
     canManager.update();
-
-    // if (data.hasValidFix()) {
-    //   LOG_INFO(Logger::Nodes::Main, "Lat: %.6f, Lon: %.6f, Heading: %f deg, Quality: %d, Satellites: %d\n",
-    //     data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
-    // } else {
-    //   LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
-    // }
-
-    // delay(50);
   }
 }
 
 
 void loop()
 {
-  
 }
-
-
-
-// https://receiverhelp.trimble.com/alloy-gnss/en-us/nmea0183-messages-gga.html?Highlight=gpgga// https://receiverhelp.trimble.com/alloy-gnss/en-us/nmea0183-messages-gga.html?Highlight=gpgga

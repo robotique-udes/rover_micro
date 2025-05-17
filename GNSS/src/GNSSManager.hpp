@@ -3,10 +3,12 @@
 
 #include <Arduino.h>
 #include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/sensors/gnss_parser.hpp"
+#include "rover_lib2/filters/circular_moving_average.hpp"
 #include <deque>
 
 
-struct GNSSData 
+struct GNSS_DATA
 {
     float latitude = 0.0;
     float longitude = 0.0;
@@ -26,30 +28,24 @@ struct GNSSData
 class GNSSManager 
 {
 private:
-    Stream* GNSSSerial;
-    String buffer_;
-    GNSSData currentData_;
+    Stream* _GNSSSerial;
+    String _buffer;
+    GNSS_DATA _sCurrentData;
     static constexpr size_t MAX_SENTENCE_LENGTH = 100;
 
-    // Circular moving average buffer for heading
-    static constexpr size_t HEADING_FILTER_WINDOW = 5;
-    float headingBuffer_[HEADING_FILTER_WINDOW] = {0};
-    size_t headingIndex_ = 0;
-    size_t headingCount_ = 0;
-    float sinSum_ = 0.0;
-    float cosSum_ = 0.0;
+    CircularMovingAverage<10> _headingFilter;  // Circular window size of 10
 
 public:
     explicit GNSSManager(Stream *serial_);
     void update(void);
-    GNSSData getData(void) const;
+    GNSS_DATA getData(void) const;
+    void updateHeadingFilter(float headingDeg_);
+    float getFilteredHeading(void) const;
     ~GNSSManager();
 
 private:
-    void parseMSG(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length);
+    void parseMSG(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_);
     float convertToDecimalDegrees(const char* nmeaCoord_, char direction_);
-    void updateHeadingFilter(float newHeadingDeg);
-    float getFilteredHeading(void) const;
 };
 
 #endif // GNSS_MANAGER_H
