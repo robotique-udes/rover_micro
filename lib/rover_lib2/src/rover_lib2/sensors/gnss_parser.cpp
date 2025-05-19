@@ -3,17 +3,17 @@
 namespace GNSSParser
 {
     // Tokenize function: splits based on commas and fills fixed-size token array
-    inline size_t tokenize(char* buffer_, char* tokens_[MAX_TOKENS]) 
+    inline size_t tokenize(char* buffer_, char* tokens_[MAX_TOKENS])
     {
         size_t count = 0;
         tokens_[count++] = buffer_;
 
-        for (size_t i = 0; buffer_[i] != '\0' && count < MAX_TOKENS; ++i) 
+        for (size_t i = 0; buffer_[i] != '\0' && count < MAX_TOKENS; ++i)
         {
-            if (buffer_[i] == ',') 
+            if (buffer_[i] == ',')
             {
                 buffer_[i] = '\0';
-                if (i + 1 < MAX_TOKENS) 
+                if (i + 1 < MAX_TOKENS)
                 {
                     tokens_[count++] = &buffer_[i + 1];
                 }
@@ -22,8 +22,7 @@ namespace GNSSParser
         return count;
     }
 
-
-    inline float convertToDecimalDegrees(const char* nmeaCoord_, char direction_) 
+    inline float convertToDecimalDegrees(const char* nmeaCoord_, char direction_)
     {
         if (!nmeaCoord_ || strlen(nmeaCoord_) < 6)
         {
@@ -36,7 +35,7 @@ namespace GNSSParser
         float minutes = degMin - degrees * 100.0f;
         float decimal = degrees + minutes / 60.0f;
 
-        if (direction_ == 'S' || direction_ == 'W') 
+        if (direction_ == 'S' || direction_ == 'W')
         {
             decimal *= -1.0f;
             return decimal;
@@ -48,18 +47,22 @@ namespace GNSSParser
         }
     }
 
-
-    bool parseGGA(char* rawSentence_, sGGAData& out_) 
+    /**
+     * @brief
+     *
+     * @attention Assume rawSentence is a GGA message
+     */
+    bool parseGGA(char* rawSentence_, sGGAData& out_)
     {
         char* tokens[MAX_TOKENS] = {nullptr};
         size_t count = tokenize(rawSentence_, tokens);
 
-        if (count >= 15) 
+        if (count >= 15)
         {
             strncpy(out_.messageID, tokens[0], 6);
             out_.messageID[6] = '\0';
 
-            if (tokens[1]) 
+            if (tokens[1])
             {
                 float time = std::atof(tokens[1]);
                 out_.utcTime.hours = static_cast<uint8_t>(time / 10000);
@@ -79,21 +82,25 @@ namespace GNSSParser
             out_.diffRefStationID = static_cast<uint16_t>(std::atoi(tokens[14]));
             strncpy(out_.checksum, tokens[15], sizeof(out_.checksum) - 1);
             return true;
-        } 
+        }
         return false;
     }
 
-
-    bool parseUniHeading(char* rawSentence_, sUniHeadingData& out_) 
+    /**
+     * @brief
+     *
+     * @attention Assume rawSentence is a UniHeading message
+     */
+    bool parseUniHeading(char* rawSentence_, sUniHeadingData& out_)
     {
         char* tokens[MAX_TOKENS] = {nullptr};
         size_t count = tokenize(rawSentence_, tokens);
 
-        if (count > 12 && tokens[12]) 
+        if (count > 12 && tokens[12])
         {
             out_.headingDeg = std::atof(tokens[12]);
             return true;
         }
         return false;
     }
-}
+}  // namespace GNSSParser

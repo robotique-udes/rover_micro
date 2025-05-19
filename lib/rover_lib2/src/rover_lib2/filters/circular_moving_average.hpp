@@ -5,7 +5,7 @@
 #include <array>
 
 /**
- * @brief 
+ * @brief
  * Circular moving average filter for angular data in radians (e.g., compass heading or encoder values).
  * Smooths transitions around the wrap-around point (e.g., near 2π to 0).
  * @attention Works only for values wrapped in the range [0, 2π)
@@ -22,7 +22,6 @@ class CircularMovingAverage
     float _cosSum = 0.0f;
 
   public:
-
     float addValue(float angleRad_)
     {
         float oldRad = _buffer[_index];
@@ -38,7 +37,7 @@ class CircularMovingAverage
         }
 
         _buffer[_index] = angleRad_;
-        _index = (_index + 1) % WINDOW_SIZE;
+        _index = (++_index >= WINDOW_SIZE) ? 0 : _index;
 
         _sinSum += std::sin(angleRad_);
         _cosSum += std::cos(angleRad_);

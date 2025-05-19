@@ -87,6 +87,9 @@ constexpr T CONSTRAIN(T value_, T min_, T max_)
     }
 }
 
+constexpr float RAD_TO_DEG_ = 57.295779513;
+constexpr float DEG_TO_RAD_ = 0.017453293;
+
 /**
  * @brief Truncate a floating-point value (remove fractional part).
  */
