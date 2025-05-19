@@ -3,18 +3,15 @@
 
 #include <cmath>
 #include <array>
-#include <Arduino.h>
-
-// On pourrait potentiellement l'update pour gerer des rads
 
 /**
  * @brief 
- * Circular moving average filter for angular data (e.g. compass heading or encoder values).
- * Smooths transitions around the wrap-around point (e.g., 359° to 0°).
- * @attention Works only for 0-360 degrees range
+ * Circular moving average filter for angular data in radians (e.g., compass heading or encoder values).
+ * Smooths transitions around the wrap-around point (e.g., near 2π to 0).
+ * @attention Works only for values wrapped in the range [0, 2π)
  * @tparam WINDOW_SIZE The number of samples to average over
  */
-template<uint16_t WINDOW_SIZE>
+template<size_t WINDOW_SIZE>
 class CircularMovingAverage
 {
   private:
@@ -25,12 +22,9 @@ class CircularMovingAverage
     float _cosSum = 0.0f;
 
   public:
-    CircularMovingAverage() {}
-    ~CircularMovingAverage() {}
 
-    float addValue(float headingDeg_)
+    float addValue(float angleRad_)
     {
-        float newRad = headingDeg_ * DEG_TO_RAD;
         float oldRad = _buffer[_index];
 
         if (_count < WINDOW_SIZE)
@@ -43,11 +37,11 @@ class CircularMovingAverage
             _cosSum -= std::cos(oldRad);
         }
 
-        _buffer[_index] = newRad;
+        _buffer[_index] = angleRad_;
         _index = (_index + 1) % WINDOW_SIZE;
 
-        _sinSum += std::sin(newRad);
-        _cosSum += std::cos(newRad);
+        _sinSum += std::sin(angleRad_);
+        _cosSum += std::cos(angleRad_);
 
         return getAverage();
     }
@@ -58,12 +52,13 @@ class CircularMovingAverage
         {
             return 0.0f;
         }
+
         float avgRad = std::atan2(_sinSum / _count, _cosSum / _count);
-        if (avgRad < 0)
+        if (avgRad < 0.0f)
         {
-            avgRad += 2.0f * PI;
+            avgRad += 2.0f * static_cast<float>(M_PI);
         }
-        return avgRad * RAD_TO_DEG;
+        return avgRad;
     }
 };
 

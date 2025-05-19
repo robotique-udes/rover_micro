@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "rover_lib2/helpers/moving_average.hpp"
+#include "rover_lib2/filters/moving_average.hpp"
 
 // =============================================================================
 // Test Suite

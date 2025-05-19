@@ -5,18 +5,17 @@
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/sensors/gnss_parser.hpp"
 #include "rover_lib2/filters/circular_moving_average.hpp"
-#include <deque>
 
 
-struct GNSS_DATA
+struct sGNSSData
 {
-    float latitude = 0.0;
-    float longitude = 0.0;
-    int fixQuality = 0;
-    int satellites = 0;
-    float headingDeg = 0.0;
+    float latitude = 0.0f;
+    float longitude = 0.0f;
+    uint8_t fixQuality = 0;
+    uint8_t satellites = 0;
+    float headingDeg = 0.0f;
 
-    bool hasValidFix() const { return fixQuality > 0; }
+    inline bool hasValidFix() const { return fixQuality > 0; }
 };
 
 
@@ -28,24 +27,26 @@ struct GNSS_DATA
 class GNSSManager 
 {
 private:
-    Stream* _GNSSSerial;
-    String _buffer;
-    GNSS_DATA _sCurrentData;
+    static constexpr size_t CIRCULAR_WINDOW_SIZE = 10;
     static constexpr size_t MAX_SENTENCE_LENGTH = 100;
+    static constexpr float RAD_TO_DEG_ = 57.295779513;
+    static constexpr float DEG_TO_RAD_ = 0.017453293;
 
-    CircularMovingAverage<10> _headingFilter;  // Circular window size of 10
+    Stream* _GNSSSerial;
+    sGNSSData _currentData;
+    CircularMovingAverage<CIRCULAR_WINDOW_SIZE> _headingFilter;
+
+    char _sentenceBuffer[MAX_SENTENCE_LENGTH];
+    size_t _buffer_Index;
 
 public:
-    explicit GNSSManager(Stream *serial_);
+    explicit GNSSManager(Stream &serial_);
     void update(void);
-    GNSS_DATA getData(void) const;
-    void updateHeadingFilter(float headingDeg_);
-    float getFilteredHeading(void) const;
-    ~GNSSManager();
+    sGNSSData getData(void);
+    float getFilteredHeading(void);
 
 private:
-    void parseMSG(const std::array<char, MAX_SENTENCE_LENGTH>& sentence_, size_t length_);
-    float convertToDecimalDegrees(const char* nmeaCoord_, char direction_);
+    void parseMSG(char* buffer, size_t length_);
 };
 
 #endif // GNSS_MANAGER_H

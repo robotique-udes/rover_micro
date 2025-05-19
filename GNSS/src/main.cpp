@@ -37,28 +37,32 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
 
     void _init(void){}
 
-    void _update(float latitude_, float longitude_, float headingDeg_,
-                 int fixQuality_, int satellites_)
+    void _update(void)
     {
-      if (!updateTimer.isReady()) return;
-
-      RoverCan2::Msgs::FixPosition posMsg;
-      posMsg.data().latitude = latitude_;
-      posMsg.data().longitude = longitude_;
-
-      RoverCan2::Msgs::FixHeading headingMsg;
-      headingMsg.data().headingDeg = headingDeg_;
-
-      RoverCan2::Msgs::FixInfo infoMsg;
-      infoMsg.data().fixQuality = fixQuality_;
-      infoMsg.data().satelliteCount = satellites_;
-
+      if (!updateTimer.isReady()) 
+      {
+        return;
+      }
       this->sendMsg(posMsg);
       this->sendMsg(headingMsg);
       this->sendMsg(infoMsg);
     }
+
+    void set(float latitude_, float longitude_, float headingDeg_, int fixQuality_, int satellites_)
+    {
+      posMsg.data().latitude = latitude_;
+      posMsg.data().longitude = longitude_;
+
+      headingMsg.data().headingDeg = headingDeg_;
+      
+      infoMsg.data().fixQuality = fixQuality_;
+      infoMsg.data().satelliteCount = satellites_;
+    }
   
   private:
+    RoverCan2::Msgs::FixPosition posMsg;
+    RoverCan2::Msgs::FixHeading headingMsg;
+    RoverCan2::Msgs::FixInfo infoMsg;
     RoverCan2::Publisher<RoverCan2::Msgs::FixPosition> _fixPosPublisher;
     RoverCan2::Publisher<RoverCan2::Msgs::FixHeading> _fixHeadingPublisher;
     RoverCan2::Publisher<RoverCan2::Msgs::FixInfo> _fixInfoPublisher;
@@ -77,16 +81,16 @@ void setup()
 
   // Initialize HardwareSerial on UART2
   HardwareSerial GNSSSerial(2); 
-  GNSSManager gnss(&GNSSSerial);
+  GNSSManager gnss(GNSSSerial);
   GNSSSerial.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
 
 
   for (EVER)
   {
     gnss.update();
-    GNSS_DATA data = gnss.getData();
+    sGNSSData data = gnss.getData();
 
-    device._update(data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
+    device.set(data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
     
     if (data.hasValidFix()) 
     {
