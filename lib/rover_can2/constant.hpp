@@ -113,6 +113,8 @@ namespace RoverCan2::Constant
                                                                eMsgId::PWM_CMD,
                                                                eMsgId::PWM_STATUS,
                                                                eMsgId::PWM_INFO,
+                                                               eMsgId::PROP_SPEED_CMD,
+                                                               eMsgId::PROP_SPEED_STATUS,
                                                                eMsgId::DDB_CMD,
                                                                eMsgId::DDB_STATUS};
 
