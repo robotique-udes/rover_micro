@@ -5,7 +5,7 @@
 #include "rover_lib2/helpers/compile_time_array.hpp"
 #include "rover_lib2/LED/blink_pattern.hpp"
 
-namespace RoverCan2::Constant 
+namespace RoverCan2::Constant
 {
     constexpr size_t CAN_MAX_DATA_LENGTH = 8UL;
     constexpr float MASTER_HEARTBEAT_RATE_HZ = 10.0F;
