@@ -9,15 +9,15 @@
 // Configure UART pins
 constexpr gpio_num_t PIN_UART_TX = GPIO_NUM_47;
 constexpr gpio_num_t PIN_UART_RX = GPIO_NUM_13;
-constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_4;
-constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_5;
+constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_5;
+constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_4;
 constexpr gpio_num_t PIN_LED_CAN = GPIO_NUM_2;
 
 constexpr uint32_t UART_BAUD_RATE = 115200;
-constexpr uint32_t PUBLISH_PERIOD_MS = 50;
+constexpr uint32_t PUBLISH_PERIOD_MS = 100;
 constexpr uint8_t GNSS_UART_PORT = 2;
 
-DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 
 class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>,
                                          RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>,
@@ -69,6 +69,7 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
 
 void setup()
 {
+    Serial.begin(115200);
     LED::LedBlinkerSoft canLed = LED::LedBlinkerSoft(IO::DigitalOutput(PIN_LED_CAN), LED::BlinkPatterns::ON);
     RoverCan2::Drivers::DriverESP32 canDriver(PIN_CAN_RX, PIN_CAN_TX, &canLed);
     CanGNSS device;
@@ -76,7 +77,7 @@ void setup()
     canManager.init();
 
     // Initialize HardwareSerial on UART2
-    HardwareSerial GNSSSerial(GNSS_UART_PORT);
+    HardwareSerial GNSSSerial(2);
     GNSSManager gnss(GNSSSerial);
     GNSSSerial.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
 

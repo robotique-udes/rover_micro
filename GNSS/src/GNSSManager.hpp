@@ -30,7 +30,7 @@ class GNSSManager
 {
   private:
     static constexpr size_t CIRCULAR_WINDOW_SIZE = 10;
-    static constexpr size_t MAX_SENTENCE_LENGTH = 100;
+    static constexpr size_t MAX_SENTENCE_LENGTH = 200;
 
     Stream& _GNSSSerial;
     sGNSSData _currentData;

@@ -20,14 +20,13 @@ void GNSSManager::update(void)
             continue;
         }
         char ch = static_cast<char>(c);
-        LOG_DEBUG(Logger::Nodes::GNSS, "Charactere recu: %c", ch);
+        // LOG_DEBUG(Logger::Nodes::GNSS, "Charactere recu: %c", ch);
 
-        if (ch == '\n')
+        if (ch == '\n' || ch == '\r')
         {
             if (_buffer_Index > 0UL && _buffer_Index < MAX_SENTENCE_LENGTH - 1UL)
             {
                 _sentenceBuffer[_buffer_Index] = '\0';
-
                 LOG_DEBUG(Logger::Nodes::GNSS, "%s", _sentenceBuffer);
 
                 if (_sentenceBuffer[0] == '$' || _sentenceBuffer[0] == '#')

@@ -13,7 +13,7 @@ namespace GNSSParser
             if (buffer_[i] == ',')
             {
                 buffer_[i] = '\0';
-                if (i + 1 < MAX_TOKENS)
+                if (count < MAX_TOKENS)
                 {
                     tokens_[count++] = &buffer_[i + 1];
                 }
@@ -42,8 +42,7 @@ namespace GNSSParser
         }
         else
         {
-            LOG_ERROR(Logger::Nodes::GNSS_PARSER, "Invalid direction: %c", direction_);
-            return 0.0f;
+            return decimal;
         }
     }
 
@@ -59,9 +58,11 @@ namespace GNSSParser
 
         if (count >= 15)
         {
-            strncpy(out_.messageID, tokens[0], 6);
-            out_.messageID[6] = '\0';
-
+            if (tokens[0])
+            {
+                strncpy(out_.messageID, tokens[0], 6);
+                out_.messageID[6] = '\0';
+            }
             if (tokens[1])
             {
                 float time = std::atof(tokens[1]);
@@ -69,18 +70,54 @@ namespace GNSSParser
                 out_.utcTime.minutes = static_cast<uint8_t>((static_cast<int>(time) % 10000) / 100);
                 out_.utcTime.seconds = fmod(time, 100.0f);
             }
-            out_.latitude = convertToDecimalDegrees(tokens[2], tokens[3][0]);
-            out_.longitude = convertToDecimalDegrees(tokens[4], tokens[5][0]);
-            out_.fixQuality = static_cast<uint8_t>(std::atoi(tokens[6]));
-            out_.satellitesUsed = static_cast<uint8_t>(std::atoi(tokens[7]));
-            out_.hdop = std::atof(tokens[8]);
-            out_.mslAltitude = std::atof(tokens[9]);
-            out_.altitudeUnits = tokens[10][0];
-            out_.geoidSeparation = std::atof(tokens[11]);
-            out_.geoidUnits = tokens[12][0];
-            out_.ageOfDiffCorr = std::atof(tokens[13]);
-            out_.diffRefStationID = static_cast<uint16_t>(std::atoi(tokens[14]));
-            strncpy(out_.checksum, tokens[15], sizeof(out_.checksum) - 1);
+            if (tokens[2] && tokens[3])
+            {
+                out_.latitude = convertToDecimalDegrees(tokens[2], tokens[3][0]);
+            }
+            if (tokens[4] && tokens[5])
+            {
+                out_.longitude = convertToDecimalDegrees(tokens[4], tokens[5][0]);
+            }
+            if (tokens[6])
+            {
+                out_.fixQuality = static_cast<uint8_t>(std::atoi(tokens[6]));
+            }
+            if (tokens[7])
+            {
+                out_.satellitesUsed = static_cast<uint8_t>(std::atoi(tokens[7]));
+            }
+            if (tokens[8])
+            {
+                out_.hdop = std::atof(tokens[8]);
+            }
+            if (tokens[9])
+            {
+                out_.mslAltitude = std::atof(tokens[9]);
+            }
+            if (tokens[10])
+            {
+                out_.altitudeUnits = tokens[10][0];
+            }
+            if (tokens[11])
+            {
+                out_.geoidSeparation = std::atof(tokens[11]);
+            }
+            if (tokens[12])
+            {
+                out_.geoidUnits = tokens[12][0];
+            }
+            if (tokens[13])
+            {
+                out_.ageOfDiffCorr = std::atof(tokens[13]);
+            }
+            if (tokens[14])
+            {
+                out_.diffRefStationID = static_cast<uint16_t>(std::atoi(tokens[14]));
+            }
+            if (tokens[15])
+            {
+                strncpy(out_.checksum, tokens[15], sizeof(out_.checksum) - 1);
+            }
             return true;
         }
         return false;
