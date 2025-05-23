@@ -1,6 +1,8 @@
 #ifndef ACTUATOR_SERVO_HPP
 #define ACTUATOR_SERVO_HPP
 
+#error IMPLEMENTATION IN PROGRESS DON'T USE
+
 #include "actuator.hpp"
 #include "rover_lib2/sensors/encoder/encoder.hpp"
 #include "motor_drivers/motor_driver.hpp"

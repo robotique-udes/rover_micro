@@ -9,6 +9,7 @@
 #if defined(__linux__) && defined(RCLCPP_DEBUG)
 #include <rclcpp/qos.hpp>
 #define QOS_DEFAULT rclcpp::QoS(rclcpp::KeepLast(10))
+#include <rover_msgs/msg/joy.hpp>
 #endif  // defined(__linux__) && defined(RCLCPP_DEBUG)
 
 namespace Constants
@@ -29,8 +30,7 @@ namespace Constants
         };
 
         /**
-         * @brief Tries to find a name from a camera URL
-         *
+         * @brief
          * @param url_ URL of the camera
          * @param rName_ Overwrite value if found
          * @return Success on camera name found
@@ -38,6 +38,26 @@ namespace Constants
         bool getNameFromURL(const std::string& url_, std::string& rName_);
 #endif  // defined(__linux__)
     }   // namespace CameraInfo
+
+    namespace DriveTrain
+    {
+        constexpr float SPEED_FACTOR_CRAWLER = 0.2f;
+        constexpr float SPEED_FACTOR_NORMAL = 0.5f;
+        constexpr float SPEED_FACTOR_TURBO = 1.0f;
+        constexpr float SMALLEST_RADIUS = 0.3f;
+    }  // namespace DriveTrain
+
+    namespace DriveTrain::KeyBinding
+    {
+#if defined(__linux__) && defined(RCLCPP_DEBUG)
+        constexpr float DEADMAN_SWITCH = rover_msgs::msg::Joy::L1;
+        constexpr float LINEAR_INPUT = rover_msgs::msg::Joy::JOYSTICK_LEFT_FRONT;
+        constexpr float ANGULAR_INPUT = rover_msgs::msg::Joy::JOYSTICK_LEFT_SIDE;
+        constexpr float MODE_TANK_ANGULAR_INPUT = rover_msgs::msg::Joy::JOYSTICK_RIGHT_SIDE;
+        constexpr float MODE_NORMAL_ENABLE = rover_msgs::msg::Joy::R1;
+        constexpr float MODE_TURBO_ENABLE = rover_msgs::msg::Joy::R2;
+#endif  // defined(__linux__) && defined(RCLCPP_DEBUG)
+    }   // namespace DriveTrain::KeyBinding
 }  // namespace Constants
 
 #endif  // CONSTANTS_HPP

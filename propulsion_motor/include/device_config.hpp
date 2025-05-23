@@ -7,9 +7,9 @@
 #include <cstdint>
 #include "rover_can2/constant.hpp"
 
-constexpr RoverCan2::Constant::eDeviceId DEVICE_ID = RoverCan2::Constant::eDeviceId::FRONTRIGHT_MOTOR;
+constexpr RoverCan2::Constant::eDeviceId DEVICE_ID = RoverCan2::Constant::eDeviceId::REARRIGHT_MOTOR;
 
 constexpr float ALIM_VOLTAGE = 24.0F;
-constexpr float MAX_VOLTAGE = 12.0F; // Not higher than 18V for BackEMF problems
- 
+constexpr float MAX_VOLTAGE = 24.0F;
+
 #endif  // __CONFIG_LOCAL_HPP__
