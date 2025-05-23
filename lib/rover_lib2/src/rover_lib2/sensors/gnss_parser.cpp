@@ -26,7 +26,7 @@ namespace GNSSParser
     {
         if (!nmeaCoord_ || strlen(nmeaCoord_) < 6)
         {
-            LOG_ERROR(Logger::Nodes::GNSS_PARSER, "Invalid NMEA Coord: %s", nmeaCoord_);
+            LOG_WARN(Logger::Nodes::GNSS_PARSER, "Invalid NMEA Coord: %s", nmeaCoord_);
             return 0.0f;
         }
 

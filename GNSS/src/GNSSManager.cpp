@@ -47,7 +47,7 @@ void GNSSManager::parseMSG(char* buffer_, size_t length_)
 {
     if (length_ < 10 || (buffer_[0] != '$' && buffer_[0] != '#'))
     {
-        LOG_ERROR(Logger::Nodes::GNSS, "Le message reçu est tout cassé bozo: lenght: %d, sentence 0: %s", length_, buffer_);
+        LOG_WARN(Logger::Nodes::GNSS, "Le message reçu est tout cassé bozo: lenght: %d, sentence 0: %s", length_, buffer_);
         return;
     }
 
