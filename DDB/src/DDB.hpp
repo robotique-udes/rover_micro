@@ -36,7 +36,6 @@ class DDB : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs
 
     void _init(void)
     {
-
         _bank0_ch2.write(IO::eIOState::HIGH_);
         _bank0_ch3.write(IO::eIOState::LOW_);
 

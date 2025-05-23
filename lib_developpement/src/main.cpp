@@ -56,7 +56,6 @@ void setup(void)
     ActuatorServo<PWMGenerators::MCPWM> servo(ActuatorServoT::eModel::BILDA_TORQUE_FIVE_TURN, pwmGen, false);
     servo.init();
 
-
     LoopTimer<uint64_t, Time::micros> timerCmdChange(5000.0F);
     LOG_INFO(Logger::Nodes::Main, "Init done, starting loop!");
     for (EVER)
