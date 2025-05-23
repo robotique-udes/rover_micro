@@ -37,12 +37,11 @@ constexpr uint64_t PERIOD_SEND_PROP_MOTOR_STATUS = 1'000ULL / 20ULL;
 constexpr uint64_t PERIOD_RECV_PROP_MOTOR_STATUS = 1'000ULL / 20ULL;
 constexpr uint64_t PERIOD_WATCHDOG_TRIGGER = 2ULL * PERIOD_RECV_PROP_MOTOR_STATUS;
 
-constexpr float MOTOR_PWM_FREQUENCY = 6'000.0F;
+constexpr float MOTOR_PWM_FREQUENCY = 1'000.0F;
+constexpr float FULL_STOP_CMD = 0.0F;
 
 static_assert(ABS(MAX_VOLTAGE) <= ABS(ALIM_VOLTAGE), "Alim tension cannot be lower than limit");
 constexpr float MAX_COMMAND = 100.0F * (ABS(MAX_VOLTAGE) / ABS(ALIM_VOLTAGE));
-
-float globalTestVal = 0.0F;
 
 class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PropSpeedCmd, PropulsionMotor>,
                                                  RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>>,
@@ -56,9 +55,9 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
         DeviceT(id_,
                 RoverCan2::SubscriberMember(*this, &PropulsionMotor::CB_propMotorCmdRecv),
                 RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>()),
-        _cmdAvg(0.0F),
+        _cmdAvg(FULL_STOP_CMD),
         _timerSend(PERIOD_SEND_PROP_MOTOR_STATUS),
-        _timerLoop(PERIOD_RECV_PROP_MOTOR_STATUS),
+        _timerLoop(1),
         _watchdog(PERIOD_WATCHDOG_TRIGGER)
     {
         switch (id_)
@@ -83,7 +82,7 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
 
     void _init(void)
     {
-        _drive.setCmd(0.0F);
+        _drive.setCmd(FULL_STOP_CMD);
         _drive.init();
         _drive.setEnabled(true);
     }
@@ -94,13 +93,13 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
         {
             _drive.update();
 
-            float cmd = CONSTRAIN(_cmdAvg.getAverage(), -MAX_COMMAND, MAX_COMMAND);
+            float cmd = MAP(_cmdAvg.getAverage(), -100.0F, 100.0F, -MAX_COMMAND, MAX_COMMAND);
+            cmd = CONSTRAIN(cmd, -MAX_COMMAND, MAX_COMMAND);
             _drive.setCmd(cmd);
-            LOG_DEBUG(Logger::Nodes::Main, "%f", cmd);
 
             if (!_watchdog.isOk())
             {
-                _cmdAvg.addValue(globalTestVal);
+                _cmdAvg.addValue(FULL_STOP_CMD);
             }
 
             if (_timerSend.isReady())
@@ -116,7 +115,7 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
     void CB_propMotorCmdRecv(const RoverCan2::Msgs::PropSpeedCmd& msg_)
     {
         _watchdog.reset();
-        _cmdAvg.addValue(msg_.getData().target_speed);
+        _cmdAvg.addValue(msg_.getData().target_speed * 100.0F);
     }
 
     IO::DigitalOutput __enableA
@@ -162,52 +161,6 @@ void setup()
 
     for (EVER)
     {
-        char c = Serial.read();
-        if (c == '0')
-        {
-            globalTestVal = 0.0F;
-        }
-        else if (c == '1')
-        {
-            globalTestVal = 10.0F;
-        }
-        else if (c == '2')
-        {
-            globalTestVal = 20.0F;
-        }
-        else if (c == '3')
-        {
-            globalTestVal = 30.0F;
-        }
-        else if (c == '4')
-        {
-            globalTestVal = 40.0F;
-        }
-        else if (c == '5')
-        {
-            globalTestVal = 50.0F;
-        }
-        else if (c == '6')
-        {
-            globalTestVal = 60.0F;
-        }
-        else if (c == '7')
-        {
-            globalTestVal = 70.0F;
-        }
-        else if (c == '8')
-        {
-            globalTestVal = 80.0F;
-        }
-        else if (c == '9')
-        {
-            globalTestVal = 90.0F;
-        }
-        else if (c == '+')
-        {
-            globalTestVal = 100.0F;
-        }
-
         manager.update();
         propMotor.update();
     }
