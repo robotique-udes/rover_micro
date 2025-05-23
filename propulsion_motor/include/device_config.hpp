@@ -1,5 +1,5 @@
-#ifndef __CONFIG_LOCAL_HPP__
-#define __CONFIG_LOCAL_HPP__
+#ifndef CONFIG_LOCAL_HPP
+#define CONFIG_LOCAL_HPP
 
 // This file should be use to change parameter before uploading into a new
 // device of the same type. For example, all propulsion motors should have the
