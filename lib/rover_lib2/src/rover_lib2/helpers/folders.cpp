@@ -1,8 +1,8 @@
 #include "folders.hpp"
-#include <sstream>
 
 #if defined(__linux__)
 #include "log.hpp"
+#include <sstream>
 
 DEFINE_LOG_NODE(FoldersHelper, Logger::eNodeState::OFF);
 
@@ -37,7 +37,7 @@ bool Folders::createFolder(const std::string& path_)
             if (mkdir(currentDirectory.c_str(), 0775) != 0)
             {
                 std::string errorMessage = "Failed to create folder for path: " + currentDirectory;
-                LOG_INFO(Logger::Nodes::FoldersHelper, errorMessage);
+                LOG_INFO(Logger::Nodes::FoldersHelper, errorMessage.c_str());
                 return false;
             }
         }

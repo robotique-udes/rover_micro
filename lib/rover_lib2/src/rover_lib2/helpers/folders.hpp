@@ -1,11 +1,10 @@
 #ifndef FOLDERS_HPP
 #define FOLDERS_HPP
 
+#if defined(__linux__)
 #include <string>
 #include <sys/stat.h>
 #include <vector>
-
-#if defined(__linux__)
 
 namespace Folders
 {
