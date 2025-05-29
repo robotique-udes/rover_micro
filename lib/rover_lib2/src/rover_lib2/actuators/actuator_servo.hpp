@@ -1,7 +1,7 @@
 #ifndef ACTUATOR_SERVO_HPP
 #define ACTUATOR_SERVO_HPP
 
-#error IMPLEMENTATION IN PROGRESS DON'T USE
+#warning IMPLEMENTATION IN PROGRESS DON'T USE
 
 #include "actuator.hpp"
 #include "rover_lib2/sensors/encoder/encoder.hpp"
@@ -16,18 +16,14 @@
 
 #include <array>
 
+DEFINE_LOG_NODE(ActuatorServo, Logger::eNodeState::ON);
+
 class ActuatorServoT
 {
   protected:
     ActuatorServoT() = default;
 
   public:
-    enum class eModel
-    {
-        BILDA_TORQUE_FIVE_TURN,
-        eLast
-    };
-
     struct sTimingLimits
     {
         float frequency;
@@ -37,14 +33,6 @@ class ActuatorServoT
         float maxPosition;
         float maxSpeed;  // Used to simulate position during movement
     };
-
-    static constexpr std::array<sTimingLimits, TO_UNDERLYING(eModel::eLast)> TIMING_CONFIGS
-        = {sTimingLimits{.frequency = 50.0F,
-                         .minMs = 1000.0F,
-                         .maxMs = 2000.0F,
-                         .minPosition = 0.0F,
-                         .maxPosition = Constants::TWO_PI_,
-                         .maxSpeed = 1000.0F}};
 };
 
 template<typename PwmGenerator_T>
@@ -55,25 +43,23 @@ class ActuatorServo : public Actuator<ActuatorServo<PwmGenerator_T>>
     static constexpr uint64_t UPDATE_PERIOD = 1'000ULL / static_cast<uint64_t>(UPDATE_FREQUENCY);
 
   public:
-    ActuatorServo(ActuatorServoT::eModel model_, PwmGenerator_T& pwmGenerator_, bool reversed_ = false):
-        _model(model_),
+    ActuatorServo(ActuatorServoT::sTimingLimits servoTimings_, PwmGenerator_T& pwmGenerator_, bool reversed_ = false):
+        _servoTimings(servoTimings_),
         _pwmGenerator(pwmGenerator_),
-        _msToDutyFactor(1.0F / (1'000'000.0F / ActuatorServoT::TIMING_CONFIGS[TO_UNDERLYING(_model)].frequency)),
+        _minPosition(_servoTimings.minPosition),
+        _maxPosition(_servoTimings.maxPosition),
+        _maxSpeed(_servoTimings.maxSpeed),
+        _msToDutyFactor(1.0F / (1'000'000.0F / _servoTimings.frequency)),
         _updateTimer(UPDATE_PERIOD)
     {
-        ASSERT_COND(TO_UNDERLYING(_model) < TO_UNDERLYING(ActuatorServoT::eModel::eLast));
-        ASSERT_COND(
-            IN_ERROR(_pwmGenerator.getFrequency(), 1.0F, ActuatorServoT::TIMING_CONFIGS[TO_UNDERLYING(_model)].frequency));
-
-        _minPosition = ActuatorServoT::TIMING_CONFIGS[TO_UNDERLYING(_model)].minPosition;
-        _maxPosition = ActuatorServoT::TIMING_CONFIGS[TO_UNDERLYING(_model)].maxPosition;
-
+        ASSERT_COND(IN_ERROR(_pwmGenerator.getFrequency(), 10.0F, _servoTimings.frequency));
         this->setReversed(reversed_);
     }
 
     void __init(void)
     {
         _pwmGenerator.init();
+        _pwmGenerator.setEnabled(true);
     }
 
     void __update(void)
@@ -109,9 +95,10 @@ class ActuatorServo : public Actuator<ActuatorServo<PwmGenerator_T>>
                     }
                 }
 
-                float minDuty = ActuatorServoT::TIMING_CONFIGS[TO_UNDERLYING(_model)].minMs * _msToDutyFactor;
-                float maxDuty = ActuatorServoT::TIMING_CONFIGS[TO_UNDERLYING(_model)].maxMs * _msToDutyFactor;
-                cmd = MAP(_goalPos, _minPosition, _maxPosition, minDuty, maxDuty);
+                _currentPos = cmd;
+                float minDuty = _servoTimings.minMs * _msToDutyFactor;
+                float maxDuty = _servoTimings.maxMs * _msToDutyFactor;
+                cmd = MAP(cmd, _minPosition, _maxPosition, minDuty, maxDuty);
                 _pwmGenerator.setDutyCycle(100.0F * cmd);
             }
 
@@ -122,13 +109,27 @@ class ActuatorServo : public Actuator<ActuatorServo<PwmGenerator_T>>
 
     void _setPosition(float pos_)
     {
-        CONSTRAIN(pos_, _minPosition, _maxPosition);
-        _goalPos = pos_;
+        if (!_reversed)
+        {
+            _goalPos = pos_;
+        }
+        else
+        {
+            _goalPos = MAP(pos_, _minPosition, _maxPosition, _maxPosition, _minPosition);
+        }
+        _goalPos = CONSTRAIN(_goalPos, _minPosition, _maxPosition);
     }
 
     float _getPosition(void)
     {
-        return _currentPos;
+        if (!_reversed)
+        {
+            return _currentPos;
+        }
+        else
+        {
+            return MAP(_currentPos, _maxPosition, _minPosition, _minPosition, _maxPosition);
+        }
     }
 
     void _setSpeed(float speed_)
@@ -142,6 +143,10 @@ class ActuatorServo : public Actuator<ActuatorServo<PwmGenerator_T>>
         {
             return 0.0F;
         }
+        else if (_goalPos > _currentPos)
+        {
+            return -_maxSpeed;
+        }
         else
         {
             return _maxSpeed;
@@ -150,7 +155,7 @@ class ActuatorServo : public Actuator<ActuatorServo<PwmGenerator_T>>
 
     void _setMaxSpeed(float max_speed_)
     {
-        ASSERT_MSG("TODO");
+        _maxSpeed = max_speed_;
     }
 
     void _setJointLimit(float min_, float max_)
@@ -169,16 +174,16 @@ class ActuatorServo : public Actuator<ActuatorServo<PwmGenerator_T>>
     }
 
   private:
-    const ActuatorServoT::eModel _model;
+    const ActuatorServoT::sTimingLimits _servoTimings;
     PwmGenerator_T& _pwmGenerator;
 
     float _goalPos = 0.0F;
     float _currentPos = 0.0F;
     bool _reversed = false;
 
-    float _minPosition = 0.0F;
-    float _maxPosition = 0.0F;
-    float _maxSpeed = 0.0F;
+    float _minPosition;
+    float _maxPosition;
+    float _maxSpeed;
 
     const float _msToDutyFactor;
     Chrono<uint64_t, Time::micros> _enlapseSinceLastUpdate;
