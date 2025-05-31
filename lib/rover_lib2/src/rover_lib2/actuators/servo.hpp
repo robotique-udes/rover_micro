@@ -4,17 +4,17 @@
 #include "actuator.hpp"
 #include "rover_lib2/sensors/encoder/encoder.hpp"
 #include "motor_drivers/motor_driver.hpp"
-#include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/assert.hpp"
 #include "rover_lib2/helpers/constants.hpp"
 #include "rover_lib2/actuators/PWM_generators/PWM_generator.hpp"
 #include "rover_lib2/helpers/chrono.hpp"
 #include "rover_lib2/helpers/time.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
+#include "rover_lib2/helpers/macros.hpp"
 
 #include <array>
 
-DEFINE_LOG_NODE(ActuatorServo, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(ActuatorServo, Logger::eNodeState::OFF);
 
 namespace Actuators
 {
@@ -43,7 +43,10 @@ namespace Actuators
         static constexpr uint64_t UPDATE_PERIOD = 1'000ULL / static_cast<uint64_t>(UPDATE_FREQUENCY);
 
       public:
-        Servo(ServoT::sTimingConfig servoTimings_, PwmGenerator_T& pwmGenerator_, bool reversed_ = false):
+        Servo(ServoT::sTimingConfig servoTimings_,
+              PwmGenerator_T& pwmGenerator_,
+              bool reversed_ = false,
+              float initialPos_ = 0.0F):
             _servoTimings(servoTimings_),
             _pwmGenerator(pwmGenerator_),
             _minPosition(_servoTimings.minPosition),
@@ -56,6 +59,9 @@ namespace Actuators
             this->setReversed(reversed_);
 
             this->setJointLimit(_servoTimings.minPosition, _servoTimings.maxPosition);
+
+            _goalPos = CONSTRAIN(initialPos_, _minPosition, _maxPosition);
+            _currentPos = _goalPos + 1.0E-6F;  // Creating a very small offset otherwise the update function won't be executed
         }
 
         void __init(void)
@@ -68,6 +74,7 @@ namespace Actuators
         {
             if (_updateTimer.isReady())
             {
+                LOG_DEBUG(Logger::Nodes::ActuatorServo, "_currentPos: %f, _goalPos: %f", _currentPos, _goalPos);
                 if (_currentPos != _goalPos)
                 {
                     float enlapseS = static_cast<float>(_enlapseSinceLastUpdate.getTime()) / 1'000'000.0F;
@@ -100,7 +107,7 @@ namespace Actuators
                     _currentPos = cmd;
                     float minDuty = _servoTimings.minMs * _msToDutyFactor;
                     float maxDuty = _servoTimings.maxMs * _msToDutyFactor;
-                    cmd = MAP(cmd, _minPosition, _maxPosition, minDuty, maxDuty);
+                    cmd = MAP(cmd, _servoTimings.minPosition, _servoTimings.maxPosition, minDuty, maxDuty);
                     _pwmGenerator.setDutyCycle(100.0F * cmd);
                 }
 
@@ -111,15 +118,32 @@ namespace Actuators
 
         void _setPosition(float pos_)
         {
+            if (pos_ == _goalPos)
+            {
+                return;
+            }
+
+            pos_ = CONSTRAIN(pos_, _minPosition, _maxPosition);
+
             if (!_reversed)
             {
                 _goalPos = pos_;
             }
             else
             {
-                _goalPos = MAP(pos_, _minPosition, _maxPosition, _maxPosition, _minPosition);
+                if (_minPosition == _maxPosition)
+                {
+                    _goalPos = _minPosition;
+                }
+                else
+                {
+                    _goalPos = MAP(pos_,
+                                   _servoTimings.minPosition,
+                                   _servoTimings.maxPosition,
+                                   _servoTimings.maxPosition,
+                                   _servoTimings.minPosition);
+                }
             }
-            _goalPos = CONSTRAIN(_goalPos, _minPosition, _maxPosition);
         }
 
         float _getPosition(void)
@@ -130,7 +154,11 @@ namespace Actuators
             }
             else
             {
-                return MAP(_currentPos, _maxPosition, _minPosition, _minPosition, _maxPosition);
+                return MAP(_currentPos,
+                           _servoTimings.minPosition,
+                           _servoTimings.maxPosition,
+                           _servoTimings.maxPosition,
+                           _servoTimings.minPosition);
             }
         }
 
@@ -157,43 +185,45 @@ namespace Actuators
 
         void _setMaxSpeed(float max_speed_)
         {
-            _maxSpeed = max_speed_;
+            max_speed_ = std::abs(max_speed_);
+            _maxSpeed = CONSTRAIN(max_speed_, 0.0F, _servoTimings.maxSpeed);
         }
 
         void _setJointLimit(std::optional<float> min_, std::optional<float> max_)
         {
-            if (min_ && max_)
+            if (!min_ && !max_)
             {
-                ASSERT_COND_MSG(min_ <= max_, "Y'a dumb biatch");
+                return;
+            }
 
-                if (min_ > max_)
-                {
-                    _minPosition = max_.value();
-                    _maxPosition = min_.value();
-                }
-                else
-                {
-                    _minPosition = min_.value();
-                    _maxPosition = max_.value();
-                }
-            }
-            else if (min_)
+            if (min_ && _minPosition != CONSTRAIN(min_.value(), _servoTimings.minPosition, _servoTimings.maxPosition))
             {
-                _minPosition = min_.value();
-                _maxPosition = std::numeric_limits<float>::infinity();
-            }
-            else if (max_)
-            {
-                _minPosition = -std::numeric_limits<float>::infinity();
-                _maxPosition = max_.value();
+                _minPosition = CONSTRAIN(min_.value(), _servoTimings.minPosition, _servoTimings.maxPosition);
             }
             else
             {
-                _minPosition = -std::numeric_limits<float>::infinity();
-                _maxPosition = std::numeric_limits<float>::infinity();
+                _minPosition = _servoTimings.minPosition;
             }
 
-            _goalPos = CONSTRAIN(_goalPos, _minPosition, _maxPosition);
+            if (max_ && _maxPosition != CONSTRAIN(max_.value(), _servoTimings.minPosition, _servoTimings.maxPosition))
+            {
+                LOG_INFO(Logger::Nodes::ActuatorServo, "Here");
+                _maxPosition = CONSTRAIN(max_.value(), _servoTimings.minPosition, _servoTimings.maxPosition);
+            }
+            else
+            {
+                _maxPosition = _servoTimings.maxPosition;
+            }
+
+            if (_minPosition > _maxPosition)
+            {
+                ASSERT_COND_MSG_ARGS(_minPosition <= _maxPosition,
+                                     "Can't set min joint limit (%f) higher than max joint limits (%f), stopping joint",
+                                     _minPosition,
+                                     _maxPosition);
+
+                _minPosition = _maxPosition;
+            }
         }
 
         void _setReversed(bool reversed_)
