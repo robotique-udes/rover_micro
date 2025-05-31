@@ -50,14 +50,13 @@ namespace Actuators
             static_cast<Impl_T*>(this)->_setMaxSpeed(max_speed_);
         }
 
+        /**
+         * @brief Sets the joint limts of the actuators, using std::nullopt will reset limits
+         *
+         */
         void setJointLimit(std::optional<float> min_, std::optional<float> max_)
         {
             static_cast<Impl_T*>(this)->_setJointLimit(min_, max_);
-        }
-
-        void setReversed(bool reversed_)
-        {
-            static_cast<Impl_T*>(this)->_setReversed(reversed_);
         }
     };
 

@@ -21,7 +21,7 @@ class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<Ro
                                       RoverCan2::Publisher<RoverCan2::Msgs::PtzStatus>,
                                       RoverCan2::SubscriberMember<RoverCan2::Msgs::PtzConfig, GimbalController>>;
 
-    static constexpr float PTZ_STATUS_SEND_FREQUENCY = 5;
+    static constexpr float PTZ_STATUS_SEND_FREQUENCY = 5.0F;
     static constexpr uint64_t PTZ_STATUS_SEND_PERIOD_MS = static_cast<uint64_t>(1'000.0F / PTZ_STATUS_SEND_FREQUENCY);
 
   public:
@@ -81,7 +81,6 @@ class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<Ro
         _panServo.setMaxSpeed(configMsg_.getData().panMaxSpeed);
     }
 
-    // Servo
     PWMGenerators::MCPWMTimer __pwmGenTimer = PWMGenerators::MCPWMTimer(GET_SERVO_TIMING_CONFIG<eServoType::PAN>().frequency,
                                                                         PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
     PWMGenerators::MCPWM __panServoPwmGen = PWMGenerators::MCPWM(PIN_SERVO_1,
@@ -94,7 +93,6 @@ class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<Ro
                                                  true,
                                                  static_cast<float>(DEG_TO_RAD) * 180.0F);
 
-    // Can
     LoopTimer<uint64_t, Time::millis> _timerPTZStatusSend;
 };
 

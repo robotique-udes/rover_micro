@@ -2,17 +2,12 @@
 #define ACTUATOR_SERVO_HPP
 
 #include "actuator.hpp"
-#include "rover_lib2/sensors/encoder/encoder.hpp"
-#include "motor_drivers/motor_driver.hpp"
-#include "rover_lib2/helpers/assert.hpp"
-#include "rover_lib2/helpers/constants.hpp"
-#include "rover_lib2/actuators/PWM_generators/PWM_generator.hpp"
-#include "rover_lib2/helpers/chrono.hpp"
-#include "rover_lib2/helpers/time.hpp"
-#include "rover_lib2/helpers/loop_timer.hpp"
-#include "rover_lib2/helpers/macros.hpp"
 
-#include <array>
+#include <rover_lib2/helpers/assert.hpp>
+#include <rover_lib2/actuators/PWM_generators/PWM_generator.hpp>
+#include <rover_lib2/helpers/time.hpp>
+#include <rover_lib2/helpers/loop_timer.hpp>
+#include <rover_lib2/helpers/macros.hpp>
 
 DEFINE_LOG_NODE(ActuatorServo, Logger::eNodeState::OFF);
 
@@ -31,7 +26,7 @@ namespace Actuators
             float maxMs;
             float minPosition;
             float maxPosition;
-            float maxSpeed;  // Used to simulate current position during movement
+            float maxSpeed;  // Used to simulate encoder during movement
         };
     };
 
@@ -39,8 +34,11 @@ namespace Actuators
     class Servo : public Actuator<Servo<PwmGenerator_T>>
     {
         VALIDATE_BASE_TYPE(PWMGenerators::PWMGeneratorT, PwmGenerator_T);
+
         static constexpr float UPDATE_FREQUENCY = 1'000.0F;
         static constexpr uint64_t UPDATE_PERIOD = 1'000ULL / static_cast<uint64_t>(UPDATE_FREQUENCY);
+
+        static constexpr float SERVO_FREQUENCY_TOLERANCE_HZ = 10.0F;  // +- Hz
 
       public:
         Servo(ServoT::sTimingConfig servoTimings_,
@@ -55,13 +53,13 @@ namespace Actuators
             _msToDutyFactor(1.0F / (1'000'000.0F / _servoTimings.frequency)),
             _updateTimer(UPDATE_PERIOD)
         {
-            ASSERT_COND(IN_ERROR(_pwmGenerator.getFrequency(), 10.0F, _servoTimings.frequency));
+            ASSERT_COND(IN_ERROR(_pwmGenerator.getFrequency(), SERVO_FREQUENCY_TOLERANCE_HZ, _servoTimings.frequency));
             this->setReversed(reversed_);
 
             this->setJointLimit(_servoTimings.minPosition, _servoTimings.maxPosition);
 
             _goalPos = CONSTRAIN(initialPos_, _minPosition, _maxPosition);
-            _currentPos = _goalPos + 1.0E-6F;  // Creating a very small offset otherwise the update function won't be executed
+            _currentPos = _goalPos + 1.0E-6F;  // Creating a very small offset otherwise the update will return early
         }
 
         void __init(void)
@@ -118,12 +116,11 @@ namespace Actuators
 
         void _setPosition(float pos_)
         {
-            if (pos_ == _goalPos)
+            pos_ = CONSTRAIN(pos_, _minPosition, _maxPosition);
+            if (pos_ == this->getPosition())
             {
                 return;
             }
-
-            pos_ = CONSTRAIN(pos_, _minPosition, _maxPosition);
 
             if (!_reversed)
             {
@@ -226,18 +223,13 @@ namespace Actuators
             }
         }
 
-        void _setReversed(bool reversed_)
-        {
-            _reversed = reversed_;
-        }
-
       private:
         const ServoT::sTimingConfig _servoTimings;
         PwmGenerator_T& _pwmGenerator;
 
         float _goalPos = 0.0F;
         float _currentPos = 0.0F;
-        bool _reversed = false;
+        const bool _reversed = false;
 
         float _minPosition;
         float _maxPosition;
