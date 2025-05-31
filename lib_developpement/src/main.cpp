@@ -32,7 +32,7 @@
 
 #include "rover_can2/rover_can2.hpp"
 
-#include "rover_lib2/actuators/actuator_servo.hpp"
+#include "rover_lib2/actuators/servo.hpp"
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_lib2/helpers/constants.hpp"
@@ -40,7 +40,7 @@
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_12;
 constexpr gpio_num_t PIN_SERVO = GPIO_NUM_15;
 
-constexpr ActuatorServoT::sTimingLimits ANTENNA_SERVO_TIMING_CONFIG = {
+constexpr Actuators::ServoT::sTimingConfig ANTENNA_SERVO_TIMING_CONFIG = {
     .frequency = 50.0F,
     .minMs = 2450.0F,
     .maxMs = 545.0F,
@@ -63,7 +63,7 @@ void setup(void)
 
     PWMGenerators::MCPWMTimer timer(50.0F, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
     PWMGenerators::MCPWM pwmGen(GPIO_NUM_15, timer);
-    ActuatorServo<PWMGenerators::MCPWM> servo(ANTENNA_SERVO_TIMING_CONFIG, pwmGen, false);
+    Actuators::Servo<PWMGenerators::MCPWM> servo(ANTENNA_SERVO_TIMING_CONFIG, pwmGen, false);
     servo.init();
     servo.setMaxSpeed(45.0F * DEG_TO_RAD);
     servo.setReversed(false);
