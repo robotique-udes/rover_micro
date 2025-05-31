@@ -47,6 +47,7 @@ namespace Actuators
               float initialPos_ = 0.0F):
             _servoTimings(servoTimings_),
             _pwmGenerator(pwmGenerator_),
+            _reversed(reversed_),
             _minPosition(_servoTimings.minPosition),
             _maxPosition(_servoTimings.maxPosition),
             _maxSpeed(_servoTimings.maxSpeed),
@@ -54,7 +55,6 @@ namespace Actuators
             _updateTimer(UPDATE_PERIOD)
         {
             ASSERT_COND(IN_ERROR(_pwmGenerator.getFrequency(), SERVO_FREQUENCY_TOLERANCE_HZ, _servoTimings.frequency));
-            this->setReversed(reversed_);
 
             this->setJointLimit(_servoTimings.minPosition, _servoTimings.maxPosition);
 
