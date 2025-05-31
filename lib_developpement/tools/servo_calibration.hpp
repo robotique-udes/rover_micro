@@ -1,6 +1,7 @@
 /**
  * @file servo_calibration.hpp
- * @brief This file can be used to generate the ActuatorServoT::sTimingLimits struct for a specific motor easily.
+ * @brief This file can be used to generate the Actuators::ServoT::sTimingLimits struct for a specific servo motor quickly.
+ * Mostly auto generated
  */
 
 #include <Arduino.h>
