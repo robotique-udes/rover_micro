@@ -13,7 +13,7 @@
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 
-#warning Note: Currently, the "max_speed" mesurement isn't very accurate. Mesuring be hand is recommended
+#warning Note: Currently, the "max_speed" mesurement isn't very accurate. Mesuring manually is recommended
 
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_12;
 constexpr gpio_num_t PIN_SERVO = GPIO_NUM_15;
