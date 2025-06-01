@@ -8,7 +8,7 @@
 
 #include <optional>
 
-DEFINE_LOG_NODE(IFX9201SG, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(IFX9201SG, Logger::eNodeState::OFF);
 
 template<typename PWMGenerator_T>
 class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
@@ -57,32 +57,24 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
         float duty = std::abs(_goalCmd);
         bool negativeCmd = (_goalCmd < 0.0F);
 
+        if (negativeCmd)
+        {
+            _ioDir.write(IO::eIOState::HIGH_);
+        }
+        else
+        {
+            _ioDir.write(IO::eIOState::LOW_);
+        }
+
         LOG_DEBUG(Logger::Nodes::IFX9201SG, "duty: %f, negativeCmd: %s", duty, negativeCmd ? "TRUE" : "FALSE");
         switch (_brakeMode)
         {
             case MotorDriverT::eBrakeMode::BRAKE:
-                if (negativeCmd)
-                {
-                    _ioDir.write(IO::eIOState::HIGH_);
-                }
-                else
-                {
-                    _ioDir.write(IO::eIOState::LOW_);
-                }
-
                 break;
             case MotorDriverT::eBrakeMode::COAST:
                 if (IN_ERROR(duty, ZERO_ERROR_TOLERANCE, 0.0F))
                 {
                     _ioNotEn.write(IO::eIOState::HIGH_);
-                }
-                else if (negativeCmd)
-                {
-                    _ioDir.write(IO::eIOState::HIGH_);
-                }
-                else
-                {
-                    _ioDir.write(IO::eIOState::LOW_);
                 }
                 break;
         }
@@ -138,7 +130,7 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
     void setReversed(bool reversed_)
     {
         _reversed = reversed_;
-        this->setCmd(this->getCmd());  // will apply reversed on the internal command value
+        this->setCmd(this->getCmd());  // Applies "reversed" on goal
     }
 
     bool _isReversed(void)
@@ -156,6 +148,11 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
         if (!_coastPossible)
         {
             _brakeMode = MotorDriverT::eBrakeMode::BRAKE;
+
+            if (mode_ == MotorDriverT::eBrakeMode::COAST)
+            {
+                LOG_WARN(Logger::Nodes::IFX9201SG, "Can't apply coast brake mode without a specified DIS pin");
+            }
         }
         else
         {
