@@ -75,8 +75,8 @@ namespace Actuators
                 LOG_DEBUG(Logger::Nodes::ActuatorServo, "_currentPos: %f, _goalPos: %f", _currentPos, _goalPos);
                 if (_currentPos != _goalPos)
                 {
-                    float enlapseS = static_cast<float>(_enlapseSinceLastUpdate.getTime()) / 1'000'000.0F;
-                    float maxIncrement = enlapseS * _maxSpeed;
+                    float elapsedS = static_cast<float>(_elapsedSinceLastUpdate.getTime()) / 1'000'000.0F;
+                    float maxIncrement = elapsedS * _maxSpeed;
 
                     float cmd = _goalPos;
                     if ((_currentPos <= _goalPos))
