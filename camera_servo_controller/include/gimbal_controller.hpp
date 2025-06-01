@@ -1,5 +1,5 @@
-#ifndef YAW_CONTROLLER_HPP
-#define YAW_CONTROLLER_HPP
+#ifndef GIMBAL_CONTROLLER_HPP
+#define GIMBAL_CONTROLLER_HPP
 
 #include "device_config.hpp"
 
@@ -96,4 +96,4 @@ class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<Ro
     LoopTimer<uint64_t, Time::millis> _timerPTZStatusSend;
 };
 
-#endif  // YAW_CONTROLLER_HPP
+#endif  // GIMBAL_CONTROLLER_HPP
