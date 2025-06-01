@@ -236,7 +236,7 @@ namespace Actuators
         float _maxSpeed;
 
         const float _msToDutyFactor;
-        Chrono<uint64_t, Time::micros> _enlapseSinceLastUpdate;
+        Chrono<uint64_t, Time::micros> _elapsedSinceLastUpdate;
         LoopTimer<uint64_t, Time::millis> _updateTimer;
     };
 
