@@ -76,7 +76,7 @@ namespace Actuators
                 if (_currentPos != _goalPos)
                 {
                     float elapsedS = static_cast<float>(_elapsedSinceLastUpdate.getTime()) / 1'000'000.0F;
-                    float maxIncrement = elapsedS * _maxSpeed;
+                    float maxIncrement = elapsedS * _maxSpeed; 
 
                     float cmd = _goalPos;
                     if ((_currentPos <= _goalPos))
