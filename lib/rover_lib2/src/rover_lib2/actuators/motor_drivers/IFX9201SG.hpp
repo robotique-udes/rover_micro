@@ -6,6 +6,8 @@
 #include "rover_lib2/helpers/assert.hpp"
 #include "rover_lib2/IO/digital_output.hpp"
 
+#include "rover_lib2/actuators/PWM_generators/PWM_generator.hpp"
+
 #include <optional>
 
 DEFINE_LOG_NODE(IFX9201SG, Logger::eNodeState::OFF);
@@ -15,7 +17,8 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
 {
     VALIDATE_BASE_TYPE(PWMGenerators::PWMGeneratorT, PWMGenerator_T);
 
-    static constexpr float ZERO_ERROR_TOLERANCE = 0.1F;  // When command are considered null
+    static constexpr float ZERO_ERROR_TOLERANCE
+        = 0.001F;  // When command are considered null, mustn't move nor heat the driver/motor
 
   public:
     IFX9201SG(PWMGenerator_T& pwmGenerator_,
@@ -29,22 +32,13 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
         _enabled(false),
         _reversed(false),
         _goalCmd(0),
-        _coastPossible(false),
+        _lastNonZeroCmd(false),
         _brakeMode(brakeMode_)
     {
         this->setEnabled(false);
         this->setReversed(reversed_);
         _ioDir.write(IO::eIOState::LOW_);
-
-        if (pinDis_ != GPIO_NUM_NC)
-        {
-            _coastPossible = false;
-            this->setBrakeMode(MotorDriverT::eBrakeMode::BRAKE);
-        }
-        else
-        {
-            _coastPossible = true;
-        }
+        _ioNotEn.write(IO::eIOState::LOW_);
     }
 
     void __init(void)
@@ -54,31 +48,54 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
 
     void __update(void)
     {
-        float duty = std::abs(_goalCmd);
-        bool negativeCmd = (_goalCmd < 0.0F);
+        float cmd = _goalCmd;
+        bool isZeroCmd = IN_ERROR(cmd, ZERO_ERROR_TOLERANCE, 0.0F);
 
-        if (negativeCmd)
+        if (isZeroCmd && _lastNonZeroCmd > 0.0F)
         {
-            _ioDir.write(IO::eIOState::HIGH_);
+            if (_brakeMode == MotorDriverT::eBrakeMode::BRAKE)
+            {
+                cmd = -std::abs(ZERO_ERROR_TOLERANCE);
+            }
+            else
+            {
+                cmd = std::abs(ZERO_ERROR_TOLERANCE);
+            }
         }
-        else
+        else if (isZeroCmd && _lastNonZeroCmd < 0.0F)
+        {
+            if (_brakeMode == MotorDriverT::eBrakeMode::BRAKE)
+            {
+                cmd = std::abs(ZERO_ERROR_TOLERANCE);
+            }
+            else
+            {
+                cmd = -std::abs(ZERO_ERROR_TOLERANCE);
+            }
+        }
+        else if (isZeroCmd)  // On init
+        {
+            cmd = 0.0F;
+        }
+
+        bool isReversedCmd = (cmd < 0.0F);
+        if (isReversedCmd)
         {
             _ioDir.write(IO::eIOState::LOW_);
         }
-
-        LOG_DEBUG(Logger::Nodes::IFX9201SG, "duty: %f, negativeCmd: %s", duty, negativeCmd ? "TRUE" : "FALSE");
-        switch (_brakeMode)
+        else
         {
-            case MotorDriverT::eBrakeMode::BRAKE:
-                break;
-            case MotorDriverT::eBrakeMode::COAST:
-                if (IN_ERROR(duty, ZERO_ERROR_TOLERANCE, 0.0F))
-                {
-                    _ioNotEn.write(IO::eIOState::HIGH_);
-                }
-                break;
+            _ioDir.write(IO::eIOState::HIGH_);
         }
 
+        if (!isZeroCmd)
+        {
+            _lastNonZeroCmd = cmd;
+        }
+
+        LOG_INFO(Logger::Nodes::IFX9201SG, "dir pin: %s, duty: %f", (_ioDir.read() == IO::eIOState::HIGH_) ? "HIGH" : "LOW", cmd);
+
+        float duty = std::abs(cmd);
         _pwmGenerator.setDutyCycle(duty);
         _pwmGenerator.update();
     }
@@ -140,24 +157,12 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
 
     void _setBrakeMode(MotorDriverT::eBrakeMode mode_)
     {
-        if (_brakeMode == mode_)
-        {
-            return;
-        }
-
-        if (!_coastPossible)
-        {
-            _brakeMode = MotorDriverT::eBrakeMode::BRAKE;
-
-            if (mode_ == MotorDriverT::eBrakeMode::COAST)
-            {
-                LOG_WARN(Logger::Nodes::IFX9201SG, "Can't apply coast brake mode without a specified DIS pin");
-            }
-        }
-        else
+        if (_brakeMode != mode_)
         {
             _brakeMode = mode_;
         }
+
+        return;
     }
 
     MotorDriverT::eBrakeMode _getBrakeMode(void)
@@ -175,7 +180,8 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
     bool _reversed;
     float _goalCmd;
 
-    bool _coastPossible;
+    float _lastNonZeroCmd;  // Needs to be tracked to control brake mode because driver has very weird brake/coast behavior
+
     MotorDriverT::eBrakeMode _brakeMode;
 };
 

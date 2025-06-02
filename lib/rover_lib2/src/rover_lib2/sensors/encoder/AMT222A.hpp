@@ -12,6 +12,8 @@
 
 DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::ON);
 
+#warning TODO Implement "Reversed"
+
 class AMT222A : public Encoder<AMT222A>
 {
     // Clock speed this low necessary because the ESP-IDF doesn't support adding clean delay between bytes in same transaction...
