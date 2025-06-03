@@ -188,11 +188,19 @@ class AMT222A : public Encoder<AMT222A>
 
         if (_reversed)
         {
-            _currentPosition = MAP(newPos, 0U, ((1U << 12) - 1U), 0.0f, TWO_PI);
+            _currentPosition = MAP(static_cast<float>(newPos),
+                                   0.0F,
+                                   static_cast<float>((1U << 12) - 1U),
+                                   0.0F,
+                                   static_cast<float>(std::numbers::pi));
         }
         else
         {
-            _currentPosition = MAP(newPos, 0U, ((1U << 12) - 1U), TWO_PI, 0.0f);
+            _currentPosition = MAP(static_cast<float>(newPos),
+                                   0.0F,
+                                   static_cast<float>((1U << 12) - 1U),
+                                   static_cast<float>(std::numbers::pi),
+                                   0.0F);
         }
 
         _dataValidWatchdog.reset();
