@@ -90,14 +90,14 @@ constexpr T CONSTRAIN(T value_, T min_, T max_)
 template<std::floating_point T>
 constexpr T CONSTRAIN_TO_CIRCLE(T value_)
 {
-    while (value_ >= TWO_PI)
+    while (value_ >= static_cast<T>(M_TWOPI))
     {
-        value_ -= TWO_PI;
+        value_ -= M_TWOPI;
     }
 
     while (value_ < 0.0F)
     {
-        value_ += TWO_PI;
+        value_ += static_cast<T>(M_TWOPI);
     }
 
     return value_;

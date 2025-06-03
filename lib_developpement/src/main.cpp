@@ -102,7 +102,10 @@ void setup(void)
             encoder.calib(-10.0F);
         }
 
-        LOG_INFO(Logger::Nodes::Main, "encoder.getPosition(): %f, encoder.getSpeed(): %f", encoder.getPosition(), encoder.getSpeed());
+        LOG_INFO(Logger::Nodes::Main,
+                 "encoder.getPosition(): %f, encoder.getSpeed(): %f",
+                 encoder.getPosition(),
+                 encoder.getSpeed());
     }
 }
 
