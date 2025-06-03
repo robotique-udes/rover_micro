@@ -1,7 +1,7 @@
 #ifndef MACROS_HPP
 #define MACROS_HPP
 
-#include <cmath>
+#include <numbers>
 #include <type_traits>
 
 #if defined(__linux__) && defined(RCLCPP_DEBUG)
@@ -90,14 +90,14 @@ constexpr T CONSTRAIN(T value_, T min_, T max_)
 template<std::floating_point T>
 constexpr T CONSTRAIN_TO_CIRCLE(T value_)
 {
-    while (value_ >= static_cast<T>(M_TWOPI))
+    while (value_ >= static_cast<T>(2.0 * std::numbers::pi))
     {
-        value_ -= M_TWOPI;
+        value_ -= static_cast<T>(2.0 * std::numbers::pi);
     }
 
     while (value_ < 0.0F)
     {
-        value_ += static_cast<T>(M_TWOPI);
+        value_ += static_cast<T>(2.0 * std::numbers::pi);
     }
 
     return value_;
