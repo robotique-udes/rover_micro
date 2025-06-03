@@ -51,6 +51,7 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
         float cmd = _goalCmd;
         bool isZeroCmd = IN_ERROR(cmd, ZERO_ERROR_TOLERANCE, 0.0F);
 
+        // For the driver to brake, the dir pin must be switch when the pwm comes to 0% duty. Otherwise will coast
         if (isZeroCmd && _lastNonZeroCmd > 0.0F)
         {
             if (_brakeMode == MotorDriverT::eBrakeMode::BRAKE)
