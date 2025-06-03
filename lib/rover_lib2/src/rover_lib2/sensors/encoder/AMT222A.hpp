@@ -12,6 +12,11 @@
 
 DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::OFF);
 
+/**
+ * @brief AMT222A Absolute one turn encoder driver. Allow absolute and persistent calibration inside encoder itself. Only support
+ * one turn and will always return a position value between [0; 2PI[]
+ *
+ */
 class AMT222A : public Encoder<AMT222A>
 {
     // Clock speed this low necessary because the ESP-IDF doesn't support adding clean delay between bytes in same transaction...
