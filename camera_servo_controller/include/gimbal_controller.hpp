@@ -66,14 +66,12 @@ class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<Ro
         std::optional<float> minPanLimit = std::nullopt;
         if (configMsg_.getData().panMinPosition != 0.0F)
         {
-            minPanLimit = float();
             minPanLimit = configMsg_.getData().panMinPosition;
         }
 
         std::optional<float> maxPanLimit = std::nullopt;
         if (configMsg_.getData().panMaxPosition != 0.0F)
         {
-            maxPanLimit = float();
             maxPanLimit = configMsg_.getData().panMaxPosition;
         }
 

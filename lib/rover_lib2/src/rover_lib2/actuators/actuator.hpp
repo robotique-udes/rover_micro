@@ -51,7 +51,7 @@ namespace Actuators
         }
 
         /**
-         * @brief Sets the joint limts of the actuators, using std::nullopt will reset limits
+         * @brief Sets the joint limits of the actuators, using std::nullopt will reset limits
          *
          */
         void setJointLimit(std::optional<float> min_, std::optional<float> max_)

@@ -75,8 +75,8 @@ namespace Actuators
                 LOG_DEBUG(Logger::Nodes::ActuatorServo, "_currentPos: %f, _goalPos: %f", _currentPos, _goalPos);
                 if (_currentPos != _goalPos)
                 {
-                    float enlapseS = static_cast<float>(_enlapseSinceLastUpdate.getTime()) / 1'000'000.0F;
-                    float maxIncrement = enlapseS * _maxSpeed;
+                    float enlapsedS = static_cast<float>(_enlapsedSinceLastUpdate.getTime()) / 1'000'000.0F;
+                    float maxIncrement = enlapsedS * _maxSpeed;
 
                     float cmd = _goalPos;
                     if ((_currentPos <= _goalPos))
@@ -109,7 +109,7 @@ namespace Actuators
                     _pwmGenerator.setDutyCycle(100.0F * cmd);
                 }
 
-                _enlapseSinceLastUpdate.restart();
+                _enlapsedSinceLastUpdate.restart();
                 _pwmGenerator.update();
             }
         }
@@ -236,7 +236,7 @@ namespace Actuators
         float _maxSpeed;
 
         const float _msToDutyFactor;
-        Chrono<uint64_t, Time::micros> _enlapseSinceLastUpdate;
+        Chrono<uint64_t, Time::micros> _enlapsedSinceLastUpdate;
         LoopTimer<uint64_t, Time::millis> _updateTimer;
     };
 
