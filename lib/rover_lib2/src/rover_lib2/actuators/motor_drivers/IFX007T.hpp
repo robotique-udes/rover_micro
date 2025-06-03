@@ -40,7 +40,7 @@ class IFX007T : public MotorDriver<IFX007T<PwmGeneratorAT, PwmGeneratorBT>>
         this->setEnabled(_enabled);
         this->setBrakeMode(brakeMode_);
 
-        ASSERT_COND_MSG(pwmA_.getFrequency() <= 1'000.0F || pwmB_.getFrequency() <= 1'000.0F,
+        ASSERT_COND_MSG(pwmA_.getFrequency() <= 1'000.0F && pwmB_.getFrequency() <= 1'000.0F,
                         "IFX007T drivers are quite bad and can't handle pwm frequency over 1'000Hz without loosing precision and "
                         "generating a lot of jitter and back EMF");
     }
