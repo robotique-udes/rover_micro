@@ -87,6 +87,22 @@ constexpr T CONSTRAIN(T value_, T min_, T max_)
     }
 }
 
+template<std::floating_point T>
+constexpr T CONSTRAIN_TO_CIRCLE(T value_)
+{
+    while (value_ >= TWO_PI)
+    {
+        value_ -= TWO_PI;
+    }
+
+    while (value_ < 0.0F)
+    {
+        value_ += TWO_PI;
+    }
+
+    return value_;
+}
+
 /**
  * @brief Truncate a floating-point value (remove fractional part).
  */

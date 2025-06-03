@@ -10,9 +10,7 @@
 
 #include <bit>
 
-DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::ON);
-
-#warning TODO Implement "Reversed"
+DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::OFF);
 
 class AMT222A : public Encoder<AMT222A>
 {
@@ -50,7 +48,8 @@ class AMT222A : public Encoder<AMT222A>
         _lastPosition(0.0F),
         _currentSpeed(0.0F),
         _dataValidWatchdog(WATCHDOG_DATA_VALID_PERIOD),
-        _timerTimingDelay(0.0F)
+        _timerTimingDelay(0.0F),
+        _reversed(reversed_)
     {
     }
 
@@ -118,7 +117,7 @@ class AMT222A : public Encoder<AMT222A>
 
     float _getPosition(void)
     {
-        return _calibOffset + _currentPosition;
+        return CONSTRAIN_TO_CIRCLE(_calibOffset + _currentPosition);
     }
 
     float _getSpeed(void)
@@ -128,6 +127,7 @@ class AMT222A : public Encoder<AMT222A>
 
     void _calib(float offset_)
     {
+        offset_ = CONSTRAIN_TO_CIRCLE(offset_);
         _calibRequested = true;
         _calibOffset = offset_;
     }
@@ -185,12 +185,21 @@ class AMT222A : public Encoder<AMT222A>
         uint16_t newPos = data[0] << 8 | data[1];
         newPos &= 0b0011'1111'1111'1100;
         newPos >>= 2;
-        _currentPosition = MAP(newPos, 0U, ((1U << 12) - 1U), 0.0f, TWO_PI);
+
+        if (_reversed)
+        {
+            _currentPosition = MAP(newPos, 0U, ((1U << 12) - 1U), 0.0f, TWO_PI);
+        }
+        else
+        {
+            _currentPosition = MAP(newPos, 0U, ((1U << 12) - 1U), TWO_PI, 0.0f);
+        }
+
         _dataValidWatchdog.reset();
 
         if (_dtSpeedCalc.getTime() >= MIN_TIME_BETWEEN_SPEED_CALC_US)
         {
-            _currentSpeed = (_lastPosition - _currentPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
+            _currentSpeed = (_currentPosition - _lastPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
             _dtSpeedCalc.restart();
             _lastPosition = _currentPosition;
         }
@@ -227,6 +236,8 @@ class AMT222A : public Encoder<AMT222A>
     Watchdog<uint64_t, Time::micros> _dataValidWatchdog;
     Chrono<uint64_t, Time::micros> _dtSpeedCalc;
     OneShotTimer<uint64_t, Time::micros> _timerTimingDelay;
+
+    bool _reversed;
 };
 
 #endif  // AMT222A_HPP
