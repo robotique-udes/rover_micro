@@ -40,7 +40,7 @@ class NVSDataHandle
         ASSERT_COND_MSG(std::strcmp(namespace_, "") != 0, "NVS storage namespace can't be empty");
 
         ASSERT_COND_MSG_ARGS(std::strlen(key_) <= NVS_MAX_LENGTH_STR,
-                             "NVS storage name must can't be more than %u chars",
+                             "NVS storage name cannot be more than %u chars",
                              NVS_MAX_LENGTH_STR);
         ASSERT_COND_MSG(std::strcmp(key_, "") != 0, "NVS storage name can't be empty");
 
