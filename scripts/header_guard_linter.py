@@ -2,6 +2,8 @@
 """
 Script to check and fix header guard consistency in C++ header files.
 Usage: python3 header_guard_linter.py [--fix] [directory]
+
+Author: AI autogen
 """
 
 from __future__ import annotations
@@ -298,29 +300,6 @@ class HeaderGuardChecker:
             print(f"{Colors.RED}Error writing {file_path}: {e}{Colors.NC}")
             return False
     
-    def _create_backup(self, file_path: str) -> bool:
-        """
-        Create a backup of the file.
-        
-        Args:
-            file_path: Path to the file to backup
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        backup_path: str = f"{file_path}.bak"
-        try:
-            lines: Optional[List[str]] = self._read_file_safe(file_path)
-            if lines is None:
-                return False
-            
-            with open(backup_path, 'w', encoding='utf-8') as f:
-                f.writelines(lines)
-            return True
-        except (OSError, IOError, UnicodeError) as e:
-            print(f"{Colors.RED}Error creating backup {backup_path}: {e}{Colors.NC}")
-            return False
-    
     def fix_header_guard(self, file_path: str) -> bool:
         """
         Fix header guard in a file.
@@ -332,10 +311,6 @@ class HeaderGuardChecker:
             True if successful, False otherwise
         """
         expected_guard: str = self.path_to_guard(file_path)
-        
-        # Create backup first
-        if not self._create_backup(file_path):
-            return False
         
         lines: Optional[List[str]] = self._read_file_safe(file_path)
         if lines is None:
@@ -487,7 +462,6 @@ class HeaderGuardChecker:
         fixed_files: int = stats.missing_files + stats.mismatch_files + stats.incorrect_files
         if fixed_files > 0:
             print(f"{Colors.GREEN}Fixed {fixed_files} files{Colors.NC}")
-            print(f"{Colors.YELLOW}Backup files created with .bak extension{Colors.NC}")
     
     def _print_fix_suggestion(self, stats: ScanStatistics, original_command: str) -> None:
         """Print suggestion to run with --fix flag."""
@@ -503,7 +477,7 @@ class HeaderGuardChecker:
         if '--fix' not in original_command:
             parts: List[str] = original_command.split()
             if parts:
-                return f"{parts[0]} --fix {' '.join(parts[1:])}"
+                return f"{parts[0]} {parts[1]} --fix {' '.join(parts[2:])}"
         return original_command
     
     def scan_directory(self, target_dir: str, fix_mode: bool = False, original_command: str = "") -> ScanStatistics:

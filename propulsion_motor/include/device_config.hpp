@@ -1,5 +1,5 @@
-#ifndef CONFIG_LOCAL_HPP
-#define CONFIG_LOCAL_HPP
+#ifndef DEVICE_CONFIG_HPP
+#define DEVICE_CONFIG_HPP
 
 // This file should be use to change parameter before uploading into a new
 // device of the same type. For example, all propulsion motors should have the
@@ -12,4 +12,4 @@ constexpr RoverCan2::Constant::eDeviceId DEVICE_ID = RoverCan2::Constant::eDevic
 constexpr float ALIM_VOLTAGE = 24.0F;
 constexpr float MAX_VOLTAGE = 24.0F;
 
-#endif  // __CONFIG_LOCAL_HPP__
+#endif  // DEVICE_CONFIG_HPP
