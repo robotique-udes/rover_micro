@@ -445,9 +445,15 @@ class HeaderGuardChecker:
         print(f"{Colors.BLUE}=== SUMMARY ==={Colors.NC}")
         print(f"Total files scanned: {stats.total_files}")
         print(f"{Colors.GREEN}OK: {stats.ok_files}{Colors.NC}")
-        print(f"{Colors.RED}Missing header guards: {stats.missing_files}{Colors.NC}")
-        print(f"{Colors.RED}Mismatched guards: {stats.mismatch_files}{Colors.NC}")
-        print(f"{Colors.RED}Incorrect guards: {stats.incorrect_files}{Colors.NC}")
+        
+        if (stats.missing_files > 0):
+            print(f"{Colors.RED}Missing header guards: {stats.missing_files}{Colors.NC}")
+            
+        if (stats.mismatch_files > 0):
+            print(f"{Colors.RED}Mismatched guards: {stats.mismatch_files}{Colors.NC}")
+            
+        if (stats.incorrect_files > 0):
+            print(f"{Colors.RED}Incorrect guards: {stats.incorrect_files}{Colors.NC}")
         
         if stats.error_files > 0:
             print(f"{Colors.RED}Errors: {stats.error_files}{Colors.NC}")
@@ -799,11 +805,17 @@ def _print_overall_summary(total_stats: ScanStatistics, fix_mode: bool) -> None:
     print(f"{Colors.BLUE}=== OVERALL SUMMARY ==={Colors.NC}")
     print(f"Total files scanned: {total_stats.total_files}")
     print(f"{Colors.GREEN}OK: {total_stats.ok_files}{Colors.NC}")
-    print(f"{Colors.RED}Missing header guards: {total_stats.missing_files}{Colors.NC}")
-    print(f"{Colors.RED}Mismatched guards: {total_stats.mismatch_files}{Colors.NC}")
-    print(f"{Colors.RED}Incorrect guards: {total_stats.incorrect_files}{Colors.NC}")
     
-    if total_stats.error_files > 0:
+    if (total_stats.missing_files > 0):
+        print(f"{Colors.RED}Missing header guards: {total_stats.missing_files}{Colors.NC}")
+    
+    if (total_stats.mismatch_files > 0):
+        print(f"{Colors.RED}Mismatched guards: {total_stats.mismatch_files}{Colors.NC}")
+    
+    if (total_stats.incorrect_files > 0):
+        print(f"{Colors.RED}Incorrect guards: {total_stats.incorrect_files}{Colors.NC}")
+    
+    if (total_stats.error_files > 0):
         print(f"{Colors.RED}Errors: {total_stats.error_files}{Colors.NC}")
     
     if fix_mode:

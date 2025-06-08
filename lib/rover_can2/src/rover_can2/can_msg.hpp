@@ -1,5 +1,5 @@
-#ifndef ROVER_CAN2_CAN_MSG_HPP
-#define ROVER_CAN2_CAN_MSG_HPP
+#ifndef ROVER_CAN2_CAN2_MSG_HPP
+#define ROVER_CAN2_CAN2_MSG_HPP
 
 #include "rover_can2/constant.hpp"
 #include "rover_lib2/helpers/macros.hpp"
