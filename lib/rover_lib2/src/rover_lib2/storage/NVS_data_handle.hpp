@@ -12,18 +12,10 @@ DEFINE_LOG_NODE(NVSDataHandle, Logger::eNodeState::ON);
 template<typename Data_T>
 class NVSDataHandle
 {
-    static_assert(
-        std::is_same_v<int8_t, Data_T> || 
-        std::is_same_v<uint8_t, Data_T> || 
-        std::is_same_v<int16_t, Data_T> || 
-        std::is_same_v<uint16_t, Data_T> || 
-        std::is_same_v<int32_t, Data_T> || 
-        std::is_same_v<uint32_t, Data_T> || 
-        std::is_same_v<int64_t, Data_T> || 
-        std::is_same_v<uint64_t, Data_T> ||
-        std::is_same_v<float, Data_T> ||
-        std::is_same_v<double, Data_T>,
-        "Type not supported");
+    static_assert(std::is_same_v<
+                      int8_t,
+                      Data_T> || std::is_same_v<uint8_t, Data_T> || std::is_same_v<int16_t, Data_T> || std::is_same_v<uint16_t, Data_T> || std::is_same_v<int32_t, Data_T> || std::is_same_v<uint32_t, Data_T> || std::is_same_v<int64_t, Data_T> || std::is_same_v<uint64_t, Data_T> || std::is_same_v<float, Data_T> || std::is_same_v<double, Data_T>,
+                  "Type not supported");
 
     static constexpr size_t NVS_MAX_LENGTH_STR = 15UL;
 
@@ -43,7 +35,8 @@ class NVSDataHandle
     {
         ASSERT_COND_MSG_ARGS(std::strlen(namespace_) <= NVS_MAX_LENGTH_STR,
                              "NVS storage namespace name can't be more than %u chars long, name: \"%s\"",
-                             NVS_MAX_LENGTH_STR, namespace_);
+                             NVS_MAX_LENGTH_STR,
+                             namespace_);
         ASSERT_COND_MSG(std::strcmp(namespace_, "") != 0, "NVS storage namespace can't be empty");
 
         ASSERT_COND_MSG_ARGS(std::strlen(key_) <= NVS_MAX_LENGTH_STR,
