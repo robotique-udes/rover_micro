@@ -197,14 +197,14 @@ class AMT222A : public Encoder<AMT222A>
                                    0.0F,
                                    static_cast<float>((1U << 12) - 1U),
                                    0.0F,
-                                   static_cast<float>(std::numbers::pi));
+                                   ((2.0F * std::numbers::pi_v<float>)-0.000'001F));
         }
         else
         {
             _currentPosition = MAP(static_cast<float>(newPos),
                                    0.0F,
                                    static_cast<float>((1U << 12) - 1U),
-                                   static_cast<float>(std::numbers::pi),
+                                   ((2.0F * std::numbers::pi_v<float>)-0.000'001F),
                                    0.0F);
         }
 

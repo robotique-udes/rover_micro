@@ -13,9 +13,16 @@ template<typename Data_T>
 class NVSDataHandle
 {
     static_assert(
-        std::is_same_v<
-            int8_t,
-            Data_T> || std::is_same_v<uint8_t, Data_T> || std::is_same_v<int16_t, Data_T> || std::is_same_v<uint16_t, Data_T> || std::is_same_v<int32_t, Data_T> || std::is_same_v<uint32_t, Data_T> || std::is_same_v<int64_t, Data_T> || std::is_same_v<uint64_t, Data_T>,
+        std::is_same_v<int8_t, Data_T> || 
+        std::is_same_v<uint8_t, Data_T> || 
+        std::is_same_v<int16_t, Data_T> || 
+        std::is_same_v<uint16_t, Data_T> || 
+        std::is_same_v<int32_t, Data_T> || 
+        std::is_same_v<uint32_t, Data_T> || 
+        std::is_same_v<int64_t, Data_T> || 
+        std::is_same_v<uint64_t, Data_T> ||
+        std::is_same_v<float, Data_T> ||
+        std::is_same_v<double, Data_T>,
         "Type not supported");
 
     static constexpr size_t NVS_MAX_LENGTH_STR = 15UL;
@@ -35,8 +42,8 @@ class NVSDataHandle
         _currentValue(defaultValue_)
     {
         ASSERT_COND_MSG_ARGS(std::strlen(namespace_) <= NVS_MAX_LENGTH_STR,
-                             "NVS storage namespace must can't be more than %u chars",
-                             NVS_MAX_LENGTH_STR);
+                             "NVS storage namespace name can't be more than %u chars long, name: \"%s\"",
+                             NVS_MAX_LENGTH_STR, namespace_);
         ASSERT_COND_MSG(std::strcmp(namespace_, "") != 0, "NVS storage namespace can't be empty");
 
         ASSERT_COND_MSG_ARGS(std::strlen(key_) <= NVS_MAX_LENGTH_STR,
@@ -112,6 +119,11 @@ class NVSDataHandle
         {
             err = nvs_get_u64(_nvsHandle, _key, &retVal);
         }
+        else if constexpr (std::is_same_v<Data_T, float> || std::is_same_v<Data_T, double>)
+        {
+            size_t length = sizeof(Data_T);
+            err = nvs_get_blob(_nvsHandle, _key, &retVal, &length);
+        }
         // TODO: Add blob support for compatibility with any datatype
 
         if (err == ESP_OK)
@@ -166,6 +178,10 @@ class NVSDataHandle
         else if constexpr (std::is_same_v<Data_T, uint64_t>)
         {
             err = nvs_set_u64(_nvsHandle, _key, value_);
+        }
+        else if constexpr (std::is_same_v<Data_T, float> || std::is_same_v<Data_T, double>)
+        {
+            err = nvs_set_blob(_nvsHandle, _key, &value_, sizeof(Data_T));
         }
         // TODO: Add blob support for compatibility with any datatype
 
