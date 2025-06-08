@@ -1,5 +1,5 @@
-#ifndef __CONFIG_LOCAL_HPP__
-#define __CONFIG_LOCAL_HPP__
+#ifndef CONFIG_LOCAL_HPP
+#define CONFIG_LOCAL_HPP
 
 // This file should be use to change parameter before uploading into a new
 // device of the same type. For example, all propulsion motors should have the
@@ -15,4 +15,4 @@ constexpr gpio_num_t TX1_PIN = GPIO_NUM_13;
 constexpr gpio_num_t CAN_TX = GPIO_NUM_47;
 constexpr gpio_num_t CAN_RX = GPIO_NUM_48;
 
-#endif  // __CONFIG_LOCAL_HPP__
+#endif  // CONFIG_LOCAL_HPP

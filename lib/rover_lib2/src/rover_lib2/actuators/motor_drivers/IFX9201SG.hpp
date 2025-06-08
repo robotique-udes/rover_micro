@@ -1,5 +1,5 @@
-#ifndef IFX9201SG_HPP
-#define IFX9201SG_HPP
+#ifndef ROVER_LIB2_ACTUATORS_MOTOR_DRIVERS_IFX9201SG_HPP
+#define ROVER_LIB2_ACTUATORS_MOTOR_DRIVERS_IFX9201SG_HPP
 
 #include "motor_driver.hpp"
 
@@ -189,4 +189,4 @@ class IFX9201SG : public MotorDriver<IFX9201SG<PWMGenerator_T>>
 template<typename PwmGenerator_T>
 IFX9201SG(PwmGenerator_T&, gpio_num_t, bool, gpio_num_t, MotorDriverT::eBrakeMode) -> IFX9201SG<PwmGenerator_T>;
 
-#endif  // IFX9201SG_HPP
+#endif  // ROVER_LIB2_ACTUATORS_MOTOR_DRIVERS_IFX9201SG_HPP

@@ -1,5 +1,5 @@
-#ifndef __CONSTANT_HPP__
-#define __CONSTANT_HPP__
+#ifndef ROVER_CAN2_CONSTANT_HPP
+#define ROVER_CAN2_CONSTANT_HPP
 
 #include <cstdint>
 #include "rover_lib2/helpers/compile_time_array.hpp"
@@ -234,4 +234,4 @@ namespace RoverCan2::Constant
 
 }  // namespace RoverCan2::Constant
 
-#endif  // __CONSTANT_HPP__
+#endif  // ROVER_CAN2_CONSTANT_HPP

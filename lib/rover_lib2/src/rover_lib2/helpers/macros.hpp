@@ -1,5 +1,5 @@
-#ifndef MACROS_HPP
-#define MACROS_HPP
+#ifndef ROVER_LIB2_HELPERS_MACROS_HPP
+#define ROVER_LIB2_HELPERS_MACROS_HPP
 
 #include <numbers>
 #include <type_traits>
@@ -175,4 +175,4 @@ constexpr T MAP(T value_, T inMin_, T inMax_, T outMin_, T outMax_)
 #pragma diag_suppress 1919  // Parameter pack expension
 #endif
 
-#endif  // MACROS_HPP
+#endif  // ROVER_LIB2_HELPERS_MACROS_HPP
