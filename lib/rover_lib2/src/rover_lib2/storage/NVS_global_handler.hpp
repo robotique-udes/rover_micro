@@ -24,7 +24,7 @@ class NVSGlobalHandler
 
         if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
         {
-            ASSERT_MSG("NVS partition needs to be reseted, persistent data will be lost!");
+            ASSERT_MSG("NVS partition needs to be reset, persistent data will be lost!");
 
             if (nvs_flash_erase() != ESP_OK)
             {
