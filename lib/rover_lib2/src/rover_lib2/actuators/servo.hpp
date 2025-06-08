@@ -1,5 +1,5 @@
-#ifndef ACTUATOR_SERVO_HPP
-#define ACTUATOR_SERVO_HPP
+#ifndef ROVER_LIB2_ACTUATORS_SERVO_HPP
+#define ROVER_LIB2_ACTUATORS_SERVO_HPP
 
 #include "actuator.hpp"
 
@@ -242,4 +242,4 @@ namespace Actuators
 
 }  // namespace Actuators
 
-#endif  // ACTUATOR_SERVO_HPP
+#endif  // ROVER_LIB2_ACTUATORS_SERVO_HPP

@@ -4,8 +4,8 @@
  * @brief This file should be use to change parameter before uploading into a new device of the same type.
  */
 
-#ifndef CONFIG_LOCAL_HPP
-#define CONFIG_LOCAL_HPP
+#ifndef DEVICE_CONFIG_HPP
+#define DEVICE_CONFIG_HPP
 
 #include <cstdint>
 #include "rover_can2/constant.hpp"
@@ -66,4 +66,4 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
 }
 #endif  // REV_0
 
-#endif  // __CONFIG_LOCAL_HPP__
+#endif  // DEVICE_CONFIG_HPP

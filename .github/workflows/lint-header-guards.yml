@@ -1,0 +1,67 @@
+name: Lint Header Guards
+
+on:
+  pull_request:
+    branches:
+      - release/**
+  push:
+    branches:
+      - release/**
+
+jobs:
+  lint-header-guards:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Lint header guards
+        run: |
+          echo "=== Installing Python dependencies ... ==="
+          if ! command -v python3 &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y python3
+            echo -e "\e[0;32m[OK]\e[0m Python3 installed"
+          else
+            echo -e "\e[0;32m[OK]\e[0m Python3 already installed"
+          fi
+
+          echo "=== Finding header guard linter script... ==="
+          script_path=scripts/header_guard_linter.py
+          if [ -f "$script_path" ]; then
+            echo -e "\e[0;32m[OK]\e[0m Header guard linter found"
+            chmod +x $script_path
+          else
+            echo -e "\e[0;31m[ERROR] header_guard_linter.py not found at $script_path\e[0m"
+            exit 1
+          fi
+          
+          echo "=== Running header guard linter... ==="
+          set -e  # Stop the script if any command fails
+          
+          python3 $script_path \
+            lib/rover_lib2/src/rover_lib2 \
+            lib/rover_can2/src/rover_can2 \
+            camera_servo_controller/include:'' \
+            camera_servo_controller/src:'' \
+            compass/include:'' \
+            compass/src:'' \
+            DDB/src:'' \
+            GPS/include:'' \
+            GPS/src:'' \
+            propulsion_motor/include:'' \
+            propulsion_motor/src:''
+
+          echo "=== Checking for formatting changes... ==="
+          if git diff --quiet; then
+            echo -e "\e[0;32m=== [SUCCESS] Header guards are properly formatted ===\e[0m"
+          else
+            echo -e "=== \e[0;31m[FAILED]\e[0m Header guards are not conform ==="
+            echo ""
+            echo ""
+            git diff
+            echo ""
+            echo ""
+            echo -e "\e[0;31m=== [FAILED] Run scripts/header_guard_linter.py --fix to fix header guards ===\e[0m"
+            exit 1
+          fi
