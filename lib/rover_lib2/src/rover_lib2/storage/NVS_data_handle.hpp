@@ -1,5 +1,5 @@
-#ifndef ROVER_LIB2_STORAGE_NVS_DATA_HANDLE
-#define ROVER_LIB2_STORAGE_NVS_DATA_HANDLE
+#ifndef ROVER_LIB2_STORAGE_NVS_DATA_HANDLE_HPP
+#define ROVER_LIB2_STORAGE_NVS_DATA_HANDLE_HPP
 
 #include "NVS_global_handler.hpp"
 #include "rover_lib2/helpers/log.hpp"
@@ -254,4 +254,4 @@ class NVSDataHandle
     nvs_handle_t _nvsHandle;
 };
 
-#endif  // ROVER_LIB2_STORAGE_NVS_DATA_HANDLE
+#endif  // ROVER_LIB2_STORAGE_NVS_DATA_HANDLE_HPP
