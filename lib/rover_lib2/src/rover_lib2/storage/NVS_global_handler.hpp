@@ -28,7 +28,7 @@ class NVSGlobalHandler
 
             if (nvs_flash_erase() != ESP_OK)
             {
-                ASSERT_MSG("No NVS partition exist, this should never happen.");
+                ASSERT_MSG("No NVS partition exists, this should never happen.");
             }
 
             nvs_flash_init();
