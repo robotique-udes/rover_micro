@@ -105,6 +105,7 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSending)
 
     RoverCan2::ManagerSlave canManager(canDriver, system);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     RoverCan2::Msgs::TestMsg2 msg;
     system.sendMsg(msg);
@@ -125,6 +126,7 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSendingQueue)
 
     RoverCan2::ManagerSlave canManager(canDriver, system);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     // Simulating one msgs comming in:
     RoverCan2::Msgs::TestMsg2 msg;
@@ -149,6 +151,7 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgRecvAndSendFromCB)
 
     RoverCan2::ManagerSlave canManager(canDriver, system);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     // Simulating one msgs comming in:
     RoverCan2::Msgs::TestMsg testMsg;
