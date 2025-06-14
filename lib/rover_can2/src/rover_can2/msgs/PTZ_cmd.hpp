@@ -1,5 +1,5 @@
-#ifndef ROVER_CAN2_MSGS_PTZ_CMD_HPP
-#define ROVER_CAN2_MSGS_PTZ_CMD_HPP
+#ifndef PTZ_CMD_HPP
+#define PTZ_CMD_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
@@ -86,6 +86,8 @@ namespace RoverCan2::Msgs
                               success ? "success" : "failed");
                     break;
 
+                case eMsgContentID::eLAST:
+                    [[fallthrough]];
                 default:
                     return eLoadMsgCode::ERROR_IMPLEMENTATION;
             }
@@ -130,7 +132,11 @@ namespace RoverCan2::Msgs
                     break;
 
                 case eMsgContentID::eLAST:
+                    [[fallthrough]];
+                    
+                default:
                     return std::nullopt;
+                    break;
             }
 
             return msg_;
@@ -157,4 +163,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // ROVER_CAN2_MSGS_PTZ_CMD_HPP
+#endif  // PTZ_CMD_HPP

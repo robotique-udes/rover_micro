@@ -1,5 +1,5 @@
-#ifndef ROVER_CAN2_MSGS_PTZ_CONFIG_HPP
-#define ROVER_CAN2_MSGS_PTZ_CONFIG_HPP
+#ifndef PTZ_CONFIG_HPP
+#define PTZ_CONFIG_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
@@ -40,15 +40,7 @@ namespace RoverCan2::Msgs
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
-            = {eMsgContentID::PAN_MIN_POSITION,
-               eMsgContentID::PAN_MAX_POSITION,
-               eMsgContentID::PAN_MAX_SPEED,
-               eMsgContentID::TILT_MIN_POSITION,
-               eMsgContentID::TILT_MAX_POSITION,
-               eMsgContentID::TILT_MAX_SPEED,
-               eMsgContentID::ZOOM_MIN_POSITION,
-               eMsgContentID::ZOOM_MAX_POSITION,
-               eMsgContentID::ZOOM_MAX_SPEED};
+            = {eMsgContentID::PAN_MIN_POSITION, eMsgContentID::PAN_MAX_POSITION, eMsgContentID::PAN_MAX_SPEED, eMsgContentID::TILT_MIN_POSITION, eMsgContentID::TILT_MAX_POSITION, eMsgContentID::TILT_MAX_SPEED, eMsgContentID::ZOOM_MIN_POSITION, eMsgContentID::ZOOM_MAX_POSITION, eMsgContentID::ZOOM_MAX_SPEED};
 
       public:
         PtzConfig():
@@ -154,6 +146,8 @@ namespace RoverCan2::Msgs
                               success ? "success" : "failed");
                     break;
 
+                case eMsgContentID::eLAST:
+                    [[fallthrough]];
                 default:
                     return eLoadMsgCode::ERROR_IMPLEMENTATION;
             }
@@ -222,7 +216,11 @@ namespace RoverCan2::Msgs
                     break;
 
                 case eMsgContentID::eLAST:
+                    [[fallthrough]];
+                    
+                default:
                     return std::nullopt;
+                    break;
             }
 
             return msg_;
@@ -249,4 +247,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // ROVER_CAN2_MSGS_PTZ_CONFIG_HPP
+#endif  // PTZ_CONFIG_HPP

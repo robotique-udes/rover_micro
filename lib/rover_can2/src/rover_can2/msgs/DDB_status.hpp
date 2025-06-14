@@ -1,5 +1,5 @@
-#ifndef ROVER_CAN2_MSGS_DDB_STATUS_HPP
-#define ROVER_CAN2_MSGS_DDB_STATUS_HPP
+#ifndef DDB_STATUS_HPP
+#define DDB_STATUS_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
@@ -34,12 +34,7 @@ namespace RoverCan2::Msgs
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
-            = {eMsgContentID::B_0_CH_2_ON_STATE,
-               eMsgContentID::B_0_CH_3_ON_STATE,
-               eMsgContentID::B_1_CH_0_ON_STATE,
-               eMsgContentID::B_1_CH_1_ON_STATE,
-               eMsgContentID::B_1_CH_2_ON_STATE,
-               eMsgContentID::B_1_CH_3_ON_STATE};
+            = {eMsgContentID::B_0_CH_2_ON_STATE, eMsgContentID::B_0_CH_3_ON_STATE, eMsgContentID::B_1_CH_0_ON_STATE, eMsgContentID::B_1_CH_1_ON_STATE, eMsgContentID::B_1_CH_2_ON_STATE, eMsgContentID::B_1_CH_3_ON_STATE};
 
       public:
         DdbStatus():
@@ -121,6 +116,8 @@ namespace RoverCan2::Msgs
                               success ? "success" : "failed");
                     break;
 
+                case eMsgContentID::eLAST:
+                    [[fallthrough]];
                 default:
                     return eLoadMsgCode::ERROR_IMPLEMENTATION;
             }
@@ -177,7 +174,11 @@ namespace RoverCan2::Msgs
                     break;
 
                 case eMsgContentID::eLAST:
+                    [[fallthrough]];
+                    
+                default:
                     return std::nullopt;
+                    break;
             }
 
             return msg_;
@@ -204,4 +205,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // ROVER_CAN2_MSGS_DDB_STATUS_HPP
+#endif  // DDB_STATUS_HPP
