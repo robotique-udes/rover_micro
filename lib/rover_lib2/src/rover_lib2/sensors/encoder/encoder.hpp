@@ -3,48 +3,103 @@
 
 #include <rover_lib2/rover_object.hpp>
 
-template<typename Impl_T>
-class Encoder : public RoverObject<Encoder<Impl_T>>
+namespace Encoders
 {
-  private:
-    friend Impl_T;
-    Encoder() = default;
 
-  public:
-    void _init(void)
+    /**
+     * @brief Shadow class for type validation and optional parameters
+     * @attention [WARNING] Do not use directly as class or as pointer
+     *
+     */
+    class BaseT
     {
-        static_cast<Impl_T*>(this)->__init();
-    }
+      protected:
+        BaseT() = default;
 
-    void _update(void)
+      public:
+        void init(void)
+        {
+            ASSERT_MSG("Interface");
+        }
+
+        void update(void)
+        {
+            ASSERT_MSG("Interface");
+        }
+
+        bool dataIsValid(void)
+        {
+            ASSERT_MSG("Interface");
+            return false;
+        }
+
+        float getPosition(void)
+        {
+            ASSERT_MSG("Interface");
+            return 0.0F;
+        }
+
+        float getSpeed(void)
+        {
+            ASSERT_MSG("Interface");
+            return 0.0F;
+        }
+
+        void calib(float /*offset_*/)
+        {
+            ASSERT_MSG("Interface");
+        }
+
+        void setReversed(bool /*reverse_*/)
+        {
+            ASSERT_MSG("Interface");
+        }
+    };
+
+    template<typename Impl_T>
+    class Encoder : public RoverObject<Encoder<Impl_T>>,
+                    public BaseT
     {
-        static_cast<Impl_T*>(this)->__update();
-    }
+      private:
+        friend Impl_T;
+        Encoder() = default;
 
-    bool dataIsValid(void)
-    {
-        return static_cast<Impl_T*>(this)->_dataIsValid();
-    }
+      public:
+        void _init(void)
+        {
+            static_cast<Impl_T*>(this)->__init();
+        }
 
-    float getPosition(void)
-    {
-        return static_cast<Impl_T*>(this)->_getPosition();
-    }
+        void _update(void)
+        {
+            static_cast<Impl_T*>(this)->__update();
+        }
 
-    float getSpeed(void)
-    {
-        return static_cast<Impl_T*>(this)->_getSpeed();
-    }
+        bool dataIsValid(void)
+        {
+            return static_cast<Impl_T*>(this)->_dataIsValid();
+        }
 
-    void calib(float offset_)
-    {
-        static_cast<Impl_T*>(this)->_calib(offset_);
-    }
+        float getPosition(void)
+        {
+            return static_cast<Impl_T*>(this)->_getPosition();
+        }
 
-    void setReversed(bool reverse_)
-    {
-        static_cast<Impl_T*>(this)->_setReversed(reverse_);
-    }
-};
+        float getSpeed(void)
+        {
+            return static_cast<Impl_T*>(this)->_getSpeed();
+        }
 
+        void calib(float offset_)
+        {
+            static_cast<Impl_T*>(this)->_calib(offset_);
+        }
+
+        void setReversed(bool reverse_)
+        {
+            static_cast<Impl_T*>(this)->_setReversed(reverse_);
+        }
+    };
+
+}  // namespace Encoders
 #endif  // ROVER_LIB2_SENSORS_ENCODER_ENCODER_HPP
