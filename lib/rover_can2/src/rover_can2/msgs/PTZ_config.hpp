@@ -1,5 +1,5 @@
-#ifndef PTZ_CONFIG_HPP
-#define PTZ_CONFIG_HPP
+#ifndef ROVER_CAN2_MSGS_PTZ_CONFIG_HPP
+#define ROVER_CAN2_MSGS_PTZ_CONFIG_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
@@ -255,4 +255,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // PTZ_CONFIG_HPP
+#endif  // ROVER_CAN2_MSGS_PTZ_CONFIG_HPP
