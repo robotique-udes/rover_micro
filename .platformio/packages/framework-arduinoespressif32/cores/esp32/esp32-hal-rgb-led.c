@@ -68,6 +68,8 @@ void rgbLedWriteOrdered(uint8_t pin, rgb_led_color_order_t order, uint8_t red_va
       color[1] = blue_val;
       color[2] = red_val;
       break;
+    case LED_COLOR_ORDER_GRB: 
+      [[fallthrough]];
     default:  // GRB
       break;
   }
