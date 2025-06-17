@@ -37,7 +37,6 @@ jobs:
           fi
           
           echo "=== Running header guard linter... ==="
-          set -e  # Stop the script if any command fails
           
           python3 $script_path \
             lib/rover_lib2/src/rover_lib2 \

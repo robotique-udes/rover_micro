@@ -40,7 +40,15 @@ namespace RoverCan2::Msgs
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
-            = {eMsgContentID::PAN_MIN_POSITION, eMsgContentID::PAN_MAX_POSITION, eMsgContentID::PAN_MAX_SPEED, eMsgContentID::TILT_MIN_POSITION, eMsgContentID::TILT_MAX_POSITION, eMsgContentID::TILT_MAX_SPEED, eMsgContentID::ZOOM_MIN_POSITION, eMsgContentID::ZOOM_MAX_POSITION, eMsgContentID::ZOOM_MAX_SPEED};
+            = {eMsgContentID::PAN_MIN_POSITION,
+               eMsgContentID::PAN_MAX_POSITION,
+               eMsgContentID::PAN_MAX_SPEED,
+               eMsgContentID::TILT_MIN_POSITION,
+               eMsgContentID::TILT_MAX_POSITION,
+               eMsgContentID::TILT_MAX_SPEED,
+               eMsgContentID::ZOOM_MIN_POSITION,
+               eMsgContentID::ZOOM_MAX_POSITION,
+               eMsgContentID::ZOOM_MAX_SPEED};
 
       public:
         PtzConfig():
@@ -217,7 +225,7 @@ namespace RoverCan2::Msgs
 
                 case eMsgContentID::eLAST:
                     [[fallthrough]];
-                    
+
                 default:
                     return std::nullopt;
                     break;
