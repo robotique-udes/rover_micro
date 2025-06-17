@@ -52,7 +52,7 @@ jobs:
             propulsion_motor/include:'' \
             propulsion_motor/src:''"
 
-          eval ($script_cmd || true)
+          eval ("$script_cmd" || true)
 
           echo "=== Checking for formatting changes... ==="
           if git diff --quiet; then
