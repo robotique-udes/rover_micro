@@ -4,8 +4,10 @@
 #include "rover_lib2/helpers/assert.hpp"
 #include "rover_lib2/helpers/log.hpp"
 
+#include "rover_lib2/actuators/motor_drivers/motor_driver.hpp"
 #include "rover_lib2/sensors/encoder/encoder.hpp"
 #include "rover_lib2/controllers/controller.h"
+#include "rover_lib2/controllers/PID.hpp"
 
 DEFINE_LOG_NODE(ActuatorDc, Logger::eNodeState::OFF);
 
@@ -26,13 +28,12 @@ namespace Actuators
 
     template<class DriverT,
              typename EncoderT = Encoders::BaseT,
-             typename PositionControllerT = Controllers::BaseT,
-             typename SpeedControllerT = Controllers::BaseT>
+             Controllers::Controller PositionControllerT = Controllers::PID,
+             Controllers::Controller SpeedControllerT = Controllers::PID>
     class DC : public Actuator<DC<DriverT, EncoderT, PositionControllerT, SpeedControllerT>>
     {
+        VALIDATE_BASE_TYPE(MotorDriverT, DriverT);
         VALIDATE_BASE_TYPE(Encoders::BaseT, EncoderT);
-        VALIDATE_BASE_TYPE(Controllers::BaseT, PositionControllerT);
-        VALIDATE_BASE_TYPE(Controllers::BaseT, SpeedControllerT);
 
       public:
         DC(eControlType controlType_,
@@ -57,6 +58,7 @@ namespace Actuators
                             break;
                         case eFeedbackType::CLOSE_LOOP:
                             ASSERT_COND_MSG(_pControllerSpeed, "Can't control in position without valid position controller");
+                            ASSERT_COND_MSG(_pEncoder, "Can't control in position without valid encoder");
                             _errorMode = true;
                             break;
                         default:
@@ -123,7 +125,9 @@ namespace Actuators
                     speedModeUpdate();
                     break;
                 case eControlType::POSITION:
+                    [[fallthrough]];
                 case eControlType::TORQUE:
+                    [[fallthrough]];
                 default:
                     ASSERT_MSG_ARGS("Control mode \"%u\" not supported, falling in safe mode", _controlType);
                     _errorMode = true;
@@ -183,7 +187,25 @@ namespace Actuators
         }
 
       private:
-        void speedModeUpdate(void) {}
+        void speedModeUpdate(void)
+        {
+            switch (_feedbackType)
+            {
+                case eFeedbackType::OPEN_LOOP:
+                    _motorDriver.setCmd(_goalSpeed);
+                    break;
+
+                case eFeedbackType::CLOSE_LOOP:
+                    if (!_pControllerSpeed || !_pEncoder)
+                    {
+                        _errorMode = true;
+                        return;
+                    }
+
+                    float cmd = _pControllerSpeed->computeCommand(this->getSpeed(), _goalSpeed);
+                    _motorDriver.setCmd(cmd);
+            }
+        }
 
         const eControlType _controlType;
         const eFeedbackType _feedbackType;
