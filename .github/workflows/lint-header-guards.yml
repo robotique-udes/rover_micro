@@ -52,7 +52,7 @@ jobs:
             propulsion_motor/include:'' \
             propulsion_motor/src:''"
 
-          eval ("$script_cmd" || true)
+          eval $script_cmd || true
 
           echo "=== Checking for formatting changes... ==="
           if git diff --quiet; then
@@ -60,6 +60,6 @@ jobs:
           else
             echo -e "=== \e[0;31m[FAILED]\e[0m Header guards are not conform ==="
             echo ""
-            echo -e "\e[0;31m=== [FAILED] Run $lint_cmd to fix header guards ===\e[0m"
+            echo -e "\e[0;31m=== [FAILED] Run $script_cmd to fix header guards ===\e[0m"
             exit 1
           fi
