@@ -58,10 +58,6 @@ jobs:
           else
             echo -e "=== \e[0;31m[FAILED]\e[0m Header guards are not conform ==="
             echo ""
-            echo ""
-            git diff
-            echo ""
-            echo ""
             echo -e "\e[0;31m=== [FAILED] Run scripts/header_guard_linter.py --fix to fix header guards ===\e[0m"
             exit 1
           fi
