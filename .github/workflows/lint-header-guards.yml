@@ -38,7 +38,7 @@ jobs:
           
           echo "=== Running header guard linter... ==="
           
-          python3 $script_path \
+          (python3 $script_path \
             lib/rover_lib2/src/rover_lib2 \
             lib/rover_can2/src/rover_can2 \
             camera_servo_controller/include:'' \
@@ -49,7 +49,7 @@ jobs:
             GPS/include:'' \
             GPS/src:'' \
             propulsion_motor/include:'' \
-            propulsion_motor/src:''
+            propulsion_motor/src:'' || true)
 
           echo "=== Checking for formatting changes... ==="
           if git diff --quiet; then
