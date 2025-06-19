@@ -2,44 +2,53 @@
 #define ROVER_LIB2_SENSORS_ENCODER_ENCODER_HPP
 
 #include <rover_lib2/rover_object.hpp>
+#include <rover_lib2/helpers/macros.hpp>
+
+#include <concepts>
 
 namespace Encoders
 {
 
-    /**
-     * @brief Shadow class for type validation and optional parameters
-     * @attention [WARNING] Do not use directly as class or as pointer
-     *
-     */
-    class BaseT
+    template<typename ImplT>
+    concept Encoder = RoverObject<ImplT> && requires(ImplT impl_)
     {
-      protected:
-        BaseT() = default;
+        // clang-format off
+        { impl_.dataIsValid() } -> std::same_as<bool>;
 
+        { impl_.getPosition() } -> std::same_as<float>;
+
+        { impl_.getSpeed() } -> std::same_as<float>;
+
+        { impl_.calib(float{}) } -> std::same_as<void>;
+        // clang-format on
+    };
+
+    class None
+    {
       public:
-        void init(void)
+        void init()
         {
             ASSERT_MSG("Interface");
         }
 
-        void update(void)
+        void update()
         {
             ASSERT_MSG("Interface");
         }
 
-        bool dataIsValid(void)
+        bool dataIsValid()
         {
             ASSERT_MSG("Interface");
             return false;
         }
 
-        float getPosition(void)
+        float getPosition()
         {
             ASSERT_MSG("Interface");
             return 0.0F;
         }
 
-        float getSpeed(void)
+        float getSpeed()
         {
             ASSERT_MSG("Interface");
             return 0.0F;
@@ -54,51 +63,8 @@ namespace Encoders
         {
             ASSERT_MSG("Interface");
         }
-    };
 
-    template<typename Impl_T>
-    class Encoder : public RoverObject<Encoder<Impl_T>>,
-                    public BaseT
-    {
-      private:
-        friend Impl_T;
-        Encoder() = default;
-
-      public:
-        void _init(void)
-        {
-            static_cast<Impl_T*>(this)->__init();
-        }
-
-        void _update(void)
-        {
-            static_cast<Impl_T*>(this)->__update();
-        }
-
-        bool dataIsValid(void)
-        {
-            return static_cast<Impl_T*>(this)->_dataIsValid();
-        }
-
-        float getPosition(void)
-        {
-            return static_cast<Impl_T*>(this)->_getPosition();
-        }
-
-        float getSpeed(void)
-        {
-            return static_cast<Impl_T*>(this)->_getSpeed();
-        }
-
-        void calib(float offset_)
-        {
-            static_cast<Impl_T*>(this)->_calib(offset_);
-        }
-
-        void setReversed(bool reverse_)
-        {
-            static_cast<Impl_T*>(this)->_setReversed(reverse_);
-        }
+        VALIDATE_CONCEPT(Encoder, None);
     };
 
 }  // namespace Encoders

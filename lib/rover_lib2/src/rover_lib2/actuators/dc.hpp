@@ -4,12 +4,12 @@
 #include "rover_lib2/helpers/assert.hpp"
 #include "rover_lib2/helpers/log.hpp"
 
-#include "rover_lib2/actuators/motor_drivers/motor_driver.hpp"
+#include "rover_lib2/motor_drivers/motor_driver.hpp"
 #include "rover_lib2/sensors/encoder/encoder.hpp"
 #include "rover_lib2/controllers/controller.h"
 #include "rover_lib2/controllers/PID.hpp"
 
-DEFINE_LOG_NODE(ActuatorDc, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(ActuatorDc, Logger::eNodeState::ON);
 
 namespace Actuators
 {
@@ -27,14 +27,11 @@ namespace Actuators
     };
 
     template<class DriverT,
-             typename EncoderT = Encoders::BaseT,
-             Controllers::Controller PositionControllerT = Controllers::PID,
-             Controllers::Controller SpeedControllerT = Controllers::PID>
-    class DC : public Actuator<DC<DriverT, EncoderT, PositionControllerT, SpeedControllerT>>
+             Encoders::Encoder EncoderT = Encoders::None,
+             Controllers::Controller PositionControllerT = Controllers::None,
+             Controllers::Controller SpeedControllerT = Controllers::None>
+    class DC
     {
-        VALIDATE_BASE_TYPE(MotorDriverT, DriverT);
-        VALIDATE_BASE_TYPE(Encoders::BaseT, EncoderT);
-
       public:
         DC(eControlType controlType_,
            eFeedbackType feedbackType_,
@@ -59,7 +56,6 @@ namespace Actuators
                         case eFeedbackType::CLOSE_LOOP:
                             ASSERT_COND_MSG(_pControllerSpeed, "Can't control in position without valid position controller");
                             ASSERT_COND_MSG(_pEncoder, "Can't control in position without valid encoder");
-                            _errorMode = true;
                             break;
                         default:
                             ASSERT_MSG_ARGS("Unknown control mode specified: %u", std::to_underlying(_feedbackType));
@@ -84,7 +80,7 @@ namespace Actuators
             }
         }
 
-        void __init()
+        void init()
         {
             _motorDriver.init();
 
@@ -104,7 +100,7 @@ namespace Actuators
             }
         }
 
-        void __update()
+        void update()
         {
             _motorDriver.update();
 
@@ -115,6 +111,7 @@ namespace Actuators
 
             if (_errorMode)
             {
+                LOG_WARN(Logger::Nodes::ActuatorDc, "Fallen in error mode, motor stopped");
                 _motorDriver.setCmd(0.0F);
                 return;
             }
@@ -135,12 +132,12 @@ namespace Actuators
             }
         }
 
-        void _setPosition(float pos_)
+        void setPosition(float pos_)
         {
             _goalPos = pos_;
         }
 
-        float _getPosition()
+        float getPosition() const
         {
             if (!_pEncoder)
             {
@@ -151,12 +148,12 @@ namespace Actuators
             return _pEncoder->getPosition();
         }
 
-        void _setSpeed(float speed_)
+        void setSpeed(float speed_)
         {
             _goalSpeed = speed_;
         }
 
-        float _getSpeed()
+        float getSpeed() const
         {
             if (!_pEncoder)
             {
@@ -167,12 +164,12 @@ namespace Actuators
             return _pEncoder->getSpeed();
         }
 
-        void _setMaxSpeed(float max_speed_)
+        void setMaxSpeed(float max_speed_)
         {
             _maxSpeed = max_speed_;
         }
 
-        void _setJointLimit(std::optional<float> min_, std::optional<float> max_)
+        void setJointLimit(std::optional<float> min_, std::optional<float> max_)
         {
             if (min_.has_value() && max_.has_value() && min_.value() > max_.value())
             {
@@ -186,16 +183,28 @@ namespace Actuators
             _maxJointLimit = max_;
         }
 
+        void calib(float offset_)
+        {
+            if (_pEncoder)
+            {
+                _pEncoder->calib(offset_);
+            }
+        }
+
       private:
         void speedModeUpdate(void)
         {
+            LOG_DEBUG(Logger::Nodes::ActuatorDc, "In Speed Mode update");
             switch (_feedbackType)
             {
                 case eFeedbackType::OPEN_LOOP:
+                    LOG_DEBUG(Logger::Nodes::ActuatorDc, "In open loop mode");
                     _motorDriver.setCmd(_goalSpeed);
                     break;
 
                 case eFeedbackType::CLOSE_LOOP:
+                {
+                    LOG_DEBUG(Logger::Nodes::ActuatorDc, "In closed loop mode");
                     if (!_pControllerSpeed || !_pEncoder)
                     {
                         _errorMode = true;
@@ -204,6 +213,17 @@ namespace Actuators
 
                     float cmd = _pControllerSpeed->computeCommand(this->getSpeed(), _goalSpeed);
                     _motorDriver.setCmd(cmd);
+                    LOG_INFO(Logger::Nodes::ActuatorDc,
+                             "_goalSpeed: %f, this->getSpeed(): %f | cmd: %f",
+                             _goalSpeed,
+                             this->getSpeed(),
+                             cmd);
+                    break;
+                }
+
+                default:
+                    ASSERT_MSG("Shouldn't fall here, implementation error");
+                    _errorMode = true;
             }
         }
 
@@ -223,6 +243,8 @@ namespace Actuators
 
         float _goalSpeed = 0.0F;
         float _maxSpeed = std::numeric_limits<float>::max();
+
+        VALIDATE_CONCEPT(Actuator, DC);
     };
 
 }  // namespace Actuators

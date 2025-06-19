@@ -15,28 +15,30 @@ namespace PWMGenerators
         PWMGeneratorT() = default;
     };
 
+
+    #warning Todo RoverObject concept
+
     /**
      * @brief CRTP Interface
      *
      * @tparam Impl_T
      */
     template<typename Impl_T>
-    class PWMGenerator : public PWMGeneratorT,
-                         public RoverObject<PWMGenerator<Impl_T>>
+    class PWMGenerator : public PWMGeneratorT
     {
       private:
         friend Impl_T;
         PWMGenerator() = default;
 
       public:
-        void _init(void)
+        void init(void)
         {
-            static_cast<Impl_T*>(this)->__init();
+            static_cast<Impl_T*>(this)->_init();
         }
 
-        void _update(void)
+        void update(void)
         {
-            static_cast<Impl_T*>(this)->__update();
+            static_cast<Impl_T*>(this)->_update();
         }
 
         /**

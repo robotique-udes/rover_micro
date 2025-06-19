@@ -13,6 +13,9 @@ DEFINE_LOG_NODE(MCPWM, Logger::eNodeState::OFF);
 
 namespace PWMGenerators
 {
+
+    #warning Todo RoverObject concept
+
     class MCPWM : public PWMGenerator<MCPWM>
     {
         static constexpr int DEFAULT_INTERUPT_PRIORITY = MCPWMTimer::DEFAULT_INTERUPT_PRIORITY;
@@ -87,9 +90,9 @@ namespace PWMGenerators
             ASSERT_MSG("Destructor should never be called at runtime, resources management is RAII");
         }
 
-        void __init(void) {}
+        void init(void) {}
 
-        void __update(void) {}
+        void update(void) {}
 
         void _setDutyCycle(float duty_)
         {

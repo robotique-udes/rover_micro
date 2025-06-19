@@ -26,7 +26,7 @@ namespace Encoders
      * This class only use the read position spi command and manage the rest internally to enable support for AMT222A and AMT222C
      * which only have this command in common
      */
-    class AMT222X : public Encoder<AMT222X>
+    class AMT222X
     {
         // Clock speed this low necessary because the ESP-IDF doesn't support adding clean delay between bytes in same
         // transaction... and AMT222X Requires 2.5us between bytes in same transaction.
@@ -64,7 +64,7 @@ namespace Encoders
         {
         }
 
-        void __init(void)
+        void init(void)
         {
             if (!_lastQuadrant.dataInSync() || !_turnCount.dataInSync())
             {
@@ -79,7 +79,7 @@ namespace Encoders
             _dtSpeedCalc.restart();
         }
 
-        void __update(void)
+        void update(void)
         {
             if (!loopExec.isReady())
             {
@@ -143,22 +143,22 @@ namespace Encoders
             }
         }
 
-        bool _dataIsValid(void)
+        bool dataIsValid(void)
         {
             return _dataValidWatchdog.isOk() && _dataValidNVS;
         }
 
-        float _getPosition(void)
+        float getPosition(void)
         {
             return (_currentPosition + _calibOffset.getValue());
         }
 
-        float _getSpeed(void)
+        float getSpeed(void)
         {
             return _currentSpeed;
         }
 
-        void _calib(float offset_)
+        void calib(float offset_)
         {
             ASSERT_COND(offset_ <= static_cast<int16_t>(std::numeric_limits<int16_t>::max())
                         || offset_ >= static_cast<int16_t>(std::numeric_limits<int16_t>::min()));
@@ -273,6 +273,8 @@ namespace Encoders
         NVSDataHandle<float> _calibOffset;
 
         bool _reversed;
+
+        VALIDATE_CONCEPT(Encoder, AMT222X);
     };
 
 }  // namespace Encoders

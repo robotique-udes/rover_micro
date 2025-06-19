@@ -31,10 +31,11 @@
 #include <rover_lib2/LED/led_blinker.hpp>
 
 #include "rover_lib2/actuators/dc.hpp"
-#include "rover_lib2/actuators/motor_drivers/IFX9201SG.hpp"
+#include "rover_lib2/motor_drivers/IFX9201SG.hpp"
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 
 #include "rover_lib2/sensors/encoder/AMT222X.hpp"
+#include "rover_lib2/sensors/push_button.hpp"
 
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
 constexpr gpio_num_t PIN_J34_L_PWM = GPIO_NUM_16;
@@ -45,7 +46,13 @@ constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_48;
 constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_21;
 constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_47;
 
-DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
+constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_40;
+constexpr gpio_num_t PIN_FWD_CALIB = GPIO_NUM_42;
+constexpr gpio_num_t PIN_REV_CALIB = GPIO_NUM_41;
+
+DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
+
+#warning TODO: Implement Filters
 
 void setup(void)
 {
@@ -62,23 +69,48 @@ void setup(void)
                              pwmTimer,
                              PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH,
                              PWMGenerators::MCPWM::ePinPullMode::PULL_DOWN);
-    IFX9201SG<PWMGenerators::MCPWM> motorDriver(pwm, PIN_J34_L_DIR, false);
+    MotorDrivers::IFX9201SG<PWMGenerators::MCPWM> motorDriver(pwm, PIN_J34_L_DIR, false);
 
-    SPIBus spiMotor(spi_host_device_t::SPI1_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
+    SPIBus spiMotor(spi_host_device_t::SPI2_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
     Encoders::AMT222X encoder = {spiMotor, PIN_J34_L_CS, "J34_L", false};
 
-    Actuators::DC<IFX9201SG<PWMGenerators::MCPWM>> actuator(Actuators::eControlType::SPEED,
-                                                            Actuators::eFeedbackType::OPEN_LOOP,
-                                                            motorDriver);
+    Controllers::PID pidSpeed = Controllers::PID(150.0F, 0.0F, 0.0F, 20.0F, 10'000ULL);
+
+    Actuators::DC<MotorDrivers::IFX9201SG<PWMGenerators::MCPWM>, Encoders::AMT222X, Controllers::None, Controllers::PID>
+        actuator(Actuators::eControlType::SPEED, Actuators::eFeedbackType::CLOSE_LOOP, motorDriver, &encoder, nullptr, &pidSpeed);
     actuator.init();
-    actuator.setSpeed(50.0F);
+
+    PushButton calibPb = PushButton(PIN_PB_CALIB);
+    PushButton calibFwd = PushButton(PIN_FWD_CALIB);
 
     LOG_INFO(Logger::Nodes::Main, "Init done, starting loop!");
     for (EVER)
     {
         actuator.update();
         led.update();
+
+        LOG_INFO(Logger::Nodes::Main,
+                 "actuator.getPosition(): %f | actuator.getSpeed(): %f",
+                 actuator.getPosition(),
+                 actuator.getSpeed());
+
+        if (calibPb.isClicked())
+        {
+            actuator.calib(0.0F);
+        }
+
+        if (calibFwd.isClicked())
+        {
+            actuator.setSpeed(0.5);
+        }
+        else
+        {
+            actuator.setSpeed(0.0);
+        }
     }
 }
 
-void loop() {}
+void loop()
+{
+    // Don't use
+}

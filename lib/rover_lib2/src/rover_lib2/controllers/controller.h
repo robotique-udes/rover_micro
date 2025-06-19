@@ -13,10 +13,25 @@ namespace Controllers
     concept Controller = requires(ImplT impl_)
     {
         // clang-format off
-        { impl_.computeCommand(float{}, float{}) } -> std::same_as<float>;
+        { impl_.computeCommand(float{} /*input_*/, float{} /*target_*/) } -> std::same_as<float>;
 
         { impl_.reset() } -> std::same_as<void>;
         // clang-format on
+    };
+
+    class None
+    {
+      public:
+        float computeCommand(float, float)
+        {
+            ASSERT_MSG("Interface");
+            return 0.0F;
+        }
+
+        void reset()
+        {
+            ASSERT_MSG("Interface");
+        }
     };
 
 }  // namespace Controllers
