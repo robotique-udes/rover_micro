@@ -178,6 +178,8 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubFromDevice)
     RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
 
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
+
     RoverCan2::Msgs::TestMsg msg;
     msg.data().cmd = 69.0F;
     msg.data().closeLoop = true;
@@ -220,6 +222,8 @@ TEST(SUITE_ROVER_CAN2_CanDevice, MultiplePubSendMsgFromDevice)
     RoverCan2::Drivers::DriverMock driver;
     RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
+
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     RoverCan2::Msgs::TestMsg msg;
     msg.data().cmd = 69.0F;
@@ -272,6 +276,8 @@ TEST(SUITE_ROVER_CAN2_CanDevice, PubAndSubInDeviceIntegrationTest)
     RoverCan2::Drivers::DriverMock driver;
     RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
+
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     // Send msg
     RoverCan2::Msgs::TestMsg sendMsg;

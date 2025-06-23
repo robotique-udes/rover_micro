@@ -37,9 +37,9 @@ jobs:
           fi
           
           echo "=== Running header guard linter... ==="
-          set -e  # Stop the script if any command fails
           
-          python3 $script_path \
+          script_cmd="python3 $script_path \
+            --fix \
             lib/rover_lib2/src/rover_lib2 \
             lib/rover_can2/src/rover_can2 \
             camera_servo_controller/include:'' \
@@ -50,7 +50,9 @@ jobs:
             GPS/include:'' \
             GPS/src:'' \
             propulsion_motor/include:'' \
-            propulsion_motor/src:''
+            propulsion_motor/src:''"
+
+          eval $script_cmd || true
 
           echo "=== Checking for formatting changes... ==="
           if git diff --quiet; then
@@ -58,10 +60,6 @@ jobs:
           else
             echo -e "=== \e[0;31m[FAILED]\e[0m Header guards are not conform ==="
             echo ""
-            echo ""
-            git diff
-            echo ""
-            echo ""
-            echo -e "\e[0;31m=== [FAILED] Run scripts/header_guard_linter.py --fix to fix header guards ===\e[0m"
+            echo -e "\e[0;31m=== [FAILED] Run $script_cmd to fix header guards ===\e[0m"
             exit 1
           fi

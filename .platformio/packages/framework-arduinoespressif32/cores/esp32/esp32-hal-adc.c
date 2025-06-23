@@ -118,7 +118,7 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
           }
           adc_cali_curve_fitting_config_t cali_config = {
             .unit_id = adc_unit,
-            .atten = atten,
+            .atten = (adc_atten_t)atten,
             .bitwidth = width,
           };
           log_d("Creating ADC_UNIT_%d curve cali handle", adc_unit);

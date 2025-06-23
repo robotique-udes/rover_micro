@@ -95,6 +95,8 @@ static inline void uart_ll_enable_bus_clock(uart_port_t uart_num, bool enable)
     case 2:
         SYSTEM.perip_clk_en1.uart2_clk_en = enable;
         break;
+    case UART_NUM_MAX: 
+        [[fallthrough]];
     default:
         abort();
         break;
@@ -129,6 +131,8 @@ static inline void uart_ll_reset_register(uart_port_t uart_num)
         SYSTEM.perip_rst_en1.uart2_rst = 0;
         UART2.clk_conf.rst_core = 0;
         break;
+    case UART_NUM_MAX: 
+        [[fallthrough]];
     default:
         abort();
         break;
@@ -158,6 +162,26 @@ FORCE_INLINE_ATTR void uart_ll_set_sclk(uart_dev_t *hw, soc_module_clk_t source_
         case UART_SCLK_XTAL:
             hw->clk_conf.sclk_sel = 3;
             break;
+        case SOC_MOD_CLK_CPU: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_RTC_FAST: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_RTC_SLOW: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_PLL_F80M: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_PLL_F160M: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_PLL_D2: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_XTAL32K: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_RC_FAST_D256: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_TEMP_SENSOR: 
+            [[fallthrough]];
+        case SOC_MOD_CLK_INVALID: 
+            [[fallthrough]];
         default:
             // Invalid UART clock source
             abort();

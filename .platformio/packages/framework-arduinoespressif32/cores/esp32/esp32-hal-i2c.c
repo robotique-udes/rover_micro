@@ -402,7 +402,7 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency) {
     }
 #endif
     I2C_CLOCK_SRC_ATOMIC() {
-      i2c_hal_set_bus_timing(&(hal), frequency, i2c_clk_alloc[src_clk].clk, i2c_clk_alloc[src_clk].clk_freq);
+      i2c_hal_set_bus_timing(&(hal), frequency, (i2c_clock_source_t)i2c_clk_alloc[src_clk].clk, i2c_clk_alloc[src_clk].clk_freq);
     }
     bus[i2c_num].frequency = frequency;
     //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2

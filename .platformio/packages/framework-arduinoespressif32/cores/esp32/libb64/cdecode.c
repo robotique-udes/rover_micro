@@ -79,6 +79,8 @@ static int base64_decode_block_signed(const int8_t *code_in, const int length_in
           fragment = (int8_t)base64_decode_value_signed(*codechar++);
         } while (fragment < 0);
         *plainchar++ |= (fragment & 0x03f);
+      default:
+        break;
     }
   }
   /* control should not reach here */
