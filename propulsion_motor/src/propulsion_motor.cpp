@@ -16,6 +16,7 @@
 #include <rover_lib2/helpers/watchdog.hpp>
 #include <rover_lib2/LED/led_blinker.hpp>
 #include <rover_lib2/helpers/log.hpp>
+#include <utility>
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 
@@ -60,18 +61,18 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
         _timerLoop(1),
         _watchdog(PERIOD_WATCHDOG_TRIGGER)
     {
-        switch (id_)
+        switch (std::to_underlying(id_))
         {
-            case RoverCan2::Constant::eDeviceId::FRONTLEFT_MOTOR:
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::FRONTLEFT_MOTOR):
                 _drive.setReversed(false);
                 break;
-            case RoverCan2::Constant::eDeviceId::FRONTRIGHT_MOTOR:
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::FRONTRIGHT_MOTOR):
                 _drive.setReversed(true);
                 break;
-            case RoverCan2::Constant::eDeviceId::REARLEFT_MOTOR:
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::REARLEFT_MOTOR):
                 _drive.setReversed(false);
                 break;
-            case RoverCan2::Constant::eDeviceId::REARRIGHT_MOTOR:
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::REARRIGHT_MOTOR):
                 _drive.setReversed(true);
                 break;
             default:

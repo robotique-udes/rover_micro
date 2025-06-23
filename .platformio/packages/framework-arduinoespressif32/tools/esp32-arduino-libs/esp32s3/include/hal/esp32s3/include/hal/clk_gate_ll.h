@@ -99,6 +99,10 @@ static inline uint32_t periph_ll_get_clk_en_mask(periph_module_t periph)
         return SYSTEM_CRYPTO_HMAC_CLK_EN;
     case PERIPH_DS_MODULE:
         return SYSTEM_CRYPTO_DS_CLK_EN;
+    case PERIPH_PWM2_MODULE: [[fallthrough]];
+    case PERIPH_PWM3_MODULE: [[fallthrough]];
+    case PERIPH_TEMPSENSOR_MODULE: [[fallthrough]];
+    case PERIPH_MODULE_MAX: [[fallthrough]];
     default:
         return 0;
     }
@@ -193,6 +197,14 @@ static inline uint32_t periph_ll_get_rst_en_mask(periph_module_t periph, bool en
             /* don't reset digital signature unit, as this resets AES also */
             return SYSTEM_CRYPTO_RSA_RST;
         }
+    case PERIPH_PWM2_MODULE: [[fallthrough]];
+    case PERIPH_PWM3_MODULE: [[fallthrough]];
+    case PERIPH_TEMPSENSOR_MODULE: [[fallthrough]];
+    case PERIPH_MODULE_MAX: [[fallthrough]];
+    case PERIPH_RNG_MODULE: [[fallthrough]];
+    case PERIPH_BT_BASEBAND_MODULE: [[fallthrough]];
+    case PERIPH_BT_LC_MODULE: [[fallthrough]];
+    case PERIPH_WIFI_BT_COMMON_MODULE: [[fallthrough]];
     default:
         return 0;
     }
@@ -220,6 +232,32 @@ static inline uint32_t periph_ll_get_clk_en_reg(periph_module_t periph)
     case PERIPH_SHA_MODULE:
     case PERIPH_RSA_MODULE:
         return SYSTEM_PERIP_CLK_EN1_REG;
+    case PERIPH_LEDC_MODULE: [[fallthrough]];
+    case PERIPH_UART0_MODULE: [[fallthrough]];
+    case PERIPH_UART1_MODULE: [[fallthrough]];
+    case PERIPH_I2C0_MODULE: [[fallthrough]];
+    case PERIPH_I2C1_MODULE: [[fallthrough]];
+    case PERIPH_I2S0_MODULE: [[fallthrough]];
+    case PERIPH_I2S1_MODULE: [[fallthrough]];
+    case PERIPH_TIMG0_MODULE: [[fallthrough]];
+    case PERIPH_TIMG1_MODULE: [[fallthrough]];
+    case PERIPH_PWM0_MODULE: [[fallthrough]];
+    case PERIPH_PWM1_MODULE: [[fallthrough]];
+    case PERIPH_PWM2_MODULE: [[fallthrough]];
+    case PERIPH_PWM3_MODULE: [[fallthrough]];
+    case PERIPH_UHCI0_MODULE: [[fallthrough]];
+    case PERIPH_UHCI1_MODULE: [[fallthrough]];
+    case PERIPH_RMT_MODULE: [[fallthrough]];
+    case PERIPH_PCNT_MODULE: [[fallthrough]];
+    case PERIPH_SPI_MODULE: [[fallthrough]];
+    case PERIPH_SPI2_MODULE: [[fallthrough]];
+    case PERIPH_SPI3_MODULE: [[fallthrough]];
+    case PERIPH_TWAI_MODULE: [[fallthrough]];
+    case PERIPH_SYSTIMER_MODULE: [[fallthrough]];
+    case PERIPH_SARADC_MODULE: [[fallthrough]];
+    case PERIPH_TEMPSENSOR_MODULE: [[fallthrough]];
+    case PERIPH_MODULE_MAX: [[fallthrough]];
+    case PERIPH_USB_MODULE: [[fallthrough]];
     default:
         return SYSTEM_PERIP_CLK_EN0_REG;
     }
@@ -247,6 +285,32 @@ static inline uint32_t periph_ll_get_rst_en_reg(periph_module_t periph)
     case PERIPH_SHA_MODULE:
     case PERIPH_RSA_MODULE:
         return SYSTEM_PERIP_RST_EN1_REG;
+        case PERIPH_LEDC_MODULE: [[fallthrough]];
+    case PERIPH_UART0_MODULE: [[fallthrough]];
+    case PERIPH_UART1_MODULE: [[fallthrough]];
+    case PERIPH_I2C0_MODULE: [[fallthrough]];
+    case PERIPH_I2C1_MODULE: [[fallthrough]];
+    case PERIPH_I2S0_MODULE: [[fallthrough]];
+    case PERIPH_I2S1_MODULE: [[fallthrough]];
+    case PERIPH_TIMG0_MODULE: [[fallthrough]];
+    case PERIPH_TIMG1_MODULE: [[fallthrough]];
+    case PERIPH_PWM0_MODULE: [[fallthrough]];
+    case PERIPH_PWM1_MODULE: [[fallthrough]];
+    case PERIPH_PWM2_MODULE: [[fallthrough]];
+    case PERIPH_PWM3_MODULE: [[fallthrough]];
+    case PERIPH_UHCI0_MODULE: [[fallthrough]];
+    case PERIPH_UHCI1_MODULE: [[fallthrough]];
+    case PERIPH_RMT_MODULE: [[fallthrough]];
+    case PERIPH_PCNT_MODULE: [[fallthrough]];
+    case PERIPH_SPI_MODULE: [[fallthrough]];
+    case PERIPH_SPI2_MODULE: [[fallthrough]];
+    case PERIPH_SPI3_MODULE: [[fallthrough]];
+    case PERIPH_TWAI_MODULE: [[fallthrough]];
+    case PERIPH_SYSTIMER_MODULE: [[fallthrough]];
+    case PERIPH_SARADC_MODULE: [[fallthrough]];
+    case PERIPH_TEMPSENSOR_MODULE: [[fallthrough]];
+    case PERIPH_MODULE_MAX: [[fallthrough]];
+    case PERIPH_USB_MODULE: [[fallthrough]];
     default:
         return SYSTEM_PERIP_RST_EN0_REG;
     }
