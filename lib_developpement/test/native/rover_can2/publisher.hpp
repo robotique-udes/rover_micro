@@ -32,6 +32,8 @@ TEST(SUITE_NAME_Publisher, SimplePublish)
     RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
 
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
+
     RoverCan2::Msgs::TestMsg msg;
     msg.data().cmd = 69.0F;
     msg.data().closeLoop = true;
@@ -52,6 +54,8 @@ TEST(SUITE_NAME_Publisher, MultiplePublish)
     RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
     RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
+
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     RoverCan2::Msgs::TestMsg msg;
     msg.data().cmd = 69.0F;
