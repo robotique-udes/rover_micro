@@ -12,18 +12,10 @@ DEFINE_LOG_NODE(NVSDataHandle, Logger::eNodeState::ON);
 template<typename Data_T>
 class NVSDataHandle
 {
-<<<<<<< HEAD
     static_assert(std::is_same_v<
                       int8_t,
                       Data_T> || std::is_same_v<uint8_t, Data_T> || std::is_same_v<int16_t, Data_T> || std::is_same_v<uint16_t, Data_T> || std::is_same_v<int32_t, Data_T> || std::is_same_v<uint32_t, Data_T> || std::is_same_v<int64_t, Data_T> || std::is_same_v<uint64_t, Data_T> || std::is_same_v<float, Data_T> || std::is_same_v<double, Data_T>,
                   "Type not supported");
-=======
-    static_assert(
-        std::is_same_v<
-            int8_t,
-            Data_T> || std::is_same_v<uint8_t, Data_T> || std::is_same_v<int16_t, Data_T> || std::is_same_v<uint16_t, Data_T> || std::is_same_v<int32_t, Data_T> || std::is_same_v<uint32_t, Data_T> || std::is_same_v<int64_t, Data_T> || std::is_same_v<uint64_t, Data_T>,
-        "Type not supported");
->>>>>>> release/circ2025
 
     static constexpr size_t NVS_MAX_LENGTH_STR = 15UL;
 
