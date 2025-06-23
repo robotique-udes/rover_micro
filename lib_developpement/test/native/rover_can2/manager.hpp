@@ -109,6 +109,7 @@ TEST(SUITE_ROVER_CAN2_CanManager, MsgRecvHandlingInfiniteLoop)
     TestCanManager::g_callbackCounter = 0U;
     RoverCan2::ManagerSlave canManager(canDriver, device);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
     canManager.update();
 
     // Creating msgs and putting them in the driver's buffer to simulate multiple msg reception
@@ -139,6 +140,7 @@ TEST(SUITE_ROVER_CAN2_CanManager, MsgSending)
     RoverCan2::Drivers::DriverMock canDriver;
     RoverCan2::ManagerSlave canManager(canDriver, device);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
     canManager.update();
 
     RoverCan2::Msgs::TestMsg msg;
@@ -235,6 +237,8 @@ TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReceivedFromNonMaster)
 
     RoverCan2::ManagerSlave canManager(canDriver, device1);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
+
     canManager.update();
 
     RoverCan2::Msgs::ErrorState msg;
@@ -255,6 +259,10 @@ TEST(SUITE_ROVER_CAN2_CanManager, ErrorStateReportingWithDevices)
 
     RoverCan2::ManagerSlave canManager(canDriver, device1, device2, device3);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
+
     canManager.update();
 
     // Simulate ErrorState msg reception from Master, manager should make all
@@ -285,6 +293,7 @@ TEST(SUITE_ROVER_CAN2_CanManager, ManagerDeviceManagementIntegrationTest)
     RoverCan2::Drivers::DriverMock driver;
     RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     // Send msg
     RoverCan2::Msgs::TestMsg sendMsg;
@@ -330,4 +339,23 @@ TEST(SUITE_ROVER_CAN2_CanManager, ManagerHealthStateReporting)
 
     GTEST_ASSERT_TRUE(msgOpt.value().getCanID() == RoverCan2::Constant::eDeviceId::TEST_DEVICE);
     GTEST_ASSERT_TRUE(msgOpt.value().getMsgID() == RoverCan2::Constant::eMsgId::ERROR_STATE);
+}
+
+TEST(SUITE_ROVER_CAN2_CanManager, ReportErrorStateAtInit)
+{
+    RoverCan2::Drivers::DriverMock canDriver;
+    RoverCan2::SubscriberStandalone<RoverCan2::Msgs::TestMsg, decltype(TestCanManager::CB_Helper)> sub0(
+        TestCanManager::CB_Helper);
+    RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE, sub0);
+
+    RoverCan2::ManagerSlave canManager(canDriver, device);
+    canManager.init();
+
+    canManager.update();
+
+    GTEST_ASSERT_TRUE(canDriver.msgSentBuffer.getValue().has_value());
+
+    RoverCan2::CanMsg msg = canDriver.msgSentBuffer.getValue().value();
+    GTEST_ASSERT_EQ(msg.getMsgID(), RoverCan2::Constant::eMsgId::ERROR_STATE);
+    GTEST_ASSERT_EQ(msg.getCanID(), RoverCan2::Constant::eDeviceId::TEST_DEVICE);
 }
