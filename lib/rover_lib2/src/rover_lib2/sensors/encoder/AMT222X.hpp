@@ -47,6 +47,15 @@ namespace Encoders
         static constexpr const char* NVS_KEY_LAST_QUADRANT = "AMT_QUADRANT";
         static constexpr const char* NVS_KEY_CALIB_OFFSET = "AMT_CALIB";
 
+        static constexpr uint16_t VALID_DATA_BIT_MASK
+            = 0b0011'1111'1111'1100;  // Only these bits contains the actual encoder message
+        static constexpr uint16_t EVEN_CHECKSUM_RESULT_BIT_MASK
+            = 0b0100'0000'0000'0000U;  // bit where the even checksum result is
+        static constexpr uint16_t EVEN_CHECKSUM_BIT_MASK
+            = 0b0001'0101'0101'0101U;  // bits on which the even checksum is calculated
+        static constexpr uint16_t ODD_CHECKSUM_RESULT_BIT_MASK = 0b1000'0000'0000'0000U;  // bit where the odd checksum result is
+        static constexpr uint16_t ODD_CHECKSUM_BIT_MASK = 0b0010'1010'1010'1010U;  // bits on which the odd checksum is calculated
+
         enum class eState : uint8_t
         {
             ASK_POSITION,
@@ -207,7 +216,7 @@ namespace Encoders
             }
 
             uint16_t newPos = data[0] << 8 | data[1];
-            newPos &= 0b0011'1111'1111'1100;
+            newPos &= VALID_DATA_BIT_MASK;
             newPos >>= 2;
 
             if (_reversed)
@@ -243,13 +252,13 @@ namespace Encoders
         {
             uint16_t word = bytes_[0] << 8 | bytes_[1];
 
-            bool evenCheckExpected = word & 0b0100'0000'0000'0000;
-            uint16_t evenBits = word & 0b0001'0101'0101'0101;
+            bool evenCheckExpected = word & EVEN_CHECKSUM_RESULT_BIT_MASK;
+            uint16_t evenBits = word & EVEN_CHECKSUM_BIT_MASK;
             bool evenXorResult = static_cast<bool>(std::popcount(evenBits) % 2);
             bool evenChecksumValid = (evenCheckExpected == (!evenXorResult));
 
-            bool oddCheckExpected = word & 0b1000'0000'0000'0000;
-            uint16_t oddBits = word & 0b0010'1010'1010'1010;
+            bool oddCheckExpected = word & ODD_CHECKSUM_RESULT_BIT_MASK;
+            uint16_t oddBits = word & ODD_CHECKSUM_BIT_MASK;
             bool oddXorResult = static_cast<bool>(std::popcount(oddBits) % 2);
             bool oddChecksumValid = (oddCheckExpected == (!oddXorResult));
 
