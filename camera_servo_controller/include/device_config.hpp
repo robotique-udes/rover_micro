@@ -50,7 +50,7 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
                 .minMs = 2450.0F,
                 .maxMs = 545.0F,
                 .minPosition = 0.0F,
-                .maxPosition = static_cast<float>(M_PI * 2.0),
+                .maxPosition = std::numbers::pi_v<float> * 2.0F,
                 .maxSpeed = 0.89F,
             };
         }
