@@ -62,6 +62,7 @@ namespace Controllers
             float dtSec = static_cast<float>(dt) / 1'000'000.0f;
             if (dtSec != 0.0F)
             {
+                // TODO: Test and consider using input instead of error to prevent D kick on target changes
                 cmdD = _kd * (error - _previousError) / dtSec;
             }
             else
