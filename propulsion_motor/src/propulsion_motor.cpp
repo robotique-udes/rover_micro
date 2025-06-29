@@ -45,8 +45,7 @@ static_assert(ABS(MAX_VOLTAGE) <= ABS(ALIM_VOLTAGE), "Alim tension cannot be low
 constexpr float MAX_COMMAND = 100.0F * (ABS(MAX_VOLTAGE) / ABS(ALIM_VOLTAGE));
 
 class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PropSpeedCmd, PropulsionMotor>,
-                                                 RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>>,
-                        public RoverObject<PropulsionMotor>
+                                                 RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>>
 {
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PropSpeedCmd, PropulsionMotor>,
                                       RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>>;
@@ -81,14 +80,14 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
         }
     }
 
-    void _init(void)
+    void init(void)
     {
         _drive.setCmd(FULL_STOP_CMD);
         _drive.init();
         _drive.setEnabled(true);
     }
 
-    void _update(void)
+    void update(void)
     {
         if (_timerLoop.isReady())
         {
@@ -134,18 +133,20 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
                                                        PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH,
                                                        PWMGenerators::MCPWM::ePinPullMode::FLOATING);
 
-    IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM> _drive
-        = IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>(__enableA,
-                                                              __pwmA,
-                                                              __enableB,
-                                                              __pwmB,
-                                                              false,
-                                                              MotorDriverT::eBrakeMode::COAST);
+    MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM> _drive
+        = MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>(__enableA,
+                                                                            __pwmA,
+                                                                            __enableB,
+                                                                            __pwmB,
+                                                                            false,
+                                                                            MotorDrivers::eBrakeMode::COAST);
 
     MovingAverage<float, 5> _cmdAvg;
     LoopTimer<uint64_t, Time::millis> _timerSend;
     LoopTimer<uint64_t, Time::millis> _timerLoop;
     Watchdog<uint64_t, Time::millis> _watchdog;
+
+    VALIDATE_CONCEPT(RoverObject, PropulsionMotor);
 };
 
 void setup()
