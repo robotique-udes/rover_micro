@@ -28,6 +28,11 @@ namespace Actuators
         CLOSE_LOOP,
     };
 
+    /**
+     * @brief
+     * @warning Missing features: Position control, torque control, max_speed limiting, joint limit enforcements
+     *
+     */
     template<class DriverT,
              Encoders::Encoder EncoderT = Encoders::None,
              Controllers::Controller PositionControllerT = Controllers::None,
@@ -56,8 +61,8 @@ namespace Actuators
                         case eFeedbackType::OPEN_LOOP:
                             break;
                         case eFeedbackType::CLOSE_LOOP:
-                            ASSERT_COND_MSG(_pControllerSpeed, "Can't control in position without valid position controller");
-                            ASSERT_COND_MSG(_pEncoder, "Can't control in position without valid encoder");
+                            ASSERT_COND_MSG(_pControllerSpeed, "Can't control in speed without valid speed controller");
+                            ASSERT_COND_MSG(_pEncoder, "Can't control in speed without valid encoder");
                             break;
                         default:
                             ASSERT_MSG_ARGS("Unknown control mode specified: %u", std::to_underlying(_feedbackType));
@@ -214,6 +219,17 @@ namespace Actuators
                     }
 
                     float cmd = _pControllerSpeed->computeCommand(this->getSpeed(), _goalSpeed);
+
+                    if (_maxJointLimit.has_value() && this->getPosition() >= _maxJointLimit.value())
+                    {
+                        cmd = std::clamp(cmd, std::numeric_limits<float>::lowest(), 0.0F);
+                    }
+
+                    if (_minJointLimit.has_value() && this->getPosition() <= _minJointLimit.value())
+                    {
+                        cmd = std::clamp(cmd, 0.0F, std::numeric_limits<float>::max());
+                    }
+
                     _motorDriver.setCmd(cmd);
                     LOG_INFO(Logger::Nodes::ActuatorDc,
                              "_goalSpeed: %f, this->getSpeed(): %f | cmd: %f",
