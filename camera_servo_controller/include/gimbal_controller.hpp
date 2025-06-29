@@ -14,8 +14,7 @@
 
 class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PtzCmd, GimbalController>,
                                                   RoverCan2::Publisher<RoverCan2::Msgs::PtzStatus>,
-                                                  RoverCan2::SubscriberMember<RoverCan2::Msgs::PtzConfig, GimbalController>>,
-                         public RoverObject<GimbalController>
+                                                  RoverCan2::SubscriberMember<RoverCan2::Msgs::PtzConfig, GimbalController>>
 {
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PtzCmd, GimbalController>,
                                       RoverCan2::Publisher<RoverCan2::Msgs::PtzStatus>,
@@ -35,12 +34,12 @@ class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<Ro
     {
     }
 
-    void _init(void)
+    void init(void)
     {
         _panServo.init();
     }
 
-    void _update(void)
+    void update(void)
     {
         _panServo.update();
 

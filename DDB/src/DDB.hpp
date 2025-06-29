@@ -10,8 +10,7 @@
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 
 class DDB : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::DdbCmd, DDB>,
-                                     RoverCan2::Publisher<RoverCan2::Msgs::DdbStatus, 1UL>>,
-            public RoverObject<DDB>
+                                     RoverCan2::Publisher<RoverCan2::Msgs::DdbStatus, 1UL>>
 {
     static constexpr uint64_t CAN_SEND_PERIOD_MS = 500ULL;
 
@@ -34,7 +33,7 @@ class DDB : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs
     {
     }
 
-    void _init(void)
+    void init(void)
     {
         _bank0_ch2.write(IO::eIOState::HIGH_);
         _bank0_ch3.write(IO::eIOState::LOW_);
@@ -45,7 +44,7 @@ class DDB : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs
         _bank1_ch3.write(IO::eIOState::HIGH_);
     }
 
-    void _update(void)
+    void update(void)
     {
         if (_sendTimer.isReady())
         {
@@ -99,6 +98,8 @@ class DDB : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs
     IO::DigitalOutput _bank1_ch3 = IO::DigitalOutput(PIN_BANK1_CH3);
 
     LoopTimer<uint64_t, Time::millis> _sendTimer;
+
+    VALIDATE_CONCEPT(RoverObject, DDB);
 };
 
 #endif  // BANK1_HPP

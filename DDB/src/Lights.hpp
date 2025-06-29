@@ -11,8 +11,7 @@
 
 class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PwmCmd, Lights>,
                                         RoverCan2::Publisher<RoverCan2::Msgs::PwmStatus, 1UL>,
-                                        RoverCan2::Publisher<RoverCan2::Msgs::PwmInfo, 1UL>>,
-               public RoverObject<Lights>
+                                        RoverCan2::Publisher<RoverCan2::Msgs::PwmInfo, 1UL>>
 {
     static constexpr gpio_num_t PIN_BANK0_CH0 = GPIO_NUM_8;
 
@@ -35,13 +34,13 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
     {
     }
 
-    void _init(void)
+    void init(void)
     {
         _lightSignal.init();
         _lightSignal.setDutyCycle(0.0F);
     }
 
-    void _update(void)
+    void update(void)
     {
         _lightSignal.update();
 
@@ -75,6 +74,8 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
 
     LoopTimer<uint64_t, Time::millis> _timerStatusMsg;
     LoopTimer<uint64_t, Time::millis> _timerInfoMsg;
+
+    VALIDATE_CONCEPT(RoverObject, Lights);
 };
 
 #endif  // LIGHTS_HPP

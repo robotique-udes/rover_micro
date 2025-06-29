@@ -2,6 +2,7 @@
 #define ROVER_LIB2_ACTUATORS_ACTUATOR_HPP
 
 #include <rover_lib2/rover_object.hpp>
+#include <rover_lib2/helpers/assert.hpp>
 
 #include <concepts>
 #include <optional>
