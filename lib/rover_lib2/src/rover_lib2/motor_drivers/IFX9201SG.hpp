@@ -15,16 +15,14 @@ DEFINE_LOG_NODE(IFX9201SG, Logger::eNodeState::OFF);
 namespace MotorDrivers
 {
 
-    template<typename PWMGenerator_T>
+    template<PWMGenerators::PWMGenerator PWMGeneratorT>
     class IFX9201SG
     {
-        VALIDATE_BASE_TYPE(PWMGenerators::PWMGeneratorT, PWMGenerator_T);
-
         static constexpr float ZERO_ERROR_TOLERANCE
             = 0.001F;  // When command are considered null, mustn't move nor heat the driver/motor
 
       public:
-        IFX9201SG(PWMGenerator_T& pwmGenerator_,
+        IFX9201SG(PWMGeneratorT& pwmGenerator_,
                   gpio_num_t pinDir_,
                   bool reversed_,
                   gpio_num_t pinDis_ = GPIO_NUM_NC,
@@ -178,7 +176,7 @@ namespace MotorDrivers
         }
 
       private:
-        PWMGenerator_T& _pwmGenerator;
+        PWMGeneratorT& _pwmGenerator;
 
         IO::DigitalOutput _ioDir;
         IO::DigitalOutput _ioNotEn;
@@ -191,7 +189,7 @@ namespace MotorDrivers
 
         eBrakeMode _brakeMode;
 
-        VALIDATE_CONCEPT(MotorDriver, IFX9201SG<PWMGenerator_T>);
+        VALIDATE_CONCEPT(MotorDriver, IFX9201SG<PWMGeneratorT>);
     };
 
 template<typename PwmGenerator_T>

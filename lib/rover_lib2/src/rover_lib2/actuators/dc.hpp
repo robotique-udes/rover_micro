@@ -251,4 +251,44 @@ namespace Actuators
         VALIDATE_CONCEPT(Actuator, DC);
     };
 
+    // ===========================================================================================================================
+    // Template deduction guides
+    // ===========================================================================================================================
+
+    // Generic
+    template<class DriverT, class EncoderT, class PositionControllerT, class SpeedControllerT>
+    DC(eControlType, eFeedbackType, DriverT&, EncoderT*, PositionControllerT*, SpeedControllerT*)
+        -> DC<DriverT,
+              std::remove_pointer_t<EncoderT>,
+              std::remove_pointer_t<PositionControllerT>,
+              std::remove_pointer_t<SpeedControllerT>>;
+
+    // Driver
+    template<class DriverT>
+    DC(eControlType, eFeedbackType, DriverT&, std::nullptr_t, std::nullptr_t, std::nullptr_t) -> DC<DriverT>;
+
+    // Driver + encoder
+    template<class DriverT, class EncoderT>
+    DC(eControlType, eFeedbackType, DriverT&, EncoderT*, std::nullptr_t, std::nullptr_t)
+        -> DC<DriverT, std::remove_pointer_t<EncoderT>>;
+
+    // Driver + position controller
+    template<class DriverT, class PositionControllerT>
+    DC(eControlType, eFeedbackType, DriverT&, std::nullptr_t, PositionControllerT*, std::nullptr_t)
+        -> DC<DriverT, Encoders::None, std::remove_pointer_t<PositionControllerT>>;
+
+    // Driver + speed controller
+    template<class DriverT, class SpeedControllerT>
+    DC(eControlType, eFeedbackType, DriverT&, std::nullptr_t, std::nullptr_t, SpeedControllerT*)
+        -> DC<DriverT, Encoders::None, Controllers::None, std::remove_pointer_t<SpeedControllerT>>;
+
+    // Driver + encoder + position controller
+    template<class DriverT, class EncoderT, class PositionControllerT>
+    DC(eControlType, eFeedbackType, DriverT&, EncoderT*, PositionControllerT*, std::nullptr_t)
+        -> DC<DriverT, std::remove_pointer_t<EncoderT>, std::remove_pointer_t<PositionControllerT>>;
+
+    // Driver + encoder + speed controller
+    template<class DriverT, class EncoderT, class SpeedControllerT>
+    DC(eControlType, eFeedbackType, DriverT&, EncoderT*, std::nullptr_t, SpeedControllerT*)
+        -> DC<DriverT, std::remove_pointer_t<EncoderT>, Controllers::None, std::remove_pointer_t<SpeedControllerT>>;
 }  // namespace Actuators

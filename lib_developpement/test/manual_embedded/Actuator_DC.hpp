@@ -56,7 +56,7 @@ constexpr gpio_num_t PIN_REV = GPIO_NUM_41;
 DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
 DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::ON);
 
-void setup(void) 
+void setup(void)
 {
     Serial.begin(115200);
 #if defined(DEBUG)
@@ -66,11 +66,73 @@ void setup(void)
     LED::LedBlinkerSoft led(IO::DigitalOutput(PIN_USER_LED), LED::BlinkPatterns::HEARTBEAT);
     led.init();
 
+    PWMGenerators::MCPWMTimer pwmTimer(1'000, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
+    PWMGenerators::MCPWM pwm(PIN_J34_L_PWM,
+                             pwmTimer,
+                             PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH,
+                             PWMGenerators::MCPWM::ePinPullMode::PULL_DOWN);
+    MotorDrivers::IFX9201SG<PWMGenerators::MCPWM> motorDriver(pwm, PIN_J34_L_DIR, false);
+
+    SPIBus spiMotor(spi_host_device_t::SPI2_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
+    Filters::LowPassEMA lowPassPos(0.05F);
+    Filters::LowPassEMA lowPassSpeed(0.20F);
+    Encoders::AMT222X encoder(spiMotor, PIN_J34_L_CS, "J34_L", lowPassPos, lowPassSpeed, false);
+
+    Controllers::PID pidSpeed(50.0F, 12.5F, 0.1F, 100.0F, 5'000ULL);
+
+    Actuators::DC actuator(Actuators::eControlType::SPEED,
+                           Actuators::eFeedbackType::OPEN_LOOP,
+                           motorDriver,
+                           &encoder,
+                           nullptr,
+                           &pidSpeed);
+    actuator.init();
+
+    PushButton calibPb(PIN_PB_CALIB);
+    PushButton fwdPb(PIN_FWD);
+    PushButton revPb(PIN_REV);
+
     LOG_INFO(Logger::Nodes::Main, "Init done, starting loop!");
     LoopTimer<uint64_t, &Time::millis> updateTimer(1);
     for (EVER)
     {
         led.update();
+
+        if (!updateTimer.isReady())
+        {
+            continue;
+        }
+
+        actuator.update();
+
+        LOG_INFO(Logger::Nodes::Main,
+                 "actuator.getPosition(): %f | actuator.getSpeed(): %f",
+                 actuator.getPosition(),
+                 actuator.getSpeed());
+
+        float targetSpeed;
+        if (calibPb.isClicked())
+        {
+            actuator.calib(0.0F);
+        }
+
+        if (fwdPb.isClicked())
+        {
+            targetSpeed = 50.0F;
+        }
+        else if (revPb.isClicked())
+        {
+            targetSpeed = -100.0F;
+        }
+        else
+        {
+            targetSpeed = 0.0F;
+        }
+
+        actuator.setSpeed(targetSpeed);
+        LOG_PLOT(Logger::Nodes::MainPlot, actuator.getSpeed());
+        LOG_PLOT(Logger::Nodes::MainPlot, targetSpeed);
+        LOG_PLOT(Logger::Nodes::MainPlot, actuator.getPosition());
     }
 }
 
