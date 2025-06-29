@@ -11,7 +11,6 @@
 
 #include <bit>
 #include <array>
-#include <array>
 
 DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::OFF);
 
