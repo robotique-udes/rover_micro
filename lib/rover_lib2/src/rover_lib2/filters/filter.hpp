@@ -1,5 +1,5 @@
-#ifndef FILTER_HPP
-#define FILTER_HPP
+#ifndef ROVER_LIB2_FILTERS_FILTER_HPP
+#define ROVER_LIB2_FILTERS_FILTER_HPP
 
 #include "rover_lib2/rover_object.hpp"
 
@@ -21,4 +21,4 @@ namespace Filters
 
 }  // namespace Filters
 
-#endif  // FILTER_HPP
+#endif  // ROVER_LIB2_FILTERS_FILTER_HPP

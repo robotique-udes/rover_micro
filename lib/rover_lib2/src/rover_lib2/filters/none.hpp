@@ -1,5 +1,5 @@
-#ifndef NONE_HPP
-#define NONE_HPP
+#ifndef ROVER_LIB2_FILTERS_NONE_HPP
+#define ROVER_LIB2_FILTERS_NONE_HPP
 
 #include "filter.hpp"
 
@@ -37,4 +37,4 @@ namespace Filters
 
 }  // namespace Filters
 
-#endif  // NONE_HPP
+#endif  // ROVER_LIB2_FILTERS_NONE_HPP

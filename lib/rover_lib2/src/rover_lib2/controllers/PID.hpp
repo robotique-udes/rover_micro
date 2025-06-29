@@ -1,5 +1,5 @@
-#ifndef PID_HPP
-#define PID_HPP
+#ifndef ROVER_LIB2_CONTROLLERS_PID_HPP
+#define ROVER_LIB2_CONTROLLERS_PID_HPP
 
 #include "rover_lib2/helpers/time.hpp"
 #include "rover_lib2/helpers/macros.hpp"
@@ -127,4 +127,4 @@ namespace Controllers
 
 }  // namespace Controllers
 
-#endif  // PID_HPP
+#endif  // ROVER_LIB2_CONTROLLERS_PID_HPP

@@ -56,7 +56,7 @@ constexpr gpio_num_t PIN_REV = GPIO_NUM_41;
 DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
 DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::ON);
 
-void setup(void) 
+void setup(void)
 {
     Serial.begin(115200);
 #if defined(DEBUG)

@@ -1,5 +1,5 @@
-#ifndef ROVER_LIB2_ACTUATORS_MOTOR_DRIVERS_IFX007T_HPP
-#define ROVER_LIB2_ACTUATORS_MOTOR_DRIVERS_IFX007T_HPP
+#ifndef ROVER_LIB2_MOTOR_DRIVERS_IFX007T_HPP
+#define ROVER_LIB2_MOTOR_DRIVERS_IFX007T_HPP
 
 #include "rover_lib2/actuators/motor_drivers/motor_driver.hpp"
 #include "rover_lib2/actuators/PWM_generators/PWM_generator.hpp"
@@ -199,4 +199,4 @@ template<typename PwmGeneratorAT, typename PwmGeneratorBT>
 IFX007T(IO::DigitalOutput&, PwmGeneratorAT&, IO::DigitalOutput&, PwmGeneratorBT&, bool, MotorDriverT::eBrakeMode)
     -> IFX007T<PwmGeneratorAT, PwmGeneratorBT>;
 
-#endif  // ROVER_LIB2_ACTUATORS_MOTOR_DRIVERS_IFX007T_HPP
+#endif  // ROVER_LIB2_MOTOR_DRIVERS_IFX007T_HPP

@@ -1,5 +1,5 @@
-#ifndef LOW_PASS_HPP
-#define LOW_PASS_HPP
+#ifndef ROVER_LIB2_FILTERS_LOW_PASS_EMA_HPP
+#define ROVER_LIB2_FILTERS_LOW_PASS_EMA_HPP
 
 #include "filter.hpp"
 #include "rover_lib2/helpers/macros.hpp"
@@ -72,4 +72,4 @@ namespace Filters
 
 }  // namespace Filters
 
-#endif  // LOW_PASS_HPP
+#endif  // ROVER_LIB2_FILTERS_LOW_PASS_EMA_HPP

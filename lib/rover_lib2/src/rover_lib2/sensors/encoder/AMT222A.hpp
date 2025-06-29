@@ -32,16 +32,19 @@ namespace Encoders
         static constexpr uint64_t MIN_TIME_BETWEEN_SPEED_CALC_US = 25'000ULL;
         static constexpr uint64_t ENC_BOOT_TIME_US = 50ULL;
 
-    static constexpr size_t TRANSACTION_MAX_LENGTH = 2UL;
-    static constexpr std::array<uint8_t, 2U> CMD_READ_POSITION = {0x00, 0x00};
-    static constexpr std::array<uint8_t, 2U> CMD_RESET = {0x00, 0x60};
-    static constexpr std::array<uint8_t, 2U> CMD_CALIB = {0x00, 0x70};
+        static constexpr size_t TRANSACTION_MAX_LENGTH = 2UL;
+        static constexpr std::array<uint8_t, 2U> CMD_READ_POSITION = {0x00, 0x00};
+        static constexpr std::array<uint8_t, 2U> CMD_RESET = {0x00, 0x60};
+        static constexpr std::array<uint8_t, 2U> CMD_CALIB = {0x00, 0x70};
 
-    static constexpr uint16_t VALID_DATA_BIT_MASK = 0b0011'1111'1111'1100;  // Only these bits contains the actual encoder message
-    static constexpr uint16_t EVEN_CHECKSUM_RESULT_BIT_MASK = 0b0100'0000'0000'0000U;  // bit where the even checksum result is
-    static constexpr uint16_t EVEN_CHECKSUM_BIT_MASK = 0b0001'0101'0101'0101U;  // bits on which the even checksum is calculated
-    static constexpr uint16_t ODD_CHECKSUM_RESULT_BIT_MASK = 0b1000'0000'0000'0000U;  // bit where the odd checksum result is
-    static constexpr uint16_t ODD_CHECKSUM_BIT_MASK = 0b0010'1010'1010'1010U;  // bits on which the odd checksum is calculated
+        static constexpr uint16_t VALID_DATA_BIT_MASK
+            = 0b0011'1111'1111'1100;  // Only these bits contains the actual encoder message
+        static constexpr uint16_t EVEN_CHECKSUM_RESULT_BIT_MASK
+            = 0b0100'0000'0000'0000U;  // bit where the even checksum result is
+        static constexpr uint16_t EVEN_CHECKSUM_BIT_MASK
+            = 0b0001'0101'0101'0101U;  // bits on which the even checksum is calculated
+        static constexpr uint16_t ODD_CHECKSUM_RESULT_BIT_MASK = 0b1000'0000'0000'0000U;  // bit where the odd checksum result is
+        static constexpr uint16_t ODD_CHECKSUM_BIT_MASK = 0b0010'1010'1010'1010U;  // bits on which the odd checksum is calculated
 
         enum class eState : uint8_t
         {
@@ -189,9 +192,9 @@ namespace Encoders
                 return true;
             }
 
-        uint16_t newPos = data[0] << 8 | data[1];
-        newPos &= VALID_DATA_BIT_MASK;
-        newPos >>= 2;
+            uint16_t newPos = data[0] << 8 | data[1];
+            newPos &= VALID_DATA_BIT_MASK;
+            newPos >>= 2;
 
             if (_reversed)
             {
@@ -226,15 +229,15 @@ namespace Encoders
         {
             uint16_t word = bytes_[0] << 8 | bytes_[1];
 
-        bool evenCheckExpected = word & EVEN_CHECKSUM_RESULT_BIT_MASK;
-        uint16_t evenBits = word & EVEN_CHECKSUM_BIT_MASK;
-        bool evenXorResult = static_cast<bool>(std::popcount(evenBits) % 2);
-        bool evenChecksumValid = (evenCheckExpected == (!evenXorResult));
+            bool evenCheckExpected = word & EVEN_CHECKSUM_RESULT_BIT_MASK;
+            uint16_t evenBits = word & EVEN_CHECKSUM_BIT_MASK;
+            bool evenXorResult = static_cast<bool>(std::popcount(evenBits) % 2);
+            bool evenChecksumValid = (evenCheckExpected == (!evenXorResult));
 
-        bool oddCheckExpected = word & ODD_CHECKSUM_RESULT_BIT_MASK;
-        uint16_t oddBits = word & ODD_CHECKSUM_BIT_MASK;
-        bool oddXorResult = static_cast<bool>(std::popcount(oddBits) % 2);
-        bool oddChecksumValid = (oddCheckExpected == (!oddXorResult));
+            bool oddCheckExpected = word & ODD_CHECKSUM_RESULT_BIT_MASK;
+            uint16_t oddBits = word & ODD_CHECKSUM_BIT_MASK;
+            bool oddXorResult = static_cast<bool>(std::popcount(oddBits) % 2);
+            bool oddChecksumValid = (oddCheckExpected == (!oddXorResult));
 
             return (evenChecksumValid && oddChecksumValid);
         }

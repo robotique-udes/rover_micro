@@ -111,7 +111,7 @@ TEST(SUITE_ROVER_LIB2_PID, DerivativeControl)
     // First measurement - no derivative yet
     float result1 = pid.computeCommand(0.0f, 10.0f);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Makes sure dt isn't 0
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));  // Makes sure dt isn't 0
 
     // Second measurement with different error - should have derivative component
     float result2 = pid.computeCommand(2.0f, 10.0f);

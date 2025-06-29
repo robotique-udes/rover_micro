@@ -1,3 +1,6 @@
+#ifndef ROVER_LIB2_ACTUATORS_DC_HPP
+#define ROVER_LIB2_ACTUATORS_DC_HPP
+
 #include "actuator.hpp"
 
 #include "rover_lib2/helpers/macros.hpp"
@@ -308,3 +311,5 @@ namespace Actuators
     DC(eControlType, eFeedbackType, DriverT&, EncoderT*, std::nullptr_t, SpeedControllerT*)
         -> DC<DriverT, std::remove_pointer_t<EncoderT>, Controllers::None, std::remove_pointer_t<SpeedControllerT>>;
 }  // namespace Actuators
+
+#endif  // ROVER_LIB2_ACTUATORS_DC_HPP

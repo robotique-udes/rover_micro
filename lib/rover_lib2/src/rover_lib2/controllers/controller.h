@@ -1,5 +1,5 @@
-#ifndef ROVER_LIB2_CONTROLLERS_CONTROLLER_HPP
-#define ROVER_LIB2_CONTROLLERS_CONTROLLER_HPP
+#ifndef ROVER_LIB2_CONTROLLERS_CONTROLLER_H
+#define ROVER_LIB2_CONTROLLERS_CONTROLLER_H
 
 #include "rover_lib2/rover_object.hpp"
 #include "rover_lib2/helpers/macros.hpp"
@@ -36,4 +36,4 @@ namespace Controllers
 
 }  // namespace Controllers
 
-#endif  // ROVER_LIB2_SENSORS_ENCODER_ENCODER_HPP
+#endif  // ROVER_LIB2_CONTROLLERS_CONTROLLER_H
