@@ -4,7 +4,6 @@
 #include "rover_lib2/helpers/time.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 
-#include <complex>
 #include <cmath>
 
 namespace Controllers
@@ -122,7 +121,7 @@ namespace Controllers
         float _lastcmd = 0.0f;
         float _cmdI = 0.0f;
         float _previousError = 0.0f;
-        uint64_t _lastMeasureTime = 0ULL;
+        uint64_t _lastMeasureTime = Time::micros();
     };
 
 }  // namespace Controllers

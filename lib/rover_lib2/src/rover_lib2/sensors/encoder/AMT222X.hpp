@@ -9,11 +9,13 @@
 #include "rover_lib2/helpers/one_shot_timer.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/storage/NVS_data_handle.hpp"
+#include "rover_lib2/filters/none.hpp"
 
 #include <bit>
 #include <array>
 
 DEFINE_LOG_NODE(AMT222X, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::OFF);
 
 namespace Encoders
 {
@@ -26,6 +28,7 @@ namespace Encoders
      * This class only use the read position spi command and manage the rest internally to enable support for AMT222A and AMT222C
      * which only have this command in common
      */
+    template<Filters::Filter FilterPosT = Filters::None, Filters::Filter FilterSpeedT = Filters::None>
     class AMT222X
     {
         // Clock speed this low necessary because the ESP-IDF doesn't support adding clean delay between bytes in same
@@ -44,7 +47,6 @@ namespace Encoders
         static constexpr std::array<uint8_t, 2U> CMD_READ_POSITION = {0x00, 0x00};
 
         static constexpr const char* NVS_KEY_TURN_COUNT = "AMT_TURN_CTN";
-        static constexpr const char* NVS_KEY_LAST_QUADRANT = "AMT_QUADRANT";
         static constexpr const char* NVS_KEY_CALIB_OFFSET = "AMT_CALIB";
 
         static constexpr uint16_t VALID_DATA_BIT_MASK
@@ -63,10 +65,15 @@ namespace Encoders
         };
 
       public:
-        AMT222X(SPIBus& spiBus_, gpio_num_t pinCS_, const char* nvsNamespace_, bool reversed_ = false):
+        AMT222X(SPIBus& spiBus_,
+                gpio_num_t pinCS_,
+                const char* nvsNamespace_,
+                FilterPosT& filterPos_,
+                FilterSpeedT& filterSpeed_,
+                bool reversed_ = false):
             _spiDevice(spiBus_, pinCS_, SPI_CLOCK_SPEED_HZ, SPI_TIME_BEFORE_FIRST_BIT_US, SPI_TIME_AFTER_LAST_BIT_US, SPI_MODE),
-
-            _lastQuadrant(nvsNamespace_, NVS_KEY_LAST_QUADRANT, 0U),
+            _filterPos(filterPos_),
+            _filterSpeed(filterSpeed_),
             _turnCount(nvsNamespace_, NVS_KEY_TURN_COUNT, 0U),
             _calibOffset(nvsNamespace_, NVS_KEY_CALIB_OFFSET, 0.0F),
             _reversed(reversed_)
@@ -75,7 +82,7 @@ namespace Encoders
 
         void init(void)
         {
-            if (!_lastQuadrant.dataInSync() || !_turnCount.dataInSync())
+            if (!_calibOffset.dataInSync() || !_turnCount.dataInSync())
             {
                 LOG_WARN(Logger::Nodes::AMT222X, "Persistant data couldn't be read, calib necessary");
                 _dataValidNVS = false;
@@ -106,43 +113,23 @@ namespace Encoders
                 case eState::READ_POSITION:
                     if (this->readPosition())
                     {
-                        uint8_t currentQuadrant = 0U;
-                        if (_encoderPosition >= 0.0F && _encoderPosition < (std::numbers::pi_v<float> / 2.0F))
-                        {
-                            currentQuadrant = 1U;
-                        }
-                        else if (_encoderPosition >= (std::numbers::pi_v<float> / 2.0F)
-                                 && _encoderPosition < std::numbers::pi_v<float>)
-                        {
-                            currentQuadrant = 2U;
-                        }
-                        else if (_encoderPosition
-                                     >= std::numbers::pi_v<float> && _encoderPosition < (3.0F * std::numbers::pi_v<float> / 2.0F))
-                        {
-                            currentQuadrant = 3U;
-                        }
-                        else if (_encoderPosition >= (3.0F * std::numbers::pi_v<float> / 2.0F)
-                                 && _encoderPosition < (2.0F * std::numbers::pi_v<float>))
-                        {
-                            currentQuadrant = 4U;
-                        }
-                        else
-                        {
-                            LOG_WARN(Logger::Nodes::AMT222X, "_encoderPosition: %f", _encoderPosition);
-                            ASSERT_MSG("Should never fall here, implementation error");
-                        }
-
-                        if (_lastQuadrant.getValue() == 4 && currentQuadrant == 1)
+                        if ((_prevEncoderPosition > (1.5F * std::numbers::pi_v<float>))
+                            && (_encoderPosition < (0.5F * std::numbers::pi_v<float>)))
                         {
                             _turnCount.writeValue(_turnCount.getValue() + 1);
                         }
-                        else if (_lastQuadrant.getValue() == 1 && currentQuadrant == 4)
+                        else if ((_prevEncoderPosition < (0.5F * std::numbers::pi_v<float>))
+                                 && (_encoderPosition > (1.5F * std::numbers::pi_v<float>)))
                         {
                             _turnCount.writeValue(_turnCount.getValue() - 1);
                         }
 
-                        _lastQuadrant.writeValue(currentQuadrant);
-                        _currentPosition = _encoderPosition + std::numbers::pi_v<float> * 2.0F * _turnCount.getValue();
+                        float rawCurrentPosition = _encoderPosition + std::numbers::pi_v<float> * 2.0F * _turnCount.getValue();
+                        _currentPosition = _filterPos.addValue(rawCurrentPosition);
+
+                        LOG_PLOT(Logger::Nodes::AMT222XPlot, rawCurrentPosition)
+                        LOG_PLOT(Logger::Nodes::AMT222XPlot, _currentPosition)
+
                         _currentState = eState::ASK_POSITION;
                     }
                     break;
@@ -238,12 +225,21 @@ namespace Encoders
 
             _dataValidWatchdog.reset();
 
-            if (_dtSpeedCalc.getTime() >= MIN_TIME_BETWEEN_SPEED_CALC_US)
+            // Filter
+            float rawCurrentSpeed
+                = (this->getPosition() - _lastPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
+            _currentSpeed = _filterSpeed.addValue(rawCurrentSpeed);
+            if (_currentSpeed > 1.0F)
             {
-                _currentSpeed = (_encoderPosition - _lastPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
-                _dtSpeedCalc.restart();
-                _lastPosition = _encoderPosition;
+                LOG_WARN(Logger::Nodes::ActuatorDc,
+                         "_currentSpeed: %f, this->getPosition(): %f, _lastPosition: %f, _dtSpeedCalc.getTime(): %lu",
+                         _currentSpeed,
+                         this->getPosition(),
+                         _lastPosition,
+                         _dtSpeedCalc.getTime());
             }
+            _dtSpeedCalc.restart();
+            _lastPosition = this->getPosition();
 
             return true;
         }
@@ -270,14 +266,16 @@ namespace Encoders
         LoopTimer<uint64_t, &Time::micros> loopExec = {LOOP_PERIOD_US};
 
         float _encoderPosition = 0.0F;  // Constrained around 2*PI
+        float _prevEncoderPosition = _encoderPosition;
         float _currentPosition = 0.0F;
         float _lastPosition = 0.0F;
         float _currentSpeed = 0.0F;
         Watchdog<uint64_t, &Time::micros> _dataValidWatchdog = {WATCHDOG_DATA_VALID_PERIOD_US};
         Chrono<uint64_t, &Time::micros> _dtSpeedCalc;
+        FilterPosT& _filterPos;
+        FilterSpeedT& _filterSpeed;
 
         bool _dataValidNVS = false;
-        NVSDataHandle<uint8_t> _lastQuadrant;
         NVSDataHandle<int16_t> _turnCount;
         NVSDataHandle<float> _calibOffset;
 

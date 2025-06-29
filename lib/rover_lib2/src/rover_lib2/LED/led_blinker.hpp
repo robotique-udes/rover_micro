@@ -20,8 +20,6 @@ namespace LED
         LedBlinkerT() = default;
     };
 
-    #warning Todo RoverObject concept
-
     template<typename ImplT>
     class LedBlinker : public LedBlinkerT
     {

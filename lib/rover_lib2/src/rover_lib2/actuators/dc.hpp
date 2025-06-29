@@ -3,13 +3,15 @@
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/assert.hpp"
 #include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/helpers/log_plot.hpp"
 
 #include "rover_lib2/motor_drivers/motor_driver.hpp"
 #include "rover_lib2/sensors/encoder/encoder.hpp"
 #include "rover_lib2/controllers/controller.h"
 #include "rover_lib2/controllers/PID.hpp"
 
-DEFINE_LOG_NODE(ActuatorDc, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(ActuatorDc, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(ActuatorDcPlot, Logger::eNodeState::OFF);
 
 namespace Actuators
 {
@@ -218,6 +220,8 @@ namespace Actuators
                              _goalSpeed,
                              this->getSpeed(),
                              cmd);
+
+                    LOG_PLOT(Logger::Nodes::ActuatorDcPlot, _goalSpeed, this->getSpeed());
                     break;
                 }
 
