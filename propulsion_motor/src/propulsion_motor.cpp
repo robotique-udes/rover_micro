@@ -1,108 +1,168 @@
-#include "Arduino.h"
+#include <Arduino.h>
 
-#include "config_local.hpp"
-#include "rover_can_lib/msgs/propulsion_motor_cmd.hpp"
-#include "rover_can_lib/msgs/propulsion_motor_status.hpp"
-#include "rover_can_lib/rover_can_lib.hpp"
-#include "rover_helpers/helpers.hpp"
+#include "device_config.hpp"
 
-#include "actuators/motor_drivers/IFX007T.hpp"
+#include <rover_lib2/helpers/macros.hpp>
+#include <rover_lib2/helpers/loop_timer.hpp>
+#include <rover_lib2/rover_object.hpp>
 
-void canCB(RoverCanLib::CanBusManager* canBusManager_, const twai_message_t* msg_);
-void parseDeviceIdMsg(RoverCanLib::CanBusManager* canBusManager_, const twai_message_t* msg_);
+#include <rover_can2/rover_can2.hpp>
+#include <rover_can2/msgs/prop_speed_cmd.hpp>
+#include <rover_can2/msgs/prop_speed_status.hpp>
 
-RoverCanLib::Msgs::PropulsionMotorCmd msgPropCmd;
-RoverCanLib::Msgs::PropulsionMotorStatus msgPropStatus;
+#include <rover_lib2/actuators/motor_drivers/IFX007T.hpp>
+#include <rover_lib2/actuators/PWM_generators/MCPWM.hpp>
+#include <rover_lib2/helpers/moving_average.hpp>
+#include <rover_lib2/helpers/watchdog.hpp>
+#include <rover_lib2/LED/led_blinker.hpp>
+#include <rover_lib2/helpers/log.hpp>
+#include <utility>
+
+DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
+
+constexpr gpio_num_t PIN_EN_A = GPIO_NUM_8;
+constexpr gpio_num_t PIN_EN_B = GPIO_NUM_16;
+
+constexpr gpio_num_t PIN_IN_A = GPIO_NUM_21;
+constexpr gpio_num_t PIN_IN_B = GPIO_NUM_38;
+
+constexpr gpio_num_t PIN_LED_CAN = GPIO_NUM_2;
+constexpr gpio_num_t PIN_LED_R = GPIO_NUM_3;
+constexpr gpio_num_t PIN_LED_G = GPIO_NUM_9;
+constexpr gpio_num_t PIN_LED_B = GPIO_NUM_10;
+
+constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_47;
+constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_48;
+
+constexpr uint64_t PERIOD_SEND_PROP_MOTOR_STATUS = 1'000ULL / 20ULL;
+constexpr uint64_t PERIOD_RECV_PROP_MOTOR_STATUS = 1'000ULL / 20ULL;
+constexpr uint64_t PERIOD_WATCHDOG_TRIGGER = 2ULL * PERIOD_RECV_PROP_MOTOR_STATUS;
+
+constexpr float MOTOR_PWM_FREQUENCY = 1'000.0F;
+constexpr float FULL_STOP_CMD = 0.0F;
+
+static_assert(ABS(MAX_VOLTAGE) <= ABS(ALIM_VOLTAGE), "Alim tension cannot be lower than limit");
+constexpr float MAX_COMMAND = 100.0F * (ABS(MAX_VOLTAGE) / ABS(ALIM_VOLTAGE));
+
+class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PropSpeedCmd, PropulsionMotor>,
+                                                 RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>>,
+                        public RoverObject<PropulsionMotor>
+{
+    using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PropSpeedCmd, PropulsionMotor>,
+                                      RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>>;
+
+  public:
+    PropulsionMotor(RoverCan2::Constant::eDeviceId id_):
+        DeviceT(id_,
+                RoverCan2::SubscriberMember(*this, &PropulsionMotor::CB_propMotorCmdRecv),
+                RoverCan2::Publisher<RoverCan2::Msgs::PropSpeedStatus, 1UL>()),
+        _cmdAvg(FULL_STOP_CMD),
+        _timerSend(PERIOD_SEND_PROP_MOTOR_STATUS),
+        _timerLoop(1),
+        _watchdog(PERIOD_WATCHDOG_TRIGGER)
+    {
+        switch (std::to_underlying(id_))
+        {
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::FRONTLEFT_MOTOR):
+                _drive.setReversed(false);
+                break;
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::FRONTRIGHT_MOTOR):
+                _drive.setReversed(true);
+                break;
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::REARLEFT_MOTOR):
+                _drive.setReversed(false);
+                break;
+            case std::to_underlying(RoverCan2::Constant::eDeviceId::REARRIGHT_MOTOR):
+                _drive.setReversed(true);
+                break;
+            default:
+                _drive.setReversed(false);
+                break;
+        }
+    }
+
+    void _init(void)
+    {
+        _drive.setCmd(FULL_STOP_CMD);
+        _drive.init();
+        _drive.setEnabled(true);
+    }
+
+    void _update(void)
+    {
+        if (_timerLoop.isReady())
+        {
+            _drive.update();
+
+            float cmd = MAP(_cmdAvg.getAverage(), -100.0F, 100.0F, -MAX_COMMAND, MAX_COMMAND);
+            cmd = CONSTRAIN(cmd, -MAX_COMMAND, MAX_COMMAND);
+            _drive.setCmd(cmd);
+
+            if (!_watchdog.isOk())
+            {
+                _cmdAvg.addValue(FULL_STOP_CMD);
+            }
+
+            if (_timerSend.isReady())
+            {
+                RoverCan2::Msgs::PropSpeedStatus statusMsg;
+                statusMsg.data().current_speed = _cmdAvg.getAverage();
+                this->sendMsg(statusMsg);
+            }
+        }
+    }
+
+  private:
+    void CB_propMotorCmdRecv(const RoverCan2::Msgs::PropSpeedCmd& msg_)
+    {
+        _watchdog.reset();
+        _cmdAvg.addValue(msg_.getData().target_speed * 100.0F);
+    }
+
+    IO::DigitalOutput __enableA
+        = IO::DigitalOutput(PIN_EN_A, IO::eIOState::LOW_, GPIO_MODE_OUTPUT, GPIO_FLOATING, GPIO_DRIVE_CAP_DEFAULT);
+    IO::DigitalOutput __enableB
+        = IO::DigitalOutput(PIN_EN_B, IO::eIOState::LOW_, GPIO_MODE_OUTPUT, GPIO_FLOATING, GPIO_DRIVE_CAP_DEFAULT);
+    PWMGenerators::MCPWMTimer __pwmTimer
+        = PWMGenerators::MCPWMTimer(MOTOR_PWM_FREQUENCY, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
+    PWMGenerators::MCPWM __pwmA = PWMGenerators::MCPWM(PIN_IN_A,
+                                                       __pwmTimer,
+                                                       PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH,
+                                                       PWMGenerators::MCPWM::ePinPullMode::FLOATING);
+    PWMGenerators::MCPWM __pwmB = PWMGenerators::MCPWM(PIN_IN_B,
+                                                       __pwmTimer,
+                                                       PWMGenerators::MCPWM::ePinOutputMode::ACTIVE_HIGH,
+                                                       PWMGenerators::MCPWM::ePinPullMode::FLOATING);
+
+    IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM> _drive
+        = IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>(__enableA,
+                                                              __pwmA,
+                                                              __enableB,
+                                                              __pwmB,
+                                                              false,
+                                                              MotorDriverT::eBrakeMode::COAST);
+
+    MovingAverage<float, 5> _cmdAvg;
+    LoopTimer<uint64_t, Time::millis> _timerSend;
+    LoopTimer<uint64_t, Time::millis> _timerLoop;
+    Watchdog<uint64_t, Time::millis> _watchdog;
+};
 
 void setup()
 {
     Serial.begin(115200);
 
-    IFX007T motor(PIN_EN_1, PIN_EN_2, PIN_IN_1, PIN_IN_2, MotorDriver::eBrakeMode::COAST, false);
-    motor.init();
-    motor.enable();
+    PropulsionMotor propMotor(DEVICE_ID);
+    propMotor.init();
 
-    RoverCanLib::CanBusManager canBus(DEVICE_ID, PIN_CAN_TX, PIN_CAN_RX, canCB, true, PIN_LED_CAN);
-    canBus.init();
+    LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_LED_CAN), LED::BlinkPatterns::ON);
+    RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &canLed);
+    RoverCan2::ManagerSlave manager(canDriver, propMotor);
+    manager.init();
 
-    LOG(INFO, "Init done, starting Loop!");
-    RoverHelpers::Timer<unsigned long, millis> timerFeedback(100);  // 10 Hz
-    RoverHelpers::Timer<unsigned long, millis> timerSetCmd(10);
-
-    RoverHelpers::MovingAverage<float, 35u> cmdAverage(0.0f);
-
-    float speedCmd = 0.0f;
-    for (;;)
+    for (EVER)
     {
-        canBus.update();
-        motor.update();
-
-        if (timerSetCmd.isDone())
-        {
-            if (canBus.isOk() && msgPropCmd.data.enable)
-            {
-                if (DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::REARRIGHT_MOTOR
-                    || DEVICE_ID == (uint16_t)RoverCanLib::Constant::eDeviceId::FRONTRIGHT_MOTOR)
-                {
-                    speedCmd = cmdAverage.addValue(msgPropCmd.data.targetSpeed * -100.0f);
-                }
-                else
-                {
-                    speedCmd = cmdAverage.addValue(msgPropCmd.data.targetSpeed * 100.0f);
-                }
-            }
-            else
-            {
-                speedCmd = cmdAverage.addValue(0.0f);
-            }
-
-            motor.setCmd(speedCmd);
-        }
-
-        if (timerFeedback.isDone())
-        {
-            if (!msgPropCmd.data.closeLoop)
-            {
-                msgPropStatus.data.currentSpeed = msgPropCmd.data.targetSpeed;
-            }
-            else
-            {
-                LOG(ERROR, "Close loop not implemented yet");
-                canBus.sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::ERROR);
-                msgPropStatus.data.currentSpeed = -69.0f;
-            }
-
-            canBus.sendMsg(&msgPropStatus);
-        }
+        manager.update();
+        propMotor.update();
     }
-}
-
-void loop() {}
-
-void canCB(RoverCanLib::CanBusManager* canBusManager_, const twai_message_t* msg_)
-{
-    switch (msg_->identifier)
-    {
-        case (DEVICE_ID):
-            if (msg_->data_length_code < 3)
-            {
-                LOG(WARN, "Ill formed msg, dropping");
-                canBusManager_->sendErrorCode(RoverCanLib::Constant::eInternalErrorCode::WARNING);
-                return;
-            }
-            else
-            {
-                canBusManager_->resetWatchDog();
-                canBusManager_->sendErrorCode(msgPropCmd.parseMsg(msg_));
-            }
-            break;
-
-        default:
-            break;
-    }
-}
-
-void parseDeviceIdMsg(RoverCanLib::CanBusManager* canBusManager_, const twai_message_t* msg_)
-{
-    canBusManager_->resetWatchDog();
 }

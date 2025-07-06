@@ -1,8 +1,7 @@
-#ifndef CAN_DRIVER_MOCK_HPP
-#define CAN_DRIVER_MOCK_HPP
+#ifndef ROVER_CAN2_DRIVERS_DRIVER_MOCK_HPP
+#define ROVER_CAN2_DRIVERS_DRIVER_MOCK_HPP
 
 #include "rover_can2/drivers/driver_base.hpp"
-#include "rover_can2/msgs/test_msg.hpp"
 #include "rover_lib2/helpers/circular_buffer.hpp"
 
 namespace RoverCan2::Drivers
@@ -47,4 +46,4 @@ namespace RoverCan2::Drivers
         bool hasUpdated = false;
     };
 }  // namespace RoverCan2::Drivers
-#endif  // CAN_DRIVER_MOCK_HPP
+#endif  // ROVER_CAN2_DRIVERS_DRIVER_MOCK_HPP

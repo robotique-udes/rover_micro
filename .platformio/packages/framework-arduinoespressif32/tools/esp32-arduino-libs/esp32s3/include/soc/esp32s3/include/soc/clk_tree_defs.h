@@ -150,7 +150,7 @@ typedef enum {
  * }
  * @endcode
  */
-#define SOC_GPTIMER_CLKS {SOC_MOD_CLK_APB, SOC_MOD_CLK_XTAL}
+#define SOC_GPTIMER_CLKS {(soc_periph_gptimer_clk_src_t)SOC_MOD_CLK_APB, (soc_periph_gptimer_clk_src_t)SOC_MOD_CLK_XTAL}
 
 /**
  * @brief Type of GPTimer clock source

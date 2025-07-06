@@ -35,7 +35,7 @@ void setup()
 
     LED::LedBlinkerSoft ledCan(IO::DigitalOutput(PIN_LED_CAN), LED::BlinkPatterns::ON);
     RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &ledCan, 10U);
-    RoverCan2::Manager canManager(canDriver, ddb, router, lights);
+    RoverCan2::ManagerSlave canManager(canDriver, ddb, router, lights);
     canManager.init();
 
     IO::DigitalOutput routerChannel(GPIO_NUM_17);

@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 
 #include "rover_can2/device.hpp"
-#include "rover_can2/manager.hpp"
+#include "rover_can2/manager/manager_slave.hpp"
 #include "rover_can2/subscriber.hpp"
 #include "rover_can2/publisher.hpp"
 #include "rover_can2/drivers/driver_mock.hpp"
@@ -71,7 +71,7 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgReception)
     system.init();
     system.update();
 
-    RoverCan2::Manager canManager(canDriver, system);
+    RoverCan2::ManagerSlave canManager(canDriver, system);
     canManager.init();
 
     // Simulating one msgs comming in:
@@ -103,8 +103,9 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSending)
     system.init();
     system.update();
 
-    RoverCan2::Manager canManager(canDriver, system);
+    RoverCan2::ManagerSlave canManager(canDriver, system);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     RoverCan2::Msgs::TestMsg2 msg;
     system.sendMsg(msg);
@@ -123,8 +124,9 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgSendingQueue)
     system.init();
     system.update();
 
-    RoverCan2::Manager canManager(canDriver, system);
+    RoverCan2::ManagerSlave canManager(canDriver, system);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     // Simulating one msgs comming in:
     RoverCan2::Msgs::TestMsg2 msg;
@@ -147,8 +149,9 @@ TEST(SUITE_ROVER_CAN2_IntegrationTests, MsgRecvAndSendFromCB)
     system.init();
     system.update();
 
-    RoverCan2::Manager canManager(canDriver, system);
+    RoverCan2::ManagerSlave canManager(canDriver, system);
     canManager.init();
+    canDriver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     // Simulating one msgs comming in:
     RoverCan2::Msgs::TestMsg testMsg;

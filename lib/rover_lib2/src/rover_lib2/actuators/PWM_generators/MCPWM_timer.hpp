@@ -1,12 +1,12 @@
-#ifndef MCPWM_TIMER_HPP
-#define MCPWM_TIMER_HPP
+#ifndef ROVER_LIB2_ACTUATORS_PWM_GENERATORS_MCPWM_TIMER_HPP
+#define ROVER_LIB2_ACTUATORS_PWM_GENERATORS_MCPWM_TIMER_HPP
 
 #include "rover_lib2/helpers/assert.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 #include "driver/mcpwm_prelude.h"
 #include "driver/gpio.h"
 
-DEFINE_LOG_NODE(MCPWMTimer, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(MCPWMTimer, Logger::eNodeState::ON);
 
 /**
  * @brief Each timer instance can generate up to two distinct PWM output at the same frequency
@@ -70,10 +70,11 @@ namespace PWMGenerators
             {
                 LOG_DEBUG(Logger::Nodes::MCPWMTimer,
                           "Requested frequency of %u Hz; Optimal possible timings are:\n\tEffective frequency: %f "
-                          "Hz\n\tDuty-Cycle resolution (steps of): %.3f%%",
+                          "Hz\n\tDuty-Cycle resolution (steps of): %.3f%%\n\tTimerCnt: %lu",
                           frequency_,
                           _frequency,
-                          dutyCycleResolution);
+                          dutyCycleResolution,
+                          _timerPeriodTick + 1);
             }
 
             ASSERT_COND_MSG_ARGS(TO_UNDERLYING(peripheralGroupId_) < SOC_MCPWM_GROUPS,
@@ -86,7 +87,7 @@ namespace PWMGenerators
                                                 .count_mode = mcpwm_timer_count_mode_t::MCPWM_TIMER_COUNT_MODE_UP,
                                                 .period_ticks = _timerPeriodTick,
                                                 .intr_priority = DEFAULT_INTERUPT_PRIORITY,
-                                                .flags = {.update_period_on_empty = false, .update_period_on_sync = false}};
+                                                .flags = {.update_period_on_empty = true, .update_period_on_sync = false}};
 
             esp_err_t retVal = mcpwm_new_timer(&timerConfig, &_timerH);
             ASSERT_COND_MSG_ARGS(retVal == ESP_OK, "mcpwm_new_timer() failed with %u", retVal);
@@ -129,7 +130,8 @@ namespace PWMGenerators
 
         uint32_t dutyToTickCtn(float duty_) const
         {
-            return static_cast<uint32_t>(std::round(static_cast<float>(_timerPeriodTick) * (duty_ / 100.0F)));
+            uint32_t activeTickCtn = static_cast<uint32_t>(std::round(static_cast<float>(_timerPeriodTick) * (duty_ / 100.0F)));
+            return CONSTRAIN(activeTickCtn, 0UL, _timerPeriodTick);
         }
 
         float tickCtnToDuty(uint32_t tickCtn_) const
@@ -248,4 +250,4 @@ namespace PWMGenerators
     };
 }  // namespace PWMGenerators
 
-#endif  // MCPWM_TIMER_HPP
+#endif  // ROVER_LIB2_ACTUATORS_PWM_GENERATORS_MCPWM_TIMER_HPP

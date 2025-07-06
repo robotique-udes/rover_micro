@@ -1,5 +1,5 @@
-#ifndef DRIVER_ESP32_HPP
-#define DRIVER_ESP32_HPP
+#ifndef ROVER_CAN2_DRIVERS_DRIVER_ESP32_HPP
+#define ROVER_CAN2_DRIVERS_DRIVER_ESP32_HPP
 
 #include "rover_can2/drivers/driver_base.hpp"
 
@@ -31,6 +31,9 @@ namespace RoverCan2::Drivers
         static constexpr size_t CAN_DATA_LENGTH = TWAI_FRAME_MAX_DLC;
         static_assert(Constant::CAN_MAX_DATA_LENGTH == CAN_DATA_LENGTH);
 
+        static constexpr uint64_t RECV_WATCHDOG_TIMEOUT_MS
+            = 2ULL * 1'000ULL / static_cast<uint64_t>(Constant::MASTER_HEARTBEAT_RATE_HZ);
+
         enum eState : size_t
         {
             UNINSTALLED,
@@ -50,7 +53,7 @@ namespace RoverCan2::Drivers
             _txQueueLength(static_cast<uint32_t>(txQueueLength_)),
             _state(eState::UNINSTALLED),
             _led(led_),
-            _recvWatchdog(2ULL * 1'000ULL / static_cast<uint64_t>(Constant::MASTER_HEARTBEAT_RATE_HZ))
+            _recvWatchdog(RECV_WATCHDOG_TIMEOUT_MS)
         {
         }
 
@@ -87,10 +90,11 @@ namespace RoverCan2::Drivers
                 case eState::TX_QUEUE_FULL:
                     this->processNewMessage();
                     break;
-
                 case eState::INVALID_STATE:
                     this->handleRecovery();
                     break;
+                default:
+                    ASSERT_MSG("Shouldn't fall here, implementation error");
             }
         }
 
@@ -117,7 +121,7 @@ namespace RoverCan2::Drivers
             }
 
             twai_message_t twaiMsg;
-            twaiMsg.identifier = static_cast<uint32_t>(canMsg_.getCanID());
+            twaiMsg.identifier = std::to_underlying(canMsg_.getCanID());
             twaiMsg.extd = 0U;
             twaiMsg.rtr = 0U;           // Data frame
             twaiMsg.ss = 0U;            // Not single shot, retry if bus not ready
@@ -225,6 +229,8 @@ namespace RoverCan2::Drivers
                             case twai_state_t::TWAI_STATE_RECOVERING:
                                 LOG_DEBUG(Logger::Nodes::DriverESP32, "Recovery in progress...");
                                 break;
+                            default:
+                                ASSERT_MSG("Unhandled error, shouldn't fall here");
                         }
                         break;
 
@@ -237,6 +243,8 @@ namespace RoverCan2::Drivers
                                  "Can't get TWAI status info, driver is not installed. Implementation error");
                         _state = eState::UNINSTALLED;
                         break;
+                    default:
+                        ASSERT_MSG("Unhandled error, shouldn't fall here");
                 }
             }
         }
@@ -247,6 +255,8 @@ namespace RoverCan2::Drivers
             {
                 switch (_state)
                 {
+                    default:
+                        [[fallthrough]];
                     case eState::UNINSTALLED:
                         [[fallthrough]];
                     case eState::BUS_OFF:
@@ -349,6 +359,8 @@ namespace RoverCan2::Drivers
                     ASSERT_MSG("Invalid arguments, implementation error");
                     _state = eState::UNINSTALLED;
                     return;
+                default:
+                    ASSERT_MSG("Unhandled error, shouldn't fall here");
             }
 
             if (!twaiMsgValid(message))
@@ -375,6 +387,8 @@ namespace RoverCan2::Drivers
                 case decltype(_msgBuffer)::eErrorCode::ERROR:
                     LOG_WARN(Logger::Nodes::DriverESP32, "Unknown error");
                     break;
+                default:
+                    ASSERT_MSG("Unhandled error, shouldn't fall here");
             }
         }
 
@@ -407,11 +421,11 @@ namespace RoverCan2::Drivers
         LedBlinkerT_* const _led;
 
         CircularBuffer<CanMsg, 10UL> _msgBuffer;
-        Watchdog<uint64_t, Time::millis> _recvWatchdog;
+        Watchdog<uint64_t, &Time::millis> _recvWatchdog;
     };
 
     template<typename LedBlinkerT_>
     DriverESP32(gpio_num_t ioRx_, gpio_num_t ioTx_, LedBlinkerT_* led_ = nullptr) -> DriverESP32<LedBlinkerT_>;
 }  // namespace RoverCan2::Drivers
 
-#endif  // DRIVER_ESP32_HPP
+#endif  // ROVER_CAN2_DRIVERS_DRIVER_ESP32_HPP

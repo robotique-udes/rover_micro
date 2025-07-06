@@ -272,6 +272,10 @@ void HardwareSerial::_uartEventTask(void *args) {
             log_v("UART%d frame error.", uart->_uart_nr);
             currentErr = UART_FRAME_ERROR;
             break;
+          case uart_event_type_t::UART_DATA_BREAK: [[fallthrough]];
+          case uart_event_type_t::UART_PATTERN_DET: [[fallthrough]];
+          case uart_event_type_t::UART_WAKEUP: [[fallthrough]];
+          case uart_event_type_t::UART_EVENT_MAX: [[fallthrough]];
           default: log_v("UART%d unknown event type %d.", uart->_uart_nr, event.type); break;
         }
         if (currentErr != UART_NO_ERROR) {
@@ -328,6 +332,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           rxPin = _rxPin < 0 ? (int8_t)RX1 : _rxPin;
           txPin = _txPin < 0 ? (int8_t)TX1 : _txPin;
         }
+        break;
+      default:
         break;
 #endif
 #if SOC_UART_HP_NUM > 2  // may save some flash bytes...

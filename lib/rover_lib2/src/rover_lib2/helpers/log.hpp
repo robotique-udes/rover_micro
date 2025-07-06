@@ -1,5 +1,11 @@
-#ifndef LOG_HPP
-#define LOG_HPP
+#ifndef ROVER_LIB2_HELPERS_LOG_HPP
+#define ROVER_LIB2_HELPERS_LOG_HPP
+
+// Always activate Logger in ROS
+#if defined(__linux__) && defined(ROS)
+#define VERBOSE
+#define NODE_BYPASS_SEVERITY_LEVEL Logger::eSeverityLevels::WARN
+#endif  // defined(__linux__) && defined(ROS)
 
 #if defined(VERBOSE)
 
@@ -11,12 +17,17 @@
 #define NODE_BYPASS_SEVERITY_LEVEL Logger::eSeverityLevels::ERROR
 #endif
 
-#if defined(ARDUINO_ESP32S3_DEV)
-#include <Stream.h>
-#include <Arduino.h>
+#if defined(__linux__) && defined(ROS)
+#include <rclcpp/logger.hpp>
+#include <rclcpp/logging.hpp>
+#include <rcutils/logging_macros.h>
+#include <string>
+
 #elif defined(__linux__)
 #include <cstdarg>
-#endif  // defined(ARDUINO_ESP32S3_DEV)
+#include <cstdio>
+
+#endif  // defined(__linux__) && defined(ROS)
 
 #include "rover_lib2/helpers/time.hpp"
 #include "rover_lib2/helpers/macros.hpp"
@@ -94,6 +105,42 @@ namespace Logger
                 va_end(args);
                 loggerStream.printf("\n%s", COLOR_RESET);
 
+// If ROS
+#elif defined(__linux__) && defined(ROS)
+                (void)severityIndex;
+
+                std::string loggerName;
+                loggerName.append(std::string("LIB(") + fileName + ":" + std::to_string(lineNb) + ")");
+                auto logger = rclcpp::get_logger(loggerName);
+
+                va_list args;
+                va_start(args, format);
+
+                static thread_local char buffer[2048];
+                vsnprintf(buffer, sizeof(buffer), format, args);
+                va_end(args);
+
+                if constexpr (SEVERITY == eSeverityLevels::DEBUG_)
+                {
+                    RCLCPP_DEBUG(logger, "%s", buffer);
+                }
+                else if constexpr (SEVERITY == eSeverityLevels::INFO)
+                {
+                    RCLCPP_INFO(logger, "%s", buffer);
+                }
+                else if constexpr (SEVERITY == eSeverityLevels::WARN)
+                {
+                    RCLCPP_WARN(logger, "%s", buffer);
+                }
+                else if constexpr (SEVERITY == eSeverityLevels::ERROR)
+                {
+                    RCLCPP_ERROR(logger, "%s", buffer);
+                }
+                else if constexpr (SEVERITY == eSeverityLevels::FATAL)
+                {
+                    RCLCPP_FATAL(logger, "%s", buffer);
+                }
+
 #elif defined(__linux__)
                 printf("%s[%lu][%s]%s:%d: ",
                        SEVERITY_COLORS[severityIndex],
@@ -163,4 +210,4 @@ DEFINE_LOG_NODE(Debug, Logger::eNodeState::ON);
 
 #endif  // defined(VERBOSE)
 
-#endif  // LOG_HPP
+#endif  // ROVER_LIB2_HELPERS_LOG_HPP

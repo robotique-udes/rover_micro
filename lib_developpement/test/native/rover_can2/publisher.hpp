@@ -4,7 +4,7 @@
 #include "rover_can2/publisher.hpp"
 #include "rover_can2/msgs/test_msg.hpp"
 #include "rover_can2/device.hpp"
-#include "rover_can2/manager.hpp"
+#include "rover_can2/manager/manager_slave.hpp"
 
 // =============================================================================
 // Helpers
@@ -29,8 +29,10 @@ TEST(SUITE_NAME_Publisher, SimplePublish)
 
     RoverCan2::Drivers::DriverMock driver;
     RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
-    RoverCan2::Manager manager(driver, device);
+    RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
+
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     RoverCan2::Msgs::TestMsg msg;
     msg.data().cmd = 69.0F;
@@ -50,8 +52,10 @@ TEST(SUITE_NAME_Publisher, MultiplePublish)
 
     RoverCan2::Drivers::DriverMock driver;
     RoverCan2::Device device(RoverCan2::Constant::eDeviceId::TEST_DEVICE);
-    RoverCan2::Manager manager(driver, device);
+    RoverCan2::ManagerSlave manager(driver, device);
     manager.init();
+
+    driver.msgSentBuffer.getValue();  // Removing initial error state msg
 
     RoverCan2::Msgs::TestMsg msg;
     msg.data().cmd = 69.0F;
