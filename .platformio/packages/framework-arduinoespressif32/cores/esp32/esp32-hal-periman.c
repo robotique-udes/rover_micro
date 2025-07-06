@@ -111,6 +111,7 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_PPP_RTS: return "PPP_MODEM_RTS";
     case ESP32_BUS_TYPE_PPP_CTS: return "PPP_MODEM_CTS";
 #endif
+    case ESP32_BUS_TYPE_MAX: [[fallthrough]];
     default: return "UNKNOWN";
   }
 }

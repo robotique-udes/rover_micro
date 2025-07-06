@@ -860,6 +860,8 @@ static inline rmt_clock_source_t rmt_ll_get_group_clock_src(rmt_dev_t *dev, uint
     case 3:
         clk_src = RMT_CLK_SRC_XTAL;
         break;
+    default:
+        break;
     }
     return clk_src;
 }

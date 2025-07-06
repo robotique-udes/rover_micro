@@ -64,6 +64,8 @@ int base64_encode_block(const char *plaintext_in, int length_in, char *code_out,
         *codechar++ = base64_encode_value(result);
         result = (fragment & 0x03f) >> 0;
         *codechar++ = base64_encode_value(result);
+      default:
+        break;
     }
   }
   /* control should not reach here */
@@ -84,6 +86,7 @@ int base64_encode_blockend(char *code_out, base64_encodestate *state_in) {
       *codechar++ = '=';
       break;
     case step_A: break;
+    default: break;
   }
   *codechar = 0x00;
 
