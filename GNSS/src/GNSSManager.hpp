@@ -37,7 +37,6 @@ class GNSSManager
     CircularMovingAverage<CIRCULAR_WINDOW_SIZE> _headingFilter;
 
     char _sentenceBuffer[MAX_SENTENCE_LENGTH] = {'\0'};
-    ;
     size_t _buffer_Index;
 
   public:
