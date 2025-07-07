@@ -6,8 +6,7 @@
 #include "rover_can2/msgs/power_status.hpp"
 
 class Router : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PowerCmd, Router>,
-                                        RoverCan2::Publisher<RoverCan2::Msgs::PowerStatus, 1UL>>,
-               public RoverObject<Router>
+                                        RoverCan2::Publisher<RoverCan2::Msgs::PowerStatus, 1UL>>
 {
     static constexpr uint64_t CAN_SEND_PERIOD_MS = 500ULL;
     static constexpr gpio_num_t PIN_BANK0_CH1 = GPIO_NUM_17;
@@ -23,9 +22,9 @@ class Router : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
     {
     }
 
-    void _init(void) {}
+    void init(void) {}
 
-    void _update(void)
+    void update(void)
     {
         if (_statusSendTimer.isReady())
         {
@@ -59,6 +58,8 @@ class Router : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
 
     IO::DigitalOutput _powerControl = IO::DigitalOutput(PIN_BANK0_CH1);
     LoopTimer<uint64_t, Time::millis> _statusSendTimer;
+
+    VALIDATE_CONCEPT(RoverObject, Router);
 };
 
 #endif  // ROUTER_HPP
