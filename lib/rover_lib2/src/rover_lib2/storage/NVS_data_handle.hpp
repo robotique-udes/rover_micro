@@ -31,7 +31,7 @@ class NVSDataHandle
     static constexpr size_t NVS_MAX_LENGTH_STR = 15UL;
 
   public:
-    NVSDataHandle(const char* namespace_, const char* key_, Data_T defaultValue_ = 0UL):
+    NVSDataHandle(const char* namespace_, const char* key_, Data_T defaultValue_ = static_cast<Data_T>(0)):
         _namespace(namespace_),
         _key(key_),
         _defaultValue(defaultValue_),
