@@ -31,17 +31,8 @@ J2Controller::J2Controller(Stream* serial_)
     pinMode(BUT_JOG_PLUS, INPUT_PULLUP);
     pinMode(BUT_JOG_MOINS, INPUT_PULLUP);
 
-    // Initialize speed variable
-    J2Controller::current_rpm = 0.0;
-    J2Controller::target_rpm = 0.0;
-
-    // Initialize HardwareSerial on UART2
-    J2Controller::motorSerial = serial_;
-    // SJ2Controller::motorSerial->begin(J2Controller::UART_BAUD_RATE, SERIAL_8N1, J2Controller::UART_RX_PIN,
-    // J2Controller::UART_TX_PIN);
-
-    // Serial.begin(115200); // Monitor output
-    // Serial.println("UART initialized");
+    // Initialize motor serial communication
+    J2Controller::_motorSerial = serial_;
     delay(100);
 }
 
@@ -49,15 +40,18 @@ void J2Controller::sendSpeedCommand(float rpm_)
 {
     // Speed conversion to electrical RPM
     float erpm_f = rpm_ * 100.0 * 6.0 * 14.0;
+    float cap_rpm = rpm_;
     if (erpm_f > J2Controller::RATED_SPEED_ERPM)
     {
         erpm_f = J2Controller::RATED_SPEED_ERPM;
-        LOG_WARN(Logger::Nodes::Main, "Trop vite bozo");
+        cap_rpm = J2Controller::RATED_SPEED_ERPM / (100.0 * 6.0 * 14.0);
+        LOG_WARN(Logger::Nodes::Main, "Trop vite bozo, %f rpm max", cap_rpm);
     }
     else if (erpm_f < -J2Controller::RATED_SPEED_ERPM)
     {
         erpm_f = -J2Controller::RATED_SPEED_ERPM;
-        LOG_WARN(Logger::Nodes::Main, "Trop vite bozo");
+        cap_rpm = -J2Controller::RATED_SPEED_ERPM / (100.0 * 6.0 * 14.0);
+        LOG_WARN(Logger::Nodes::Main, "Trop vite bozo, %f rpm max", cap_rpm);
     }
 
     // Convert to int32_t for proper signed byte handling
@@ -66,7 +60,7 @@ void J2Controller::sendSpeedCommand(float rpm_)
     uint8_t buffer[10];
 
     buffer[0] = J2Controller::FRAME_HEAD;
-    buffer[1] = 0x05;  // 1 byte command + 4 bytes speed
+    buffer[1] = 0x05;  // Data length : 1 byte command + 4 bytes speed
     buffer[2] = J2Controller::COMMAND_SET_RPM;
     buffer[3] = (erpm >> 24) & 0xFF;
     buffer[4] = (erpm >> 16) & 0xFF;
@@ -80,7 +74,7 @@ void J2Controller::sendSpeedCommand(float rpm_)
 
     buffer[9] = J2Controller::FRAME_TAIL;
 
-    J2Controller::motorSerial->write(buffer, 10);
+    J2Controller::_motorSerial->write(buffer, 10);
     LOG_INFO(Logger::Nodes::Main, "Sent RPM Command: %f", rpm_);
 }
 
@@ -95,7 +89,7 @@ unsigned short J2Controller::calculateCRC16(unsigned char* buf_, unsigned int le
     return cksum;
 }
 
-void J2Controller::readMotorParameters(bool verbose)
+void J2Controller::readMotorParameters(bool verbose_)
 {
     // Command to request motor parameters
     uint8_t buffer[6];
@@ -107,15 +101,15 @@ void J2Controller::readMotorParameters(bool verbose)
     buffer[4] = checksum & 0xFF;
     buffer[5] = J2Controller::FRAME_TAIL;
 
-    J2Controller::motorSerial->write(buffer, 6);
+    J2Controller::_motorSerial->write(buffer, 6);
     LOG_INFO(Logger::Nodes::Main, "Sent motor parameter request");
 
     delay(10);  // Allow time for response
 
-    if (J2Controller::motorSerial->available())
+    if (J2Controller::_motorSerial->available())
     {
         uint8_t response[100];
-        int len = J2Controller::motorSerial->readBytes(response, sizeof(response));
+        int len = J2Controller::_motorSerial->readBytes(response, sizeof(response));
 
         if (len < 4 || response[0] != J2Controller::FRAME_HEAD || response[len - 1] != J2Controller::FRAME_TAIL)
         {
@@ -139,85 +133,87 @@ void J2Controller::readMotorParameters(bool verbose)
         }
 
         int index = 3;
-        J2Controller::param_mosTemp = (int16_t)((response[index] << 8) | response[index + 1]) / 10.0;
+        J2Controller::sMotorParam.mosTemp = (int16_t)((response[index] << 8) | response[index + 1]) / 10.0;
         index += 2;
-        J2Controller::param_motorTemp = (int16_t)((response[index] << 8) | response[index + 1]) / 10.0;
+        J2Controller::sMotorParam.motorTemp = (int16_t)((response[index] << 8) | response[index + 1]) / 10.0;
         index += 2;
-        J2Controller::param_outputCurrent
+        J2Controller::sMotorParam.outputCurrent
             = (int32_t)((response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3])
               / 100.0;
         index += 4;
-        J2Controller::param_inputCurrent
+        J2Controller::sMotorParam.inputCurrent
             = (int32_t)((response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3])
               / 100.0;
         index += 4;
-        J2Controller::param_idCurrent
+        J2Controller::sMotorParam.idCurrent
             = (int32_t)((response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3])
               / 100.0;
         index += 4;
-        J2Controller::param_iqCurrent
+        J2Controller::sMotorParam.iqCurrent
             = (int32_t)((response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3])
               / 100.0;
         index += 4;
-        J2Controller::param_throttleValue = (int16_t)((response[index] << 8) | response[index + 1]) / 1000.0;
+        J2Controller::sMotorParam.throttleValue = (int16_t)((response[index] << 8) | response[index + 1]) / 1000.0;
         index += 2;
-        J2Controller::param_motorSpeed
+        J2Controller::sMotorParam.motorSpeed
             = (int32_t)((response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3]);
         index += 4;
-        J2Controller::param_inputVoltage = (int16_t)((response[index] << 8) | response[index + 1]) / 10.0;
+        J2Controller::sMotorParam.inputVoltage = (int16_t)((response[index] << 8) | response[index + 1]) / 10.0;
         index += 2;
         index += 24;  // Skip Reserved bytes
-        J2Controller::param_motorStatusCode = response[index];
+        J2Controller::sMotorParam.motorStatusCode = response[index];
         index += 1;
         uint32_t positionData
             = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
-        J2Controller::param_motorOuterLoopPosition = *((float*)&positionData);
+        J2Controller::sMotorParam.motorOuterLoopPosition = *((float*)&positionData);
         index += 4;
-        J2Controller::param_motorIdNumber = response[index];
+        J2Controller::sMotorParam.motorIdNumber = response[index];
         index += 1;
         index += 6;  // Skip Temperature Reserved Value
-        J2Controller::param_vdVoltage
+        J2Controller::sMotorParam.vdVoltage
             = (int32_t)((response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3])
               / 1000.0;
         index += 4;
-        J2Controller::param_vqVoltage
+        J2Controller::sMotorParam.vqVoltage
             = (int32_t)((response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3])
               / 1000.0;
         index += 4;
         if (index + 12 < len - 3)
         {  // Check if we have enough data (nouveaux messages)
-            J2Controller::param_currentControlMode
+            J2Controller::sMotorParam.currentControlMode
                 = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
             index += 4;
             uint32_t encoderAngleData
                 = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
-            J2Controller::param_encoderAngle = *((float*)&encoderAngleData);
+            J2Controller::sMotorParam.encoderAngle = *((float*)&encoderAngleData);
             index += 4;
             uint32_t outerEncoderAngleData
                 = (response[index] << 24) | (response[index + 1] << 16) | (response[index + 2] << 8) | response[index + 3];
-            J2Controller::param_outerEncoderAngle = *((float*)&outerEncoderAngleData);
+            J2Controller::sMotorParam.outerEncoderAngle = *((float*)&outerEncoderAngleData);
             index += 4;
         }
 
-        if (verbose)
+        if (verbose_)
         {
-            LOG_WARN(Logger::Nodes::Main, "MOS Temp: %.2f °C", J2Controller::param_mosTemp);
-            LOG_WARN(Logger::Nodes::Main, "Motor Temp: %.2f °C", J2Controller::param_motorTemp);
-            LOG_WARN(Logger::Nodes::Main, "Output Current: %.3f A", J2Controller::param_outputCurrent);
-            LOG_WARN(Logger::Nodes::Main, "Input Current: %.3f A", J2Controller::param_inputCurrent);
-            LOG_WARN(Logger::Nodes::Main, "Id Current: %.3f A", J2Controller::param_idCurrent);
-            LOG_WARN(Logger::Nodes::Main, "Iq Current: %.3f A", J2Controller::param_iqCurrent);
-            LOG_WARN(Logger::Nodes::Main, "Throttle Value: %.2f V", J2Controller::param_throttleValue);
-            LOG_WARN(Logger::Nodes::Main, "Motor Speed: %.3f RPM", J2Controller::param_motorSpeed);
-            LOG_WARN(Logger::Nodes::Main, "Input Voltage: %.2f V", J2Controller::param_inputVoltage);
-            LOG_WARN(Logger::Nodes::Main, "Motor Status Code: %d", J2Controller::param_motorStatusCode);
-            LOG_WARN(Logger::Nodes::Main, "Motor Outer Loop Position: %.2f Units", J2Controller::param_motorOuterLoopPosition);
-            LOG_WARN(Logger::Nodes::Main, "Motor ID Number: %d", J2Controller::param_motorIdNumber);
-            LOG_WARN(Logger::Nodes::Main, "Vd Voltage: %.2f V", J2Controller::param_vdVoltage);
-            LOG_WARN(Logger::Nodes::Main, "Vq Voltage: %.2f V\n", J2Controller::param_vqVoltage);
-            LOG_WARN(Logger::Nodes::Main, "Current Control Mode: %d", J2Controller::param_currentControlMode);
-            LOG_WARN(Logger::Nodes::Main, "Encoder Angle: %.2f rad", J2Controller::param_encoderAngle);
-            LOG_WARN(Logger::Nodes::Main, "Outer Encoder Angle: %.2f rad\n", J2Controller::param_outerEncoderAngle);
+            LOG_WARN(Logger::Nodes::Main, "MOS Temp: %.2f °C", J2Controller::sMotorParam.mosTemp);
+            LOG_WARN(Logger::Nodes::Main, "Motor Temp: %.2f °C", J2Controller::sMotorParam.motorTemp);
+            LOG_WARN(Logger::Nodes::Main, "Output Current: %.3f A", J2Controller::sMotorParam.outputCurrent);
+            LOG_WARN(Logger::Nodes::Main, "Input Current: %.3f A", J2Controller::sMotorParam.inputCurrent);
+            LOG_WARN(Logger::Nodes::Main, "Id Current: %.3f A", J2Controller::sMotorParam.idCurrent);
+            LOG_WARN(Logger::Nodes::Main, "Iq Current: %.3f A", J2Controller::sMotorParam.iqCurrent);
+            LOG_WARN(Logger::Nodes::Main, "Throttle Value: %.2f V", J2Controller::sMotorParam.throttleValue);
+            LOG_WARN(Logger::Nodes::Main, "Motor Speed: %.3f RPM", J2Controller::sMotorParam.motorSpeed);
+            LOG_WARN(Logger::Nodes::Main, "Input Voltage: %.2f V", J2Controller::sMotorParam.inputVoltage);
+            LOG_WARN(Logger::Nodes::Main, "Motor Status Code: %d", J2Controller::sMotorParam.motorStatusCode);
+            LOG_WARN(Logger::Nodes::Main,
+                     "Motor Outer Loop Position: %.2f Units",
+                     J2Controller::sMotorParam.motorOuterLoopPosition);
+            LOG_WARN(Logger::Nodes::Main, "Motor ID Number: %d", J2Controller::sMotorParam.motorIdNumber);
+            LOG_WARN(Logger::Nodes::Main, "Vd Voltage: %.2f V", J2Controller::sMotorParam.vdVoltage);
+            LOG_WARN(Logger::Nodes::Main, "Vq Voltage: %.2f V\n", J2Controller::sMotorParam.vqVoltage);
+            LOG_WARN(Logger::Nodes::Main, "Current Control Mode: %d", J2Controller::sMotorParam.currentControlMode);
+            LOG_WARN(Logger::Nodes::Main, "Encoder Angle: %.2f rad", J2Controller::sMotorParam.encoderAngle);
+            LOG_WARN(Logger::Nodes::Main, "Outer Encoder Angle: %.2f rad\n", J2Controller::sMotorParam.outerEncoderAngle);
         }
     }
     else
@@ -228,36 +224,36 @@ void J2Controller::readMotorParameters(bool verbose)
 
 void J2Controller::setSpeed(float rpm_)
 {
-    J2Controller::target_rpm = rpm_;
+    J2Controller::_targetRPM = rpm_;
 }
 
 float J2Controller::getSpeed(void)
 {
-    return J2Controller::target_rpm;
+    return J2Controller::_targetRPM;
 }
 
 void J2Controller::update(void)
 {
     uint32_t now = millis();
-    float dt = (now - J2Controller::last_ramp_time) / 1000.0f;
-    J2Controller::last_ramp_time = now;
+    float dt = (now - J2Controller::_lastRampTime) / 1000.0f;
+    J2Controller::_lastRampTime = now;
 
-    float max_step = J2Controller::ramp_rate * dt;
+    float max_step = J2Controller::_rampRate * dt;
 
-    if (abs(J2Controller::target_rpm - J2Controller::current_rpm) <= max_step)
+    if (abs(J2Controller::_targetRPM - J2Controller::_currentRPM) <= max_step)
     {
-        current_rpm = target_rpm;
+        _currentRPM = _targetRPM;
     }
-    else if (J2Controller::target_rpm > J2Controller::current_rpm)
+    else if (J2Controller::_targetRPM > J2Controller::_currentRPM)
     {
-        J2Controller::current_rpm += max_step;
+        J2Controller::_currentRPM += max_step;
     }
     else
     {
-        J2Controller::current_rpm -= max_step;
+        J2Controller::_currentRPM -= max_step;
     }
 
-    sendSpeedCommand(J2Controller::current_rpm);
+    sendSpeedCommand(J2Controller::_currentRPM);
 }
 
 bool J2Controller::isJogButtonPressed(bool plus_moins_)

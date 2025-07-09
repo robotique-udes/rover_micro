@@ -12,32 +12,6 @@
 class J2Controller
 {
   public:
-    Stream* motorSerial;  // Declare motorSerial as a reference to HardwareSerial
-
-    // Motor Parameters
-    float param_mosTemp;
-    float param_motorTemp;
-    float param_outputCurrent;
-    float param_inputCurrent;
-    float param_idCurrent;
-    float param_iqCurrent;
-    float param_throttleValue;
-    float param_motorSpeed;
-    float param_inputVoltage;
-    uint8_t param_motorStatusCode;
-    float param_motorOuterLoopPosition;
-    uint8_t param_motorIdNumber;
-    float param_vdVoltage;
-    float param_vqVoltage;
-    uint32_t param_currentControlMode;
-    float param_encoderAngle;
-    float param_outerEncoderAngle;
-
-  private:
-    // Checksum hash table
-    static const unsigned short
-        CRC16_TAB[];  // fuck le constexpr, faudrait que je déclare mon giga tableau ici, ça serait laid pas mal
-
     // Simple I/O
     static constexpr uint8_t LED_ERR = 8;
     static constexpr uint8_t LED_BTLN = 9;
@@ -49,27 +23,58 @@ class J2Controller
     static constexpr uint8_t UART_RX_PIN = 7;
     static constexpr uint32_t UART_BAUD_RATE = 921600;
 
+    // Motor limtis
+    static constexpr int32_t RATED_SPEED_ERPM = 19572;
+    static constexpr int32_t MAX_SPEED_ERPM = 26880;  // no load
+
+  private:
+    // Checksum hash table (fuck le constexpr, faudrait que je déclare mon giga tableau ici, ça serait laid pas mal)
+    static const unsigned short CRC16_TAB[];
+
     // Motor Protocol Constants
     static constexpr uint8_t FRAME_HEAD = 0xAA;
     static constexpr uint8_t FRAME_TAIL = 0xBB;
     static constexpr uint8_t COMMAND_SET_RPM = 0x49;
     static constexpr uint8_t COMMAND_GET_VALUES = 0x45;
 
-    // Motor limtis
-    static constexpr int32_t RATED_SPEED_ERPM = 19572;
-    static constexpr int32_t MAX_SPEED_ERPM = 26880;  // no load
+  public:
+    // Motor Parameters
+    struct MotorParam
+    {
+        float mosTemp;
+        float motorTemp;
+        float outputCurrent;
+        float inputCurrent;
+        float idCurrent;
+        float iqCurrent;
+        float throttleValue;
+        float motorSpeed;
+        float inputVoltage;
+        uint8_t motorStatusCode;
+        float motorOuterLoopPosition;
+        uint8_t motorIdNumber;
+        float vdVoltage;
+        float vqVoltage;
+        uint32_t currentControlMode;
+        float encoderAngle;
+        float outerEncoderAngle;
+    };
+    MotorParam sMotorParam;
 
-    // Ramp variable
-    float current_rpm = 0.0f;
-    float target_rpm = 0.0f;
-    float ramp_rate = 1.0f;  // RPM per second
-    uint32_t last_ramp_time = 0;
+  private:
+    Stream* _motorSerial;  // Declare motorSerial as a reference to HardwareSerial
+
+    // Ramp variables
+    float _currentRPM = 0.0f;
+    float _targetRPM = 0.0f;
+    float _rampRate = 8.0f;  // RPM per second
+    uint32_t _lastRampTime = 0;
 
   public:
     J2Controller(Stream* serial_);
     void sendSpeedCommand(float rpm_);
     unsigned short calculateCRC16(unsigned char* buf_, unsigned int len_);
-    void readMotorParameters(bool verbose = false);
+    void readMotorParameters(bool verbose_ = false);
     void setSpeed(float rpm_);
     float getSpeed(void);
     void update(void);

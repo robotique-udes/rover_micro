@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <J2Controller.hpp>
+#include "J2Controller.hpp"
 
 // Configure UART pins
 #define UART_TX_PIN 6
@@ -10,7 +10,7 @@ HardwareSerial motorSerial(2);
 J2Controller controller(&motorSerial);
 
 float desiredRPM = 0.0;
-float vitesse = 1.0;
+float vitesse = 2.5;
 
 void setup()
 {
@@ -26,16 +26,13 @@ void loop()
     if (controller.isJogButtonPressed(0))
     {
         controller.setSpeed(-vitesse);
-        // controller.sendSpeedCommand(-vitesse);
     }
 
     if (controller.isJogButtonPressed(1))
     {
         controller.setSpeed(vitesse);
-        // controller.sendSpeedCommand(vitesse);
     }
 
     controller.update();
-    controller.readMotorParameters(true);
-    delay(100);
+    // controller.readMotorParameters(true);
 }
