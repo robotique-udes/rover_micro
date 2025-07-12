@@ -48,7 +48,7 @@ namespace Encoders
 
         static constexpr const char* NVS_KEY_TURN_COUNT = "TURN_CTN";
         static constexpr const char* NVS_KEY_CALIB_OFFSET = "CALIB";
-        static constexpr const char* NVS_KEY_LAST_QUADRANT = "QADRANT";
+        static constexpr const char* NVS_KEY_LAST_QUADRANT = "QUADRANT";
 
         static constexpr uint16_t VALID_DATA_BIT_MASK
             = 0b0011'1111'1111'1100;  // Only these bits contains the actual encoder message
