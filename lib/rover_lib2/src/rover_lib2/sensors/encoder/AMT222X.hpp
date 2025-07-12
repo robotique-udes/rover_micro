@@ -120,7 +120,8 @@ namespace Encoders
                         {
                             _turnCount.writeValue(_turnCount.getValue() + 1);
                         }
-                        else if (_lastQuadrant.getValue() == 1 && currentQuadrant == 4)
+                        else if ((_prevEncoderPosition < (0.5F * std::numbers::pi_v<float>))
+                                 && (_encoderPosition > (1.5F * std::numbers::pi_v<float>)))
                         {
                             _turnCount.writeValue(_turnCount.getValue() - 1);
                         }

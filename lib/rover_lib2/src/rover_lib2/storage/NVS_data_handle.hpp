@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <cstdint>
 
-DEFINE_LOG_NODE(NVSDataHandle, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(NVSDataHandle, Logger::eNodeState::OFF);
 
 template<typename Data_T>
 class NVSDataHandle
