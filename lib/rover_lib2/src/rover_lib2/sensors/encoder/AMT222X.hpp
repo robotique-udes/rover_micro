@@ -269,7 +269,7 @@ namespace Encoders
         uint8_t getQuadrant(float position_)
         {
             ASSERT_COND(position_ >= 0.0F && position_ < 2.0F * std::numbers::pi_v<float>);
-            std::clamp(position_, 0.0F, 2.0F * std::numbers::pi_v<float>);
+            position_ = std::clamp(position_, 0.0F, 2.0F * std::numbers::pi_v<float>);
 
             uint8_t quadrant = 1U;
             if (position_ >= 0.0F && position_ < (1.0F / 2.0F * std::numbers::pi_v<float>))
