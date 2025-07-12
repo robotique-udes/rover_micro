@@ -54,7 +54,7 @@ constexpr gpio_num_t PIN_FWD = GPIO_NUM_42;
 constexpr gpio_num_t PIN_REV = GPIO_NUM_41;
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
-DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::OFF);
 
 void setup(void)
 {

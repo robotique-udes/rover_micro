@@ -14,7 +14,7 @@
 
 #include <algorithm>
 
-DEFINE_LOG_NODE(J34Actuator, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(J34Actuator, Logger::eNodeState::OFF);
 
 class J34Actuator
 {
@@ -164,8 +164,6 @@ class J34Actuator
 
         _j34R_requestedCalibPos = posJ3_;
         _j34L_requestedCalibPos = posJ4_;
-        // _j34L.calib(posJ3_);
-        // _j34R.calib(posJ4_);
     }
 
   private:

@@ -16,9 +16,8 @@
 #define PCB_ROVER_J345_REV1
 
 // ===============================================================================================================================
-// PCB Specific - Only change after pcb revisions after this necessary between uploads
+// PCB Specific - Only change after pcb revisions
 // ===============================================================================================================================
-
 #if defined(PCB_ROVER_J345_REV1)
 
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
