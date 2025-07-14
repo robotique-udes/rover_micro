@@ -272,19 +272,19 @@ namespace Encoders
             position_ = std::clamp(position_, 0.0F, 2.0F * std::numbers::pi_v<float>);
 
             uint8_t quadrant = 1U;
-            if (position_ >= 0.0F && position_ < (1.0F / 2.0F * std::numbers::pi_v<float>))
+            if (position_ < (1.0F / 2.0F * std::numbers::pi_v<float>))
             {
                 quadrant = 1U;
             }
-            else if (position_ >= 1.0F / 2.0F * std::numbers::pi_v<float> && position_ < std::numbers::pi_v<float>)
+            else if (position_ < std::numbers::pi_v<float>)
             {
                 quadrant = 2U;
             }
-            else if (position_ >= std::numbers::pi_v<float> && position_ < 3.0F / 2.0F * std::numbers::pi_v<float>)
+            else if (position_ < 3.0F / 2.0F * std::numbers::pi_v<float>)
             {
                 quadrant = 3U;
-            }
-            else if (position_ >= 3.0F / 2.0F * std::numbers::pi_v<float> && position_ < 2.0F * std::numbers::pi_v<float>)
+            }   
+            else
             {
                 quadrant = 4U;
             }
