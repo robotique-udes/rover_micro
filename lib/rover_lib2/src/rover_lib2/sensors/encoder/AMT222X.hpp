@@ -283,7 +283,7 @@ namespace Encoders
             else if (position_ < 3.0F / 2.0F * std::numbers::pi_v<float>)
             {
                 quadrant = 3U;
-            }   
+            }
             else
             {
                 quadrant = 4U;
