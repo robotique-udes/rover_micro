@@ -44,7 +44,6 @@ class J34Actuator
     };
 
   public:
-    J34Actuator() = default;
     void init()
     {
         _j34L.setJointLimit(std::nullopt, std::nullopt);  // Joint limit needs to be managed by differential logic instead
@@ -67,12 +66,30 @@ class J34Actuator
             return;
         }
 
+        _j34L.update();
+        _j34R.update();
+
+        _j3CurrentPosition = (_j34L.getPosition() + _j34R.getPosition()) / 2.0F;
+        _j4CurrentPosition = (_j34L.getPosition() - _j34R.getPosition()) / 2.0F;
+
+        _j3CurrentSpeed = (_j34L.getSpeed() + _j34R.getSpeed()) / 2.0F;
+        _j4CurrentSpeed = (_j34L.getSpeed() - _j34R.getSpeed()) / 2.0F;
+
         switch (_currentState)
         {
+            default:
+                ASSERT_MSG("Shouldn't fall here 0_0");
+                [[fallthrough]];
+            case eState::RUNNING:
+                this->runningUpdateLoop();
+                break;
+
             case eState::CALIB_REQUESTED:
-                this->setSpeeds(0.0F, 0.0F);
+                _j34L.setSpeed(0.0F);
+                _j34R.setSpeed(0.0F);
                 _currentState = eState::WAIT_ON_STOP;
                 break;
+
             case eState::WAIT_ON_STOP:
             {
                 float speedJ3 = ZERO_ERROR_EPSILON + 1.0F;
@@ -86,8 +103,8 @@ class J34Actuator
                     timerWaitAfterCalib = OneShotTimer<uint64_t, &Time::millis>{WAIT_TIME_AFTER_CALIB_MS};
                     _currentState = eState::WAIT_ON_CALIB;
                 }
+                break;
             }
-            break;
 
             case eState::WAIT_ON_CALIB:
                 if (timerWaitAfterCalib.isReady())
@@ -95,22 +112,11 @@ class J34Actuator
                     _currentState = eState::RUNNING;
                 }
                 break;
-
-            case eState::RUNNING:
-                [[fallthrough]];
-            default:
-                break;
         }
+    }
 
-        _j34L.update();
-        _j34R.update();
-
-        _j3CurrentPosition = (_j34L.getPosition() + _j34R.getPosition()) / 2.0F;
-        _j4CurrentPosition = (_j34L.getPosition() - _j34R.getPosition()) / 2.0F;
-
-        _j3CurrentSpeed = (_j34L.getSpeed() + _j34R.getSpeed()) / 2.0F;
-        _j4CurrentSpeed = (_j34L.getSpeed() - _j34R.getSpeed()) / 2.0F;
-
+    void runningUpdateLoop()
+    {
         float speedCmdJ3 = _j3SpeedGoal;
         float speedCmdJ4 = _j4SpeedGoal;
 
@@ -167,10 +173,9 @@ class J34Actuator
 
     void calib(float posJ3_, float posJ4_)
     {
-        _currentState = eState::CALIB_REQUESTED;
-
         _j34R_requestedCalibPos = posJ3_;
         _j34L_requestedCalibPos = posJ4_;
+        _currentState = eState::CALIB_REQUESTED;
     }
 
   private:
