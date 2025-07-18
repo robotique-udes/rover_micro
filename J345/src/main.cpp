@@ -29,6 +29,10 @@ void setup(void)
 
     LED::LedBlinkerSoft statusLed(IO::DigitalOutput(PIN_USER_LED), LED::BlinkPatterns::HEARTBEAT);
     statusLed.init();
+
+    J34Device j34;
+    j34.init();
+
     J5Device j5;
     j5.init();
 
