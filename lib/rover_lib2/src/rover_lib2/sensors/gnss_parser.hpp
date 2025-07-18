@@ -1,5 +1,5 @@
-#ifndef GNSS_PARSER_HPP
-#define GNSS_PARSER_HPP
+#ifndef ROVER_LIB2_SENSORS_GNSS_PARSER_HPP
+#define ROVER_LIB2_SENSORS_GNSS_PARSER_HPP
 
 #include <array>
 #include <cstring>
@@ -56,4 +56,4 @@ namespace GNSSParser
     bool parseUniHeading(char* rawSentence_, sUniHeadingData& out_);
 };  // namespace GNSSParser
 
-#endif  // GNSS_PARSER_HPP
+#endif  // ROVER_LIB2_SENSORS_GNSS_PARSER_HPP
