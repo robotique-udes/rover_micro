@@ -32,7 +32,6 @@ class J34Actuator
     static_assert(J4_MIN_JOINT_LIMIT <= J4_MAX_JOINT_LIMIT);
 
     static constexpr float ZERO_ERROR_EPSILON = 0.01F;
-
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
 
     enum class eState : uint8_t
