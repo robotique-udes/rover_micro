@@ -31,6 +31,10 @@ class J34Actuator
     static constexpr float J4_MAX_JOINT_LIMIT = degToRad(5.0F * 360.0F);
     static_assert(J4_MIN_JOINT_LIMIT <= J4_MAX_JOINT_LIMIT);
 
+    static constexpr float ZERO_ERROR_EPSILON = 0.01F;
+
+    static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
+
     enum class eState : uint8_t
     {
         RUNNING,
@@ -71,22 +75,25 @@ class J34Actuator
                 break;
             case eState::WAIT_ON_STOP:
             {
-                float speedJ3 = 1.0F;
-                float speedJ4 = 1.0F;
+                float speedJ3 = ZERO_ERROR_EPSILON + 1.0F;
+                float speedJ4 = speedJ3;
                 this->getSpeeds(speedJ3, speedJ4);
 
-                if (IN_ERROR(speedJ3, 0.01F, 0.0F) && IN_ERROR(speedJ4, 0.01F, 0.0F))
+                if (IN_ERROR(speedJ3, ZERO_ERROR_EPSILON, 0.0F) && IN_ERROR(speedJ4, ZERO_ERROR_EPSILON, 0.0F))
                 {
+                    _j34L.calib(_j34L_requestedCalibPos);
+                    _j34R.calib(_j34R_requestedCalibPos);
+                    timerWaitAfterCalib = OneShotTimer<uint64_t, &Time::millis>{WAIT_TIME_AFTER_CALIB_MS};
                     _currentState = eState::WAIT_ON_CALIB;
                 }
             }
             break;
 
             case eState::WAIT_ON_CALIB:
-                _j34L.calib(_j34L_requestedCalibPos);
-                _j34R.calib(_j34R_requestedCalibPos);
-                _currentState = eState::RUNNING;
-                delay(500);
+                if (timerWaitAfterCalib.isReady())
+                {
+                    _currentState = eState::RUNNING;
+                }
                 break;
 
             case eState::RUNNING:
@@ -180,6 +187,7 @@ class J34Actuator
     float _j34L_requestedCalibPos = 0.0F;
 
     eState _currentState = eState::RUNNING;
+    OneShotTimer<uint64_t, &Time::millis> timerWaitAfterCalib = {0};
 
     // ===========================================================================================================================
     // Generic Objects
