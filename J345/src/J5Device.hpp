@@ -102,7 +102,7 @@ class J5Device
     PushButton _pbClose = {PIN_PB_J5_CLOSE};
 
     float targetSpeed_ = 0.0F;
-    LoopTimer<uint64_t, &Time::micros> _timerCanSend = {CAN_SEND_PERIOD_MS};
+    LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
 };
 
