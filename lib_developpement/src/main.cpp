@@ -30,9 +30,31 @@
 #include <Arduino.h>
 #include <rover_lib2/LED/led_blinker.hpp>
 
-constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
+#include "rover_lib2/actuators/dc.hpp"
+#include "rover_lib2/motor_drivers/IFX9201SG.hpp"
+#include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 
-DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
+#include "rover_lib2/sensors/encoder/AMT222X.hpp"
+#include "rover_lib2/sensors/push_button.hpp"
+#include "rover_lib2/helpers/loop_timer.hpp"
+
+#include "rover_lib2/filters/low_pass_EMA.hpp"
+
+constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
+constexpr gpio_num_t PIN_J34_L_PWM = GPIO_NUM_16;
+constexpr gpio_num_t PIN_J34_L_DIR = GPIO_NUM_15;
+constexpr gpio_num_t PIN_J34_L_CS = GPIO_NUM_7;
+
+constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_48;
+constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_21;
+constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_47;
+
+constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_40;
+constexpr gpio_num_t PIN_FWD = GPIO_NUM_42;
+constexpr gpio_num_t PIN_REV = GPIO_NUM_41;
+
+DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::ON);
 
 void setup(void)
 {
@@ -41,14 +63,18 @@ void setup(void)
     delay(1000);
 #endif
 
-    LED::LedBlinkerSoft led = LED::LedBlinkerSoft(IO::DigitalOutput(PIN_USER_LED), LED::BlinkPatterns::HEARTBEAT);
+    LED::LedBlinkerSoft led(IO::DigitalOutput(PIN_USER_LED), LED::BlinkPatterns::HEARTBEAT);
     led.init();
 
     LOG_INFO(Logger::Nodes::Main, "Init done, starting loop!");
+    LoopTimer<uint64_t, &Time::millis> updateTimer(1);
     for (EVER)
     {
         led.update();
     }
 }
 
-void loop() {}
+void loop()
+{
+    // Don't use
+}

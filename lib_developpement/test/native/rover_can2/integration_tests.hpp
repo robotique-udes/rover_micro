@@ -26,8 +26,7 @@ namespace TestIntegrationTests
     float targetSpeedValue = 0.0F;
 
     class TestSystem : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::TestMsg, TestSystem>,
-                                                RoverCan2::Publisher<RoverCan2::Msgs::TestMsg2, 1>>,
-                       public RoverObject<TestSystem>
+                                                RoverCan2::Publisher<RoverCan2::Msgs::TestMsg2, 1>>
     {
       public:
         TestSystem():
@@ -37,9 +36,9 @@ namespace TestIntegrationTests
         {
         }
 
-        void _init(void) {}
+        void init(void) {}
 
-        void _update(void) {}
+        void update(void) {}
 
       private:
         void CB_testMsgs(const RoverCan2::Msgs::TestMsg& msg_)

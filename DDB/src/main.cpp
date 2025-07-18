@@ -7,7 +7,7 @@
 #include "Router.hpp"
 #include "Lights.hpp"
 
-DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
 
 constexpr gpio_num_t PIN_LED_USER = GPIO_NUM_2;
 constexpr gpio_num_t PIN_LED_CAN = GPIO_NUM_1;
