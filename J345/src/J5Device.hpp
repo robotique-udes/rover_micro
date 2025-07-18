@@ -10,7 +10,7 @@
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
 
-class J5Actuator
+class J5Device
 {
     static constexpr uint64_t LOOP_PERIOD_US = 500ULL;
     static constexpr float MAX_SPEED_RAD_S = 1.0F;
@@ -19,11 +19,11 @@ class J5Actuator
     static constexpr float CAN_SEND_FREQUENCY = 20.0F;
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(ROUND(1'000.0F / CAN_SEND_FREQUENCY));
 
-    using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Actuator>,
+    using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
 
   public:
-    J5Actuator() = default;
+    J5Device() = default;
 
     void init()
     {
@@ -86,7 +86,7 @@ class J5Actuator
 
     JointCanDeviceT _j5CanDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
-                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Actuator>(*this, &J5Actuator::CB_canCmd),
+                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>(*this, &J5Device::CB_canCmd),
                           RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
 
     PWMGenerators::MCPWMTimer __pwmTimer = PWMGenerators::MCPWMTimer(1'000, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_1);

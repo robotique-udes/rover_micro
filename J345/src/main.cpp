@@ -3,7 +3,7 @@
 
 #include "config.hpp"
 #include "J34Device.hpp"
-#include "J5Actuator.hpp"
+#include "J5Device.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_can2/rover_can2.hpp"
@@ -33,7 +33,7 @@ void setup(void)
     J34Device j34;
     j34.init();
 
-    J5Actuator j5;
+    J5Device j5;
     j5.init();
 
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);
