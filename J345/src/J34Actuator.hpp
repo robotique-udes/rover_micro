@@ -199,9 +199,6 @@ class J34Actuator
     // ===========================================================================================================================
     PWMGenerators::MCPWMTimer __j34_pwmGeneratorTimer = {1'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0};
     SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
-
-    // ===========================================================================================================================
-    // J34_L Config
     // ===========================================================================================================================
     // Motor
     PWMGenerators::MCPWM __j34L_pwmGen = {PIN_J34_L_PWM, __j34_pwmGeneratorTimer};
