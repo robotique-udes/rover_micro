@@ -100,14 +100,14 @@ class J34Actuator
                 {
                     _j34L.calib(_j34L_requestedCalibPos);
                     _j34R.calib(_j34R_requestedCalibPos);
-                    timerWaitAfterCalib = OneShotTimer<uint64_t, &Time::millis>{WAIT_TIME_AFTER_CALIB_MS};
+                    _timerWaitAfterCalib = OneShotTimer<uint64_t, &Time::millis>{WAIT_TIME_AFTER_CALIB_MS};
                     _currentState = eState::WAIT_ON_CALIB;
                 }
                 break;
             }
 
             case eState::WAIT_ON_CALIB:
-                if (timerWaitAfterCalib.isReady())
+                if (_timerWaitAfterCalib.isReady())
                 {
                     _currentState = eState::RUNNING;
                 }
@@ -192,13 +192,13 @@ class J34Actuator
     float _j34L_requestedCalibPos = 0.0F;
 
     eState _currentState = eState::RUNNING;
-    OneShotTimer<uint64_t, &Time::millis> timerWaitAfterCalib = {0};
+    OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
     // ===========================================================================================================================
     // Generic Objects
     // ===========================================================================================================================
     PWMGenerators::MCPWMTimer __j34_pwmGeneratorTimer = {1'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0};
-    SPIBus _spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
+    SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
 
     // ===========================================================================================================================
     // J34_L Config
@@ -211,7 +211,7 @@ class J34Actuator
     Filters::LowPassEMA __j34L_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34L_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34L_encoder
-        = {_spi, PIN_J34_L_CS, "J34L", __j34L_encFilterPos, __j34L_encFilterSpeed, true};
+        = {__spi, PIN_J34_L_CS, "J34L", __j34L_encFilterPos, __j34L_encFilterSpeed, true};
 
     // Controller
     Controllers::PID __j34L_controllerSpeed = {50.0F, 12.5F, 0.1F, 100.0F, 20'000ULL};
@@ -238,7 +238,7 @@ class J34Actuator
     Filters::LowPassEMA __j34R_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34R_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34R_encoder
-        = {_spi, PIN_J34_R_CS, "J34R", __j34R_encFilterPos, __j34R_encFilterSpeed, false};
+        = {__spi, PIN_J34_R_CS, "J34R", __j34R_encFilterPos, __j34R_encFilterSpeed, false};
 
     // Controller
     Controllers::PID __j34R_controllerSpeed = {50.0F, 12.5F, 0.1F, 100.0F, 20'000ULL};

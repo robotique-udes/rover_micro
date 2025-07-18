@@ -18,6 +18,7 @@ class J5Device
 
     static constexpr float CAN_SEND_FREQUENCY = 20.0F;
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(ROUND(1'000.0F / CAN_SEND_FREQUENCY));
+    static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQUENCY * 2.0F);
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
@@ -48,7 +49,7 @@ class J5Device
         {
             _driver.setCmd(MotorDrivers::MIN_CMD_OPEN_LOOP);
         }
-        else if (!IN_ERROR(targetSpeed_, 0.01F, 0.0F))
+        else if (_canWatchdog.isOk() && !IN_ERROR(targetSpeed_, 0.01F, 0.0F))
         {
             float cmd = MAP(targetSpeed_,
                             MIN_SPEED_RAD_S,
@@ -69,22 +70,23 @@ class J5Device
             armStatusMsg.data().currentPosition = 0.0F;  // No position feedback on joint yet
             armStatusMsg.data().currentSpeed = _driver.getCmd();
 
-            _j5CanDevice.sendMsg(armStatusMsg);
+            _canDevice.sendMsg(armStatusMsg);
         }
     }
 
     JointCanDeviceT& getUnderlyingCanDevice()
     {
-        return _j5CanDevice;
+        return _canDevice;
     }
 
   private:
     void CB_canCmd(const RoverCan2::Msgs::ArmJointCmd& cmd_)
     {
+        _canWatchdog.reset();
         targetSpeed_ = cmd_.getData().targetSpeed;
     }
 
-    JointCanDeviceT _j5CanDevice
+    JointCanDeviceT _canDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
                           RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>(*this, &J5Device::CB_canCmd),
                           RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
@@ -101,6 +103,7 @@ class J5Device
 
     float targetSpeed_ = 0.0F;
     LoopTimer<uint64_t, &Time::micros> _timerCanSend = {CAN_SEND_PERIOD_MS};
+    Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
 };
 
 #endif  // J5ACTUATOR_HPP

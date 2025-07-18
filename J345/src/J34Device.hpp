@@ -8,8 +8,7 @@
 
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
 #include "rover_can2/msgs/arm_joint_status.hpp"
-
-#include "rover_can2/device.hpp"
+#include "rover_can2/rover_can2.hpp"
 
 class J34Device
 {
@@ -18,6 +17,8 @@ class J34Device
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQ);
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
+
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 10.0F;
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J34Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
@@ -51,19 +52,19 @@ class J34Device
 
         if (_pbFwd.isClicked())
         {
-            _j34.setSpeeds(-10.0F, 0.0F);
+            _j34.setSpeeds(-PUSH_BUTTON_SPEED_RAD_S, 0.0F);
         }
         else if (_pbRev.isClicked())
         {
-            _j34.setSpeeds(10.0F, 0.0F);
+            _j34.setSpeeds(PUSH_BUTTON_SPEED_RAD_S, 0.0F);
         }
         else if (_pbRight.isClicked())
         {
-            _j34.setSpeeds(0.0F, 10.0F);
+            _j34.setSpeeds(0.0F, PUSH_BUTTON_SPEED_RAD_S);
         }
         else if (_pbLeft.isClicked())
         {
-            _j34.setSpeeds(0.0F, -10.0F);
+            _j34.setSpeeds(0.0F, -PUSH_BUTTON_SPEED_RAD_S);
         }
         else if (_j3CanWatchdog.isOk() && _j4CanWatchdog.isOk())
         {
