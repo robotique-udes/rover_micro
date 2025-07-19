@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <GNSSManager.hpp>
+#include "GNSSManager.hpp"
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/fix_position.hpp"
 #include "rover_can2/msgs/fix_heading.hpp"
@@ -22,8 +22,7 @@ DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
 
 class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>,
                                          RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>,
-                                         RoverCan2::Publisher<RoverCan2::Msgs::FixInfo>>,
-                public RoverObject<CanGNSS>
+                                         RoverCan2::Publisher<RoverCan2::Msgs::FixInfo>>
 {
   public:
     CanGNSS():
@@ -89,7 +88,7 @@ void setup()
     for (EVER)
     {
         gnss.update();
-        device.update();
+        device._update();
         sGNSSData data = gnss.getData();
 
         device.set(data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
