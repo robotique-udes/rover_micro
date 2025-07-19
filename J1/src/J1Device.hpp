@@ -52,15 +52,15 @@ class J1Device
 
         if (_pbFwd.isClicked())
         {
-            _j1.setSpeeds(-PUSH_BUTTON_SPEED_RAD_S);
+            _j1.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
         }
         else if (_pbRev.isClicked())
         {
-            _j1.setSpeeds(PUSH_BUTTON_SPEED_RAD_S);
+            _j1.setSpeed(PUSH_BUTTON_SPEED_RAD_S);
         }
         else
         {
-            _j1.setSpeeds(0.0F);
+            _j1.setSpeed(0.0F);
         }
     }
 
@@ -77,7 +77,7 @@ class J1Device
         _j1.getPositions(j1Pos);
 
         float j1Speed = 0.0F;
-        _j1.getSpeeds(j1Speed);
+        _j1.getSpeed(j1Speed);
 
         RoverCan2::Msgs::ArmJointStatus j1Status;
         j1Status.data().currentPosition = j1Pos;
@@ -106,18 +106,13 @@ class J1Device
 
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
 
-    PushButton _pbCalib = {PIN_PB_J34_CALIB};
-    PushButton _pbFwd = {PIN_PB_J3_FWD};
-    PushButton _pbRev = {PIN_PB_J3_REV};
+    PushButton _pbCalib = {PIN_PB_CALIB};
+    PushButton _pbFwd = {PIN_PB_FWD};
+    PushButton _pbRev = {PIN_PB_REV};
 
     JointCanDeviceT _j1CanDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_TILT_CONTROLLER,
                           RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J1Device>(*this, &J1Device::CB_J3Cmd),
-                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
-
-    JointCanDeviceT _j4CanDevice
-        = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_ROT_CONTROLLER,
-                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J1Device>(*this, &J1Device::CB_J4Cmd),
                           RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
 
     VALIDATE_CONCEPT(RoverObject, J1Device);

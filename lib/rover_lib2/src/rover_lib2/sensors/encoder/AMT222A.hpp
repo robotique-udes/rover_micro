@@ -120,17 +120,17 @@ namespace Encoders
             }
         }
 
-        bool dataIsValid(void)
+        bool dataIsValid(void) const
         {
             return _dataValidWatchdog.isOk();
         }
 
-        float getPosition(void)
+        float getPosition(void) const
         {
             return CONSTRAIN_TO_CIRCLE(_calibOffset + _currentPosition);
         }
 
-        float getSpeed(void)
+        float getSpeed(void) const
         {
             return _currentSpeed;
         }

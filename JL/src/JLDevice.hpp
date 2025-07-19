@@ -51,9 +51,6 @@ class JLDevice
     PushButton _pbRev = PushButton(PIN_PB_REV);
     PushButton _pbCalib = PushButton(PIN_PB_CALIB);
 
-    // ===========================================================================================================================
-    // Actuator Config
-    // ===========================================================================================================================
     PWMGenerators::MCPWMTimer __pwmGen = {PWM_FREQUENCY, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0};
     PWMGenerators::MCPWM __pwmBridgeA = {PIN_MOTOR_A_IN, __pwmGen};
     IO::DigitalOutput __bridgeAEn = IO::DigitalOutput(PIN_MOTOR_A_EN,
