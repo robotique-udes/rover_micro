@@ -142,17 +142,17 @@ namespace Encoders
             }
         }
 
-        bool dataIsValid(void)
+        bool dataIsValid(void) const
         {
             return _dataValidWatchdog.isOk() && _dataValidNVS;
         }
 
-        float getPosition(void)
+        float getPosition(void) const
         {
             return (_currentPosition + _calibOffset.getValue());
         }
 
-        float getSpeed(void)
+        float getSpeed(void) const
         {
             return _currentSpeed;
         }
