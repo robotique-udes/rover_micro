@@ -1,0 +1,72 @@
+dependencies:
+  espressif/esp-dsp:
+    version: ^1.4.12
+  espressif/esp32-camera:
+    git: https://github.com/espressif/esp32-camera.git
+    require: public
+    rules:
+    - if: target in [esp32, esp32s2, esp32s3, esp32p4]
+    version: master
+  espressif/esp_hosted:
+    rules:
+    - if: target == esp32p4
+    version: ^0.0.25
+  espressif/esp_modem:
+    rules:
+    - if: target in [esp32, esp32s2, esp32s3, esp32h2, esp32p4]
+    version: ^1.1.0
+  espressif/esp_wifi_remote:
+    rules:
+    - if: target == esp32p4
+    version: ^0.4.1
+  espressif/mdns:
+    require: public
+    version: ^1.2.3
+  idf: '>=5.3,<=5.4'
+  joltwallet/littlefs:
+    version: ^1.14.1
+description: Arduino core for ESP32, ESP32-S and ESP32-C series of SoCs
+files:
+  exclude:
+  - docs/
+  - docs/**/*
+  - idf_component_examples/
+  - idf_component_examples/**/*
+  - package/
+  - package/**/*
+  - tests/
+  - tests/**/*
+  - tools/
+  - tools/**/*
+  - variants/**/*
+  - .gitignore
+  - .gitmodules
+  - .readthedocs.yaml
+  - boards.txt
+  - CODE_OF_CONDUCT.md
+  - LICENSE.md
+  - package.json
+  - platform.txt
+  - programmers.txt
+  include:
+  - variants/esp32/**/*
+  - variants/esp32s2/**/*
+  - variants/esp32s3/**/*
+  - variants/esp32c2/**/*
+  - variants/esp32c3/**/*
+  - variants/esp32c6/**/*
+  - variants/esp32h2/**/*
+  - variants/esp32p4/**/*
+license: LGPL-2.1
+tags:
+- arduino
+targets:
+- esp32
+- esp32s2
+- esp32s3
+- esp32c2
+- esp32c3
+- esp32c6
+- esp32h2
+- esp32p4
+url: https://github.com/espressif/arduino-esp32
