@@ -14,7 +14,7 @@
 #include "rover_lib2/controllers/PID.hpp"
 
 DEFINE_LOG_NODE(ActuatorDc, Logger::eNodeState::OFF);
-DEFINE_LOG_NODE(ActuatorDcPlot, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(ActuatorDcPlot, Logger::eNodeState::ON);
 
 namespace Actuators
 {
@@ -93,6 +93,7 @@ namespace Actuators
         void init()
         {
             _motorDriver.init();
+            _motorDriver.setEnabled(true);
 
             if (_pEncoder)
             {
