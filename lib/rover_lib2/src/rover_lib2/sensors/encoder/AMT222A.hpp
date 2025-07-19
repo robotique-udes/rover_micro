@@ -22,7 +22,7 @@ namespace Encoders
      * support one turn and will always return a position value between [0; 2PI[]
      *
      */
-    class AMT222A : public Encoder<AMT222A>
+    class AMT222A
     {
         // Clock speed this low necessary because the ESP-IDF doesn't support adding clean delay between bytes in same
         // transaction... and AMT222X Requires 2.5us between bytes in same transaction.
@@ -63,12 +63,12 @@ namespace Encoders
         {
         }
 
-        void __init(void)
+        void init(void)
         {
             _dtSpeedCalc.restart();
         }
 
-        void __update(void)
+        void update(void)
         {
             if (loopExec.isReady())
             {
@@ -120,22 +120,22 @@ namespace Encoders
             }
         }
 
-        bool _dataIsValid(void)
+        bool dataIsValid(void)
         {
             return _dataValidWatchdog.isOk();
         }
 
-        float _getPosition(void)
+        float getPosition(void)
         {
             return CONSTRAIN_TO_CIRCLE(_calibOffset + _currentPosition);
         }
 
-        float _getSpeed(void)
+        float getSpeed(void)
         {
             return _currentSpeed;
         }
 
-        void _calib(float offset_)
+        void calib(float offset_)
         {
             offset_ = CONSTRAIN_TO_CIRCLE(offset_);
             _calibRequested = true;
@@ -256,6 +256,8 @@ namespace Encoders
         OneShotTimer<uint64_t, &Time::micros> _timerTimingDelay = {0};
 
         bool _reversed;
+
+        VALIDATE_CONCEPT(Encoder, AMT222A);
     };
 
 }  // namespace Encoders
