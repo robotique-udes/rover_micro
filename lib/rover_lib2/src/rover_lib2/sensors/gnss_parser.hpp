@@ -5,7 +5,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
-#include "Arduino.h"
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 
