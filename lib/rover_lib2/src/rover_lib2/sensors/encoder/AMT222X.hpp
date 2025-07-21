@@ -2,6 +2,8 @@
 #define ROVER_LIB2_SENSORS_ENCODER_AMT222X_HPP
 
 #include "rover_lib2/rover_object.hpp"
+#include "rover_lib2/helpers/log_plot.hpp"
+
 #include "rover_lib2/sensors/encoder/encoder.hpp"
 #include "rover_lib2/communication/SPI/SPI_device.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
@@ -120,8 +122,7 @@ namespace Encoders
                         {
                             _turnCount.writeValue(_turnCount.getValue() + 1);
                         }
-                        else if ((_prevEncoderPosition < (0.5F * std::numbers::pi_v<float>))
-                                 && (_encoderPosition > (1.5F * std::numbers::pi_v<float>)))
+                        else if (_lastQuadrant.getValue() == 1 && currentQuadrant == 4)
                         {
                             _turnCount.writeValue(_turnCount.getValue() - 1);
                         }
@@ -234,15 +235,6 @@ namespace Encoders
             float rawCurrentSpeed
                 = (this->getPosition() - _lastPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
             _currentSpeed = _filterSpeed.addValue(rawCurrentSpeed);
-            if (_currentSpeed > 1.0F)
-            {
-                LOG_WARN(Logger::Nodes::ActuatorDc,
-                         "_currentSpeed: %f, this->getPosition(): %f, _lastPosition: %f, _dtSpeedCalc.getTime(): %lu",
-                         _currentSpeed,
-                         this->getPosition(),
-                         _lastPosition,
-                         _dtSpeedCalc.getTime());
-            }
             _dtSpeedCalc.restart();
             _lastPosition = this->getPosition();
 

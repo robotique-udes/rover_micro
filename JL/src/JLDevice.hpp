@@ -8,12 +8,13 @@
 #include "rover_lib2/sensors/push_button.hpp"
 #include "JLEncoder.hpp"
 
-DEFINE_LOG_NODE(JLDevice, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(JLDevice, Logger::eNodeState::ON);
 
 class JLDevice
 {
     static constexpr uint32_t PWM_FREQUENCY = 1'000UL;
-    static constexpr float JOG_SPEED = 0.1F;
+    static constexpr uint32_t CONTROL_LOOP_PERIOD_US = 1'000UL;
+    static constexpr float JOG_SPEED = 0.05F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
 
   public:
@@ -25,7 +26,10 @@ class JLDevice
 
     void update()
     {
-        _actuator.update();
+        if (timerControlLoop.isReady())
+        {
+            _actuator.update();
+        }
 
         if (_pbCalib.isClicked())
         {
@@ -51,6 +55,8 @@ class JLDevice
     PushButton _pbRev = PushButton(PIN_PB_REV);
     PushButton _pbCalib = PushButton(PIN_PB_CALIB);
 
+    LoopTimer<uint64_t, &Time::micros> timerControlLoop{CONTROL_LOOP_PERIOD_US};
+
     // ===========================================================================================================================
     // Actuator Config
     // ===========================================================================================================================
@@ -70,7 +76,7 @@ class JLDevice
 
     Encoders::JL __encoder;
 
-    Controllers::PID __pidSpeed = Controllers::PID(25.0F, 0.0F, 1.0F, 100.0F);
+    Controllers::PID __pidSpeed = Controllers::PID(0.0F, 250.0F, 0.0F, 10'000.0F, 25'000ULL);
 
     Actuators::
         DC<MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>, Encoders::JL, Controllers::None, Controllers::PID>

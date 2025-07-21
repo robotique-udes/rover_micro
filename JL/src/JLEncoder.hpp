@@ -9,7 +9,8 @@ namespace Encoders
 {
     class JL
     {
-        static constexpr float RAD_TO_M = 1.0F;
+        // From mec team: 50.26mm per turn
+        static constexpr float RAD_TO_M = 0.05026F / (2.0F * std::numbers::pi_v<float>);
         static constexpr float M_TO_RAD = 1.0F / RAD_TO_M;
 
       public:
