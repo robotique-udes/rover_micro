@@ -18,7 +18,7 @@ constexpr uint32_t PUBLISH_PERIOD_FAST_MS = 50;
 constexpr uint32_t PUBLISH_PERIOD_SLOW_MS = 1000;
 constexpr uint8_t GNSS_UART_PORT = 2;
 
-DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 
 class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>,
                                          RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>,
@@ -52,7 +52,12 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
         }
     }
 
-    void set(float latitude_, float longitude_, float headingDeg_, int fixQuality_, int satellites_)
+    void set(float latitude_,
+             float longitude_,
+             float headingDeg_,
+             Constants::GGAQuality fixQuality_,
+             Constants::UniHeadingQuality headingQuality_,
+             int satellites_)
     {
         posMsg.data().latitude = latitude_;
         posMsg.data().longitude = longitude_;
@@ -60,6 +65,7 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
         headingMsg.data().headingDeg = headingDeg_;
 
         infoMsg.data().fixQuality = fixQuality_;
+        infoMsg.data().headingQuality = headingQuality_;
         infoMsg.data().satelliteCount = satellites_;
     }
 
@@ -91,21 +97,22 @@ void setup()
         device._update();
         sGNSSData data = gnss.getData();
 
-        device.set(data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.satellites);
+        device.set(data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.headingQuality, data.satellites);
 
         if (data.hasValidFix())
         {
             LOG_INFO(Logger::Nodes::Main,
-                     "Lat: %.6f, Lon: %.6f, Heading: %f deg, Quality: %d, Satellites: %d\n",
+                     "Lat: %.6f, Lon: %.6f, Heading: %f deg, Fix Quality: %d, Heading Quality: %d, Satellites: %d\n",
                      data.latitude,
                      data.longitude,
                      data.headingDeg,
                      data.fixQuality,
+                     data.headingQuality,
                      data.satellites);
         }
         else
         {
-            device.set(0.0f, 0.0f, 0UL, 0UL, 0.0f);
+            device.set(0.0f, 0.0f, 0UL, Constants::GGAQuality::UNKNOWN, Constants::UniHeadingQuality::NO_HEADING, 0.0f);
             LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
         }
 

@@ -1,6 +1,6 @@
 #include "GNSSManager.hpp"
 
-DEFINE_LOG_NODE(GNSS, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(GNSS, Logger::eNodeState::OFF);
 
 constexpr size_t maxLoopCount = 1000UL;
 
@@ -61,7 +61,7 @@ void GNSSManager::parseMSG(char* buffer_, size_t length_)
     if (isGGA)
     {
         GNSSParser::sGGAData GGA;
-        if (GNSSParser::parseGGA(buffer_, GGA))
+        if (GNSSParser::parseGGA(buffer_, GGA, _currentData.headingQuality))
         {
             _currentData.latitude = GGA.latitude;
             _currentData.longitude = GGA.longitude;
@@ -75,6 +75,7 @@ void GNSSManager::parseMSG(char* buffer_, size_t length_)
         if (GNSSParser::parseUniHeading(buffer_, heading))
         {
             _currentData.headingDeg = RAD_TO_DEG_ * _headingFilter.addValue(heading.headingDeg * DEG_TO_RAD_);
+            _currentData.headingQuality = heading.headingQuality;
         }
     }
 }

@@ -31,19 +31,16 @@ namespace GNSSParser
         }
 
         float degMin = atof(nmeaCoord_);
-        int degrees = static_cast<int>(ROUND(degMin / 100.0f));
+        int degrees = static_cast<int>(degMin / 100.0f);
         float minutes = degMin - degrees * 100.0f;
         float decimal = degrees + minutes / 60.0f;
 
         if (direction_ == 'S' || direction_ == 'W')
         {
             decimal *= -1.0f;
-            return decimal;
         }
-        else
-        {
-            return decimal;
-        }
+
+        return decimal;
     }
 
     /**
@@ -51,7 +48,7 @@ namespace GNSSParser
      *
      * @attention Assume rawSentence is a GGA message
      */
-    bool parseGGA(char* rawSentence_, sGGAData& out_)
+    bool parseGGA(char* rawSentence_, sGGAData& out_, Constants::UniHeadingQuality headingQuality_)
     {
         char* tokens[MAX_TOKENS] = {nullptr};
         size_t count = tokenize(rawSentence_, tokens);
@@ -80,7 +77,25 @@ namespace GNSSParser
             }
             if (tokens[6])
             {
-                out_.fixQuality = static_cast<uint8_t>(std::atoi(tokens[6]));
+                // Fix quality compared with uniheading for GPS vs GNSS
+                uint8_t tempQuality = static_cast<uint8_t>(std::atoi(tokens[6]));
+
+                if (tempQuality == 4)
+                {
+                    out_.fixQuality = Constants::GGAQuality::RTK;
+                }
+                else if (tempQuality == 1 && headingQuality_ != Constants::UniHeadingQuality::NO_HEADING)
+                {
+                    out_.fixQuality = Constants::GGAQuality::GNSS;
+                }
+                else if (tempQuality == 1)
+                {
+                    out_.fixQuality = Constants::GGAQuality::GPS;
+                }
+                else
+                {
+                    out_.fixQuality = Constants::GGAQuality::UNKNOWN;
+                }
             }
             if (tokens[7])
             {
@@ -132,6 +147,26 @@ namespace GNSSParser
     {
         char* tokens[MAX_TOKENS] = {nullptr};
         size_t count = tokenize(rawSentence_, tokens);
+
+        if (count > 10 && tokens[10])
+        {
+            if (strcmp(tokens[10], "L1_FLOAT") == 0)
+            {
+                out_.headingQuality = Constants::UniHeadingQuality::UNRELIABLE;
+            }
+            else if (strcmp(tokens[10], "L1_INT") == 0)
+            {
+                out_.headingQuality = Constants::UniHeadingQuality::RELIABLE;
+            }
+            else if (strcmp(tokens[10], "L1_FIXED") == 0)
+            {
+                out_.headingQuality = Constants::UniHeadingQuality::BEST;
+            }
+            else
+            {
+                out_.headingQuality = Constants::UniHeadingQuality::NO_HEADING;
+            }
+        }
 
         if (count > 12 && tokens[12])
         {

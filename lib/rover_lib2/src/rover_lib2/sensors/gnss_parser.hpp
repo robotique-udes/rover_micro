@@ -7,6 +7,7 @@
 #include <cmath>
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/macros.hpp"
+#include "rover_lib2/helpers/constants.hpp"
 
 DEFINE_LOG_NODE(GNSS_PARSER, Logger::eNodeState::ON);
 
@@ -30,30 +31,31 @@ namespace GNSSParser
 
     struct sGGAData
     {
-        char messageID[7] = "";         // GGA protocol header
-        sUTCTime utcTime;               // UTC time (hhmmss.sss)
-        float latitude = 0.0f;          // Latitude (ddmm.mmmm)
-        char nsIndicator = 'N';         // N/S Indicator ('N' or 'S')
-        float longitude = 0.0f;         // Longitude (dddmm.mmmm)
-        char ewIndicator = 'E';         // E/W Indicator ('E' or 'W')
-        uint8_t fixQuality = 0;         // Position Fix Indicator
-        uint8_t satellitesUsed = 0;     // Number of satellites used
-        float hdop = 0.0f;              // Horizontal Dilution of Precision
-        float mslAltitude = 0.0f;       // Mean Sea Level Altitude
-        char altitudeUnits = 'M';       // Altitude units ('M' for meters)
-        float geoidSeparation = 0.0f;   // Geoid separation
-        char geoidUnits = 'M';          // Geoid separation units ('M' for meters)
-        float ageOfDiffCorr = 0.0f;     // Age of differential corrections (seconds)
-        uint16_t diffRefStationID = 0;  // Differential reference station ID
-        char checksum[3] = "";          // Checksum
+        char messageID[7] = "";                                             // GGA protocol header
+        sUTCTime utcTime;                                                   // UTC time (hhmmss.sss)
+        float latitude = 0.0f;                                              // Latitude (ddmm.mmmm)
+        char nsIndicator = 'N';                                             // N/S Indicator ('N' or 'S')
+        float longitude = 0.0f;                                             // Longitude (dddmm.mmmm)
+        char ewIndicator = 'E';                                             // E/W Indicator ('E' or 'W')
+        Constants::GGAQuality fixQuality = Constants::GGAQuality::UNKNOWN;  // Position Fix Indicator
+        uint8_t satellitesUsed = 0;                                         // Number of satellites used
+        float hdop = 0.0f;                                                  // Horizontal Dilution of Precision
+        float mslAltitude = 0.0f;                                           // Mean Sea Level Altitude
+        char altitudeUnits = 'M';                                           // Altitude units ('M' for meters)
+        float geoidSeparation = 0.0f;                                       // Geoid separation
+        char geoidUnits = 'M';                                              // Geoid separation units ('M' for meters)
+        float ageOfDiffCorr = 0.0f;                                         // Age of differential corrections (seconds)
+        uint16_t diffRefStationID = 0;                                      // Differential reference station ID
+        char checksum[3] = "";                                              // Checksum
     };
 
     struct sUniHeadingData  // Pas un message standard jsp c'est quoi les autres champs
     {
         float headingDeg = 0.0f;
+        Constants::UniHeadingQuality headingQuality = Constants::UniHeadingQuality::NO_HEADING;
     };
 
-    bool parseGGA(char* rawSentence_, sGGAData& out_);
+    bool parseGGA(char* rawSentence_, sGGAData& out_, Constants::UniHeadingQuality uhQuality_);
     bool parseUniHeading(char* rawSentence_, sUniHeadingData& out_);
 };  // namespace GNSSParser
 
