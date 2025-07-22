@@ -59,7 +59,7 @@ namespace Constants
     }   // namespace DriveTrain::KeyBinding
 #endif  // defined(__linux__) && defined(ROS)
 
-    enum class GGAQuality : uint8_t
+    enum class eGGAQuality : uint8_t
     {
         UNKNOWN = 0,
         GPS = 1,
@@ -67,7 +67,7 @@ namespace Constants
         RTK = 3,
     };
 
-    enum class UniHeadingQuality : uint8_t
+    enum class eUniHeadingQuality : uint8_t
     {
         NO_HEADING = 0,
         UNRELIABLE = 1,

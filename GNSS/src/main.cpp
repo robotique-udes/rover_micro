@@ -55,8 +55,8 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
     void set(float latitude_,
              float longitude_,
              float headingDeg_,
-             Constants::GGAQuality fixQuality_,
-             Constants::UniHeadingQuality headingQuality_,
+             Constants::eGGAQuality fixQuality_,
+             Constants::eUniHeadingQuality headingQuality_,
              int satellites_)
     {
         posMsg.data().latitude = latitude_;
@@ -112,7 +112,7 @@ void setup()
         }
         else
         {
-            device.set(0.0f, 0.0f, 0UL, Constants::GGAQuality::UNKNOWN, Constants::UniHeadingQuality::NO_HEADING, 0.0f);
+            device.set(0.0f, 0.0f, 0UL, Constants::eGGAQuality::UNKNOWN, Constants::eUniHeadingQuality::NO_HEADING, 0.0f);
             LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
         }
 

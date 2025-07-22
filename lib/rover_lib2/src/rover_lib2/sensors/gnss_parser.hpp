@@ -37,7 +37,7 @@ namespace GNSSParser
         char nsIndicator = 'N';                                             // N/S Indicator ('N' or 'S')
         float longitude = 0.0f;                                             // Longitude (dddmm.mmmm)
         char ewIndicator = 'E';                                             // E/W Indicator ('E' or 'W')
-        Constants::GGAQuality fixQuality = Constants::GGAQuality::UNKNOWN;  // Position Fix Indicator
+        Constants::eGGAQuality fixQuality = Constants::eGGAQuality::UNKNOWN;  // Position Fix Indicator
         uint8_t satellitesUsed = 0;                                         // Number of satellites used
         float hdop = 0.0f;                                                  // Horizontal Dilution of Precision
         float mslAltitude = 0.0f;                                           // Mean Sea Level Altitude
@@ -52,10 +52,10 @@ namespace GNSSParser
     struct sUniHeadingData  // Pas un message standard jsp c'est quoi les autres champs
     {
         float headingDeg = 0.0f;
-        Constants::UniHeadingQuality headingQuality = Constants::UniHeadingQuality::NO_HEADING;
+        Constants::eUniHeadingQuality headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
     };
 
-    bool parseGGA(char* rawSentence_, sGGAData& out_, Constants::UniHeadingQuality uhQuality_);
+    bool parseGGA(char* rawSentence_, sGGAData& out_, Constants::eUniHeadingQuality uhQuality_);
     bool parseUniHeading(char* rawSentence_, sUniHeadingData& out_);
 };  // namespace GNSSParser
 

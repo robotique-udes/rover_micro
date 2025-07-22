@@ -48,7 +48,7 @@ namespace GNSSParser
      *
      * @attention Assume rawSentence is a GGA message
      */
-    bool parseGGA(char* rawSentence_, sGGAData& out_, Constants::UniHeadingQuality headingQuality_)
+    bool parseGGA(char* rawSentence_, sGGAData& out_, Constants::eUniHeadingQuality headingQuality_)
     {
         char* tokens[MAX_TOKENS] = {nullptr};
         size_t count = tokenize(rawSentence_, tokens);
@@ -82,19 +82,19 @@ namespace GNSSParser
 
                 if (tempQuality == 4)
                 {
-                    out_.fixQuality = Constants::GGAQuality::RTK;
+                    out_.fixQuality = Constants::eGGAQuality::RTK;
                 }
-                else if (tempQuality == 1 && headingQuality_ != Constants::UniHeadingQuality::NO_HEADING)
+                else if (tempQuality == 1 && headingQuality_ != Constants::eUniHeadingQuality::NO_HEADING)
                 {
-                    out_.fixQuality = Constants::GGAQuality::GNSS;
+                    out_.fixQuality = Constants::eGGAQuality::GNSS;
                 }
                 else if (tempQuality == 1)
                 {
-                    out_.fixQuality = Constants::GGAQuality::GPS;
+                    out_.fixQuality = Constants::eGGAQuality::GPS;
                 }
                 else
                 {
-                    out_.fixQuality = Constants::GGAQuality::UNKNOWN;
+                    out_.fixQuality = Constants::eGGAQuality::UNKNOWN;
                 }
             }
             if (tokens[7])
@@ -152,19 +152,19 @@ namespace GNSSParser
         {
             if (strcmp(tokens[10], "L1_FLOAT") == 0)
             {
-                out_.headingQuality = Constants::UniHeadingQuality::UNRELIABLE;
+                out_.headingQuality = Constants::eUniHeadingQuality::UNRELIABLE;
             }
             else if (strcmp(tokens[10], "L1_INT") == 0)
             {
-                out_.headingQuality = Constants::UniHeadingQuality::RELIABLE;
+                out_.headingQuality = Constants::eUniHeadingQuality::RELIABLE;
             }
             else if (strcmp(tokens[10], "L1_FIXED") == 0)
             {
-                out_.headingQuality = Constants::UniHeadingQuality::BEST;
+                out_.headingQuality = Constants::eUniHeadingQuality::BEST;
             }
             else
             {
-                out_.headingQuality = Constants::UniHeadingQuality::NO_HEADING;
+                out_.headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
             }
         }
 

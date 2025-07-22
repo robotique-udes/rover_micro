@@ -11,14 +11,14 @@ struct sGNSSData
 {
     float latitude = 0.0f;
     float longitude = 0.0f;
-    Constants::GGAQuality fixQuality = Constants::GGAQuality::UNKNOWN;
+    Constants::eGGAQuality fixQuality = Constants::eGGAQuality::UNKNOWN;
     uint8_t satellites = 0;
     float headingDeg = 0.0f;
-    Constants::UniHeadingQuality headingQuality = Constants::UniHeadingQuality::NO_HEADING;
+    Constants::eUniHeadingQuality headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
 
     inline bool hasValidFix() const
     {
-        return fixQuality != Constants::GGAQuality::UNKNOWN;
+        return fixQuality != Constants::eGGAQuality::UNKNOWN;
     }
 };
 

@@ -23,8 +23,8 @@ namespace RoverCan2::Msgs
       private:
         struct sMsgData
         {
-            Constants::GGAQuality fixQuality;
-            Constants::UniHeadingQuality headingQuality;
+            Constants::eGGAQuality fixQuality;
+            Constants::eUniHeadingQuality headingQuality;
             uint8_t satelliteCount;
         };
 
