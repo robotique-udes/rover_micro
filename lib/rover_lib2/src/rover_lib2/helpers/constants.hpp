@@ -37,7 +37,7 @@ namespace Constants
          */
         bool getNameFromURL(const std::string& url_, std::string& rName_);
 #endif  // defined(__linux__)
-    } // namespace CameraInfo
+    }   // namespace CameraInfo
 
     namespace DriveTrain
     {
@@ -45,7 +45,7 @@ namespace Constants
         constexpr float SPEED_FACTOR_NORMAL = 0.5f;
         constexpr float SPEED_FACTOR_TURBO = 1.0f;
         constexpr float SMALLEST_RADIUS = 0.3f;
-    } // namespace DriveTrain
+    }  // namespace DriveTrain
 
 #if defined(__linux__) && defined(ROS)
     namespace DriveTrain::KeyBinding
@@ -56,7 +56,7 @@ namespace Constants
         constexpr uint8_t MODE_TANK_ANGULAR_INPUT = rover_msgs::msg::Joy::JOYSTICK_RIGHT_SIDE;
         constexpr uint8_t MODE_NORMAL_ENABLE = rover_msgs::msg::Joy::R1;
         constexpr uint8_t MODE_TURBO_ENABLE = rover_msgs::msg::Joy::R2;
-    }  // namespace DriveTrain::KeyBinding
+    }   // namespace DriveTrain::KeyBinding
 #endif  // defined(__linux__) && defined(ROS)
 
     enum class GGAQuality : uint8_t
