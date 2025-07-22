@@ -31,6 +31,9 @@ class J34Actuator
     static constexpr float J4_MAX_JOINT_LIMIT = degToRad(5.0F * 360.0F);
     static_assert(J4_MIN_JOINT_LIMIT <= J4_MAX_JOINT_LIMIT);
 
+    static constexpr float ZERO_ERROR_EPSILON = 0.01F;
+    static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
+
     enum class eState : uint8_t
     {
         RUNNING,
@@ -40,7 +43,6 @@ class J34Actuator
     };
 
   public:
-    J34Actuator() = default;
     void init()
     {
         _j34L.setJointLimit(std::nullopt, std::nullopt);  // Joint limit needs to be managed by differential logic instead
@@ -63,38 +65,6 @@ class J34Actuator
             return;
         }
 
-        switch (_currentState)
-        {
-            case eState::CALIB_REQUESTED:
-                this->setSpeeds(0.0F, 0.0F);
-                _currentState = eState::WAIT_ON_STOP;
-                break;
-            case eState::WAIT_ON_STOP:
-            {
-                float speedJ3 = 1.0F;
-                float speedJ4 = 1.0F;
-                this->getSpeeds(speedJ3, speedJ4);
-
-                if (IN_ERROR(speedJ3, 0.01F, 0.0F) && IN_ERROR(speedJ4, 0.01F, 0.0F))
-                {
-                    _currentState = eState::WAIT_ON_CALIB;
-                }
-            }
-            break;
-
-            case eState::WAIT_ON_CALIB:
-                _j34L.calib(_j34L_requestedCalibPos);
-                _j34R.calib(_j34R_requestedCalibPos);
-                _currentState = eState::RUNNING;
-                delay(500);
-                break;
-
-            case eState::RUNNING:
-                [[fallthrough]];
-            default:
-                break;
-        }
-
         _j34L.update();
         _j34R.update();
 
@@ -104,6 +74,48 @@ class J34Actuator
         _j3CurrentSpeed = (_j34L.getSpeed() + _j34R.getSpeed()) / 2.0F;
         _j4CurrentSpeed = (_j34L.getSpeed() - _j34R.getSpeed()) / 2.0F;
 
+        switch (_currentState)
+        {
+            default:
+                ASSERT_MSG("Shouldn't fall here 0_0");
+                [[fallthrough]];
+            case eState::RUNNING:
+                this->runningUpdateLoop();
+                break;
+
+            case eState::CALIB_REQUESTED:
+                _j34L.setSpeed(0.0F);
+                _j34R.setSpeed(0.0F);
+                _currentState = eState::WAIT_ON_STOP;
+                break;
+
+            case eState::WAIT_ON_STOP:
+            {
+                float speedJ3 = ZERO_ERROR_EPSILON + 1.0F;
+                float speedJ4 = speedJ3;
+                this->getSpeeds(speedJ3, speedJ4);
+
+                if (IN_ERROR(speedJ3, ZERO_ERROR_EPSILON, 0.0F) && IN_ERROR(speedJ4, ZERO_ERROR_EPSILON, 0.0F))
+                {
+                    _j34L.calib(_j34L_requestedCalibPos);
+                    _j34R.calib(_j34R_requestedCalibPos);
+                    _timerWaitAfterCalib = OneShotTimer<uint64_t, &Time::millis>{WAIT_TIME_AFTER_CALIB_MS};
+                    _currentState = eState::WAIT_ON_CALIB;
+                }
+                break;
+            }
+
+            case eState::WAIT_ON_CALIB:
+                if (_timerWaitAfterCalib.isReady())
+                {
+                    _currentState = eState::RUNNING;
+                }
+                break;
+        }
+    }
+
+    void runningUpdateLoop()
+    {
         float speedCmdJ3 = _j3SpeedGoal;
         float speedCmdJ4 = _j4SpeedGoal;
 
@@ -160,10 +172,9 @@ class J34Actuator
 
     void calib(float posJ3_, float posJ4_)
     {
-        _currentState = eState::CALIB_REQUESTED;
-
         _j34R_requestedCalibPos = posJ3_;
         _j34L_requestedCalibPos = posJ4_;
+        _currentState = eState::CALIB_REQUESTED;
     }
 
   private:
@@ -180,15 +191,13 @@ class J34Actuator
     float _j34L_requestedCalibPos = 0.0F;
 
     eState _currentState = eState::RUNNING;
+    OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
     // ===========================================================================================================================
     // Generic Objects
     // ===========================================================================================================================
     PWMGenerators::MCPWMTimer __j34_pwmGeneratorTimer = {1'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0};
-    SPIBus _spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
-
-    // ===========================================================================================================================
-    // J34_L Config
+    SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_SPI_MOSI, PIN_SPI_MISO, PIN_SPI_SCK, 32U);
     // ===========================================================================================================================
     // Motor
     PWMGenerators::MCPWM __j34L_pwmGen = {PIN_J34_L_PWM, __j34_pwmGeneratorTimer};
@@ -198,7 +207,7 @@ class J34Actuator
     Filters::LowPassEMA __j34L_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34L_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34L_encoder
-        = {_spi, PIN_J34_L_CS, "J34L", __j34L_encFilterPos, __j34L_encFilterSpeed, true};
+        = {__spi, PIN_J34_L_CS, "J34L", __j34L_encFilterPos, __j34L_encFilterSpeed, true};
 
     // Controller
     Controllers::PID __j34L_controllerSpeed = {50.0F, 12.5F, 0.1F, 100.0F, 20'000ULL};
@@ -225,7 +234,7 @@ class J34Actuator
     Filters::LowPassEMA __j34R_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34R_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34R_encoder
-        = {_spi, PIN_J34_R_CS, "J34R", __j34R_encFilterPos, __j34R_encFilterSpeed, false};
+        = {__spi, PIN_J34_R_CS, "J34R", __j34R_encFilterPos, __j34R_encFilterSpeed, false};
 
     // Controller
     Controllers::PID __j34R_controllerSpeed = {50.0F, 12.5F, 0.1F, 100.0F, 20'000ULL};

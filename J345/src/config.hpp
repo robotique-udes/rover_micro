@@ -22,6 +22,11 @@
 
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
 
+// CAN
+constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_9;
+constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_5;
+constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_4;
+
 // SPI BUS
 constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_48;
 constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_21;
