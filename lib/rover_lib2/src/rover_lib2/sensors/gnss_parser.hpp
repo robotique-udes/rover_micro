@@ -5,7 +5,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
-#include <string_view>
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/constants.hpp"
@@ -20,8 +19,8 @@ DEFINE_LOG_NODE(GNSS_PARSER, Logger::eNodeState::ON);
  */
 namespace GNSSParser
 {
-    constexpr size_t MAX_FIELDS = 20UL;
-    constexpr size_t MAX_FIELD_LENGTH = 20UL;
+    constexpr size_t MAX_FIELDS = 16UL;
+    constexpr size_t MAX_FIELD_LENGTH = 16UL;
 
     struct sUTCTime
     {
@@ -166,13 +165,14 @@ namespace GNSSParser
                 out_.utcTime.minutes = static_cast<uint8_t>((static_cast<int>(time) % 10000) / 100);
                 out_.utcTime.seconds = fmod(time, 100.0F);
             }
-            if (getField(rawSentence_, commaIndices, field, 2) && getField(rawSentence_, commaIndices, field, 3))
+            std::array<char, 2UL> secondField{}; // Only used to store 1 char (N/S, W/E)
+            if (getField(rawSentence_, commaIndices, field, 2) && getField(rawSentence_, commaIndices, secondField, 3))
             {
-                out_.latitude = convertToDecimalDegrees(field.data(), field[0]);
+                out_.latitude = convertToDecimalDegrees(field.data(), secondField[0]);
             }
-            if (getField(rawSentence_, commaIndices, field, 4) && getField(rawSentence_, commaIndices, field, 5))
+            if (getField(rawSentence_, commaIndices, field, 4) && getField(rawSentence_, commaIndices, secondField, 5))
             {
-                out_.longitude = convertToDecimalDegrees(field.data(), field[0]);
+                out_.longitude = convertToDecimalDegrees(field.data(), secondField[0]);
             }
             if (getField(rawSentence_, commaIndices, field, 6))
             {
