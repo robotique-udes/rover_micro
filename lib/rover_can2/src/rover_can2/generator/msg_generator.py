@@ -57,6 +57,7 @@ def generate_cpp_header(input_file_path):
 
         enum_class_eMsgContentID_members = ""
         struct_sMsgData_members = ""
+        static_asserts = ""
         valid_msg_ids_member = ""
         constructor_init_to_zero = ""
         loadMsg_switch_case_gen = ""
@@ -71,6 +72,7 @@ def generate_cpp_header(input_file_path):
             member_name_capital_snake_case = camel_to_upper_snake(member_name)
             enum_class_eMsgContentID_members += f"{' ' * 12}{member_name_capital_snake_case},\n"
             struct_sMsgData_members += f"{' ' * 12}{member}\n"
+            static_asserts += f"{' ' * 12}static_assert(sizeof({member_name}) <= 4, \"Can messages cannot include field longer than 4 bytes\");\n"
             valid_msg_ids_member += f"eMsgContentID::{member_name_capital_snake_case}, "
             constructor_init_to_zero += f"{' ' * 12}_data.{member_name} = static_cast<decltype(_data.{member_name})>(0);\n"
 
@@ -93,6 +95,7 @@ f"""\
         # Clean up trailing commas and newlines
         enum_class_eMsgContentID_members = enum_class_eMsgContentID_members.rstrip("\n")
         struct_sMsgData_members = struct_sMsgData_members.rstrip("\n")
+        static_asserts = static_asserts.rstrip("\n")
         constructor_init_to_zero = constructor_init_to_zero.rstrip("\n")
         valid_msg_ids_member = valid_msg_ids_member.rstrip(", ")
         loadMsg_switch_case_gen = loadMsg_switch_case_gen.rstrip("\n\n")
@@ -126,6 +129,8 @@ namespace RoverCan2::Msgs
         struct sMsgData
         {{
 {struct_sMsgData_members}
+
+{static_asserts}
         }};
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS

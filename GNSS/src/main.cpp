@@ -1,10 +1,6 @@
 #include <Arduino.h>
 #include "GNSSManager.hpp"
-#include "rover_can2/rover_can2.hpp"
-#include "rover_can2/msgs/fix_position.hpp"
-#include "rover_can2/msgs/fix_heading.hpp"
-#include "rover_can2/msgs/fix_info.hpp"
-#include "rover_lib2/helpers/loop_timer.hpp"
+#include "CanGNSS.hpp"
 
 // Configure UART pins
 constexpr gpio_num_t PIN_UART_TX = GPIO_NUM_47;
@@ -14,68 +10,8 @@ constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_4;
 constexpr gpio_num_t PIN_LED_CAN = GPIO_NUM_2;
 
 constexpr uint32_t UART_BAUD_RATE = 115200UL;
-constexpr uint32_t PUBLISH_PERIOD_FAST_MS = 50UL;
-constexpr uint32_t PUBLISH_PERIOD_SLOW_MS = 1000UL;
-constexpr uint8_t GNSS_UART_PORT = 2U;
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
-
-class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>,
-                                         RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>,
-                                         RoverCan2::Publisher<RoverCan2::Msgs::FixInfo>>
-{
-  public:
-    CanGNSS():
-        RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>,
-                          RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>,
-                          RoverCan2::Publisher<RoverCan2::Msgs::FixInfo>>(RoverCan2::Constant::eDeviceId::GNSS,
-                                                                          RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>(),
-                                                                          RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>(),
-                                                                          RoverCan2::Publisher<RoverCan2::Msgs::FixInfo>()),
-        updateTimerFast(PUBLISH_PERIOD_FAST_MS),
-        updateTimerSlow(PUBLISH_PERIOD_SLOW_MS)
-    {
-    }
-
-    void _init(void) {}
-
-    void _update(void)
-    {
-        if (updateTimerFast.isReady())
-        {
-            this->sendMsg(posMsg);
-            this->sendMsg(headingMsg);
-        }
-        if (updateTimerSlow.isReady())
-        {
-            this->sendMsg(infoMsg);
-        }
-    }
-
-    void set(float latitude_,
-             float longitude_,
-             float headingDeg_,
-             Constants::eGGAQuality fixQuality_,
-             Constants::eUniHeadingQuality headingQuality_,
-             int satellites_)
-    {
-        posMsg.data().latitude = latitude_;
-        posMsg.data().longitude = longitude_;
-
-        headingMsg.data().headingDeg = headingDeg_;
-
-        infoMsg.data().fixQuality = fixQuality_;
-        infoMsg.data().headingQuality = headingQuality_;
-        infoMsg.data().satelliteCount = satellites_;
-    }
-
-  private:
-    RoverCan2::Msgs::FixPosition posMsg;
-    RoverCan2::Msgs::FixHeading headingMsg;
-    RoverCan2::Msgs::FixInfo infoMsg;
-    LoopTimer<uint64_t, Time::millis> updateTimerFast;
-    LoopTimer<uint64_t, Time::millis> updateTimerSlow;
-};
 
 void setup()
 {
@@ -87,9 +23,8 @@ void setup()
     canManager.init();
 
     // Initialize HardwareSerial on UART2
-    HardwareSerial GNSSSerial(2);
-    GNSSManager gnss(GNSSSerial);
-    GNSSSerial.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
+    GNSSManager gnss(Serial2);
+    Serial2.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
 
     for (EVER)
     {
@@ -97,7 +32,7 @@ void setup()
         device._update();
         sGNSSData data = gnss.getData();
 
-        device.set(data.latitude, data.longitude, data.headingDeg, data.fixQuality, data.headingQuality, data.satellites);
+        device.set(data);
 
         if (data.hasValidFix())
         {
@@ -112,7 +47,8 @@ void setup()
         }
         else
         {
-            device.set(0.0F, 0.0F, 0UL, Constants::eGGAQuality::UNKNOWN, Constants::eUniHeadingQuality::NO_HEADING, 0.0F);
+            sGNSSData invalidData;  // set all values to default (zeros everywhere)
+            device.set(invalidData);
             LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
         }
 

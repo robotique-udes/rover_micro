@@ -165,7 +165,7 @@ namespace GNSSParser
                 out_.utcTime.minutes = static_cast<uint8_t>((static_cast<int>(time) % 10000) / 100);
                 out_.utcTime.seconds = fmod(time, 100.0F);
             }
-            std::array<char, 2UL> secondField{}; // Only used to store 1 char (N/S, W/E)
+            std::array<char, MAX_FIELD_LENGTH> secondField{};
             if (getField(rawSentence_, commaIndices, field, 2) && getField(rawSentence_, commaIndices, secondField, 3))
             {
                 out_.latitude = convertToDecimalDegrees(field.data(), secondField[0]);
