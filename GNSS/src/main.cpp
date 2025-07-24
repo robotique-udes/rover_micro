@@ -13,10 +13,10 @@ constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_5;
 constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_4;
 constexpr gpio_num_t PIN_LED_CAN = GPIO_NUM_2;
 
-constexpr uint32_t UART_BAUD_RATE = 115200;
-constexpr uint32_t PUBLISH_PERIOD_FAST_MS = 50;
-constexpr uint32_t PUBLISH_PERIOD_SLOW_MS = 1000;
-constexpr uint8_t GNSS_UART_PORT = 2;
+constexpr uint32_t UART_BAUD_RATE = 115200UL;
+constexpr uint32_t PUBLISH_PERIOD_FAST_MS = 50UL;
+constexpr uint32_t PUBLISH_PERIOD_SLOW_MS = 1000UL;
+constexpr uint8_t GNSS_UART_PORT = 2U;
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 
@@ -112,7 +112,7 @@ void setup()
         }
         else
         {
-            device.set(0.0f, 0.0f, 0UL, Constants::eGGAQuality::UNKNOWN, Constants::eUniHeadingQuality::NO_HEADING, 0.0f);
+            device.set(0.0F, 0.0F, 0UL, Constants::eGGAQuality::UNKNOWN, Constants::eUniHeadingQuality::NO_HEADING, 0.0F);
             LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
         }
 

@@ -2,6 +2,7 @@
 #define ROVER_LIB2_HELPERS_CONSTANTS_HPP
 
 #include <cstdint>
+
 #if defined(__linux__)
 #include <map>
 #include <string>
@@ -61,18 +62,18 @@ namespace Constants
 
     enum class eGGAQuality : uint8_t
     {
-        UNKNOWN = 0,
-        GPS = 1,
-        GNSS = 2,
-        RTK = 3,
+        UNKNOWN = 0U,
+        GPS = 1U,
+        GNSS = 2U,
+        RTK = 3U,
     };
 
     enum class eUniHeadingQuality : uint8_t
     {
-        NO_HEADING = 0,
-        UNRELIABLE = 1,
-        RELIABLE = 2,
-        BEST = 4,
+        NO_HEADING = 0U,
+        UNRELIABLE = 1U,
+        RELIABLE = 2U,
+        BEST = 4U,
     };
 }  // namespace Constants
 

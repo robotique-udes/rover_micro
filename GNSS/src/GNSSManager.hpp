@@ -9,36 +9,32 @@
 
 struct sGNSSData
 {
-    float latitude = 0.0f;
-    float longitude = 0.0f;
+    float latitude = 0.0F;
+    float longitude = 0.0F;
     Constants::eGGAQuality fixQuality = Constants::eGGAQuality::UNKNOWN;
-    uint8_t satellites = 0;
-    float headingDeg = 0.0f;
+    uint8_t satellites = 0U;
+    float headingDeg = 0.0F;
     Constants::eUniHeadingQuality headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
 
-    inline bool hasValidFix() const
-    {
-        return fixQuality != Constants::eGGAQuality::UNKNOWN;
-    }
+    bool hasValidFix() const;
 };
 
 /**
  * @brief
- * @attention Begin must be called on serial
+ * @warning Begin must be called on serial
  *
  */
 class GNSSManager
 {
   private:
-    static constexpr size_t CIRCULAR_WINDOW_SIZE = 10;
-    static constexpr size_t MAX_SENTENCE_LENGTH = 200;
+    static constexpr size_t CIRCULAR_WINDOW_SIZE = 10UL;
+    static constexpr size_t MAX_SENTENCE_LENGTH = 200UL;
 
     Stream& _GNSSSerial;
     sGNSSData _currentData;
     CircularMovingAverage<CIRCULAR_WINDOW_SIZE> _headingFilter;
 
-    char _sentenceBuffer[MAX_SENTENCE_LENGTH] = {'\0'};
-    size_t _buffer_Index;
+    std::array<char, MAX_SENTENCE_LENGTH> _sentenceBuffer{};
 
   public:
     explicit GNSSManager(Stream& serial_);
@@ -47,7 +43,7 @@ class GNSSManager
     float getFilteredHeading(void);
 
   private:
-    void parseMSG(char* buffer, size_t length_);
+    void parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_t length_);
 };
 
 #endif  // GNSS_MANAGER_H

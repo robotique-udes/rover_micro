@@ -1,7 +1,6 @@
 #ifndef ROVER_LIB2_FILTERS_CIRCULAR_MOVING_AVERAGE_HPP
 #define ROVER_LIB2_FILTERS_CIRCULAR_MOVING_AVERAGE_HPP
 
-#include <cmath>
 #include <array>
 
 /**
@@ -15,11 +14,11 @@ template<size_t WINDOW_SIZE>
 class CircularMovingAverage
 {
   private:
-    std::array<float, WINDOW_SIZE> _buffer = {0.0f};
-    uint16_t _index = 0;
-    uint16_t _count = 0;
-    float _sinSum = 0.0f;
-    float _cosSum = 0.0f;
+    std::array<float, WINDOW_SIZE> _buffer = {0.0F};
+    uint16_t _index = 0U;
+    uint16_t _count = 0U;
+    float _sinSum = 0.0F;
+    float _cosSum = 0.0F;
 
   public:
     float addValue(float angleRad_)
@@ -47,15 +46,15 @@ class CircularMovingAverage
 
     float getAverage(void) const
     {
-        if (_count == 0)
+        if (_count == 0U)
         {
-            return 0.0f;
+            return 0.0F;
         }
 
         float avgRad = std::atan2(_sinSum / _count, _cosSum / _count);
-        if (avgRad < 0.0f)
+        if (avgRad < 0.0F)
         {
-            avgRad += 2.0f * static_cast<float>(M_PI);
+            avgRad += 2.0F * std::numbers::pi_v<float>;
         }
         return avgRad;
     }

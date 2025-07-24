@@ -106,9 +106,6 @@ constexpr T CONSTRAIN_TO_CIRCLE(T value_)
     return value_;
 }
 
-constexpr float RAD_TO_DEG_ = 57.295779513;
-constexpr float DEG_TO_RAD_ = 0.017453293;
-
 /**
  * @brief Truncate a floating-point value (remove fractional part).
  */
