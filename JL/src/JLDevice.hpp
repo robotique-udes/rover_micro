@@ -2,11 +2,12 @@
 #define JL_DEVICE_HPP
 
 #include "config.hpp"
-#include "rover_lib2/actuators/dc.hpp"
-#include "rover_lib2/motor_drivers/IFX007T.hpp"
-#include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
-#include "rover_lib2/sensors/push_button.hpp"
 #include "JLEncoder.hpp"
+
+#include <rover_lib2/actuators/dc.hpp>
+#include <rover_lib2/motor_drivers/IFX007T.hpp>
+#include <rover_lib2/actuators/PWM_generators/MCPWM.hpp>
+#include <rover_lib2/sensors/push_button.hpp>
 
 DEFINE_LOG_NODE(JLDevice, Logger::eNodeState::ON);
 class JLDevice
@@ -15,6 +16,8 @@ class JLDevice
     static constexpr uint32_t CONTROL_LOOP_PERIOD_US = 1'000UL;
     static constexpr float JOG_SPEED = 0.04F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
+    static constexpr float CALIB_POSITION = 0.25F;                   // m
+    static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
 
   public:
     void init()
@@ -41,14 +44,14 @@ class JLDevice
             {
                 _actuator.update();
 
-                if (!IN_ERROR(_actuator.getSpeed(), 0.1F, FULL_STOP_SPEED))
+                if (!IN_ERROR(_actuator.getSpeed(), FULL_STOP_SPEED_ERROR_TELORANCE, FULL_STOP_SPEED))
                 {
                     timerStop = OneShotTimer<uint64_t, &Time::millis>(CALIB_STOP_TIME);
                 }
             }
             while (!timerStop.isReady());
 
-            _actuator.calib(0.25F);
+            _actuator.calib(CALIB_POSITION);
         }
 
         if (_pbFwd.isClicked())

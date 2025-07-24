@@ -1,9 +1,9 @@
 #ifndef JLENCODER_HPP
 #define JLENCODER_HPP
 
-#include "rover_lib2/sensors/encoder/encoder.hpp"
-#include "rover_lib2/sensors/encoder/AMT222X.hpp"
-#include "rover_lib2/filters/low_pass_EMA.hpp"
+#include <rover_lib2/filters/low_pass_EMA.hpp>
+#include <rover_lib2/sensors/encoder/AMT222X.hpp>
+#include <rover_lib2/sensors/encoder/encoder.hpp>
 
 namespace Encoders
 {

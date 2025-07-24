@@ -13,8 +13,10 @@
 #include "rover_lib2/storage/NVS_data_handle.hpp"
 #include "rover_lib2/filters/none.hpp"
 
-#include <bit>
+#include <algorithm>
 #include <array>
+#include <bit>
+#include <limits>
 
 DEFINE_LOG_NODE(AMT222X, Logger::eNodeState::OFF);
 DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::OFF);

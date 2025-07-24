@@ -40,7 +40,7 @@ namespace Controllers
                 return _lastcmd;
             }
 
-            if (IN_ERROR(input_, _errorTolerance, target_))
+            if (IN_ERROR(target_, _errorTolerance, 0.0F))
             {
                 return 0.0F;
             }
