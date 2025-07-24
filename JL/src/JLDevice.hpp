@@ -9,12 +9,11 @@
 #include "JLEncoder.hpp"
 
 DEFINE_LOG_NODE(JLDevice, Logger::eNodeState::ON);
-
 class JLDevice
 {
     static constexpr uint32_t PWM_FREQUENCY = 1'000UL;
     static constexpr uint32_t CONTROL_LOOP_PERIOD_US = 1'000UL;
-    static constexpr float JOG_SPEED = 0.05F;
+    static constexpr float JOG_SPEED = 0.04F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
 
   public:
@@ -22,6 +21,7 @@ class JLDevice
     {
         _actuator.init();
         _actuator.setSpeed(FULL_STOP_SPEED);
+        __motorDriver.setMaxVoltage(ALIM_VOLTAGE, MAX_MOTOR_VOLTAGE);
     }
 
     void update()
@@ -33,6 +33,21 @@ class JLDevice
 
         if (_pbCalib.isClicked())
         {
+            _actuator.setSpeed(0.0);
+
+            constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
+            OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
+            do
+            {
+                _actuator.update();
+
+                if (!IN_ERROR(_actuator.getSpeed(), 0.1F, FULL_STOP_SPEED))
+                {
+                    timerStop = OneShotTimer<uint64_t, &Time::millis>(CALIB_STOP_TIME);
+                }
+            }
+            while (!timerStop.isReady());
+
             _actuator.calib(0.25F);
         }
 
@@ -76,7 +91,7 @@ class JLDevice
 
     Encoders::JL __encoder;
 
-    Controllers::PID __pidSpeed = Controllers::PID(0.0F, 250.0F, 0.0F, 10'000.0F, 25'000ULL);
+    Controllers::PID __pidSpeed = Controllers::PID(1'500.0F, 150.0F, 15.0F, 40.0F, 25'000ULL);
 
     Actuators::
         DC<MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>, Encoders::JL, Controllers::None, Controllers::PID>

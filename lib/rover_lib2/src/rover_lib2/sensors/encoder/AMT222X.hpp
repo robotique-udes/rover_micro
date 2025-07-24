@@ -117,23 +117,6 @@ namespace Encoders
                 case eState::READ_POSITION:
                     if (this->readPosition())
                     {
-                        uint8_t currentQuadrant = this->getQuadrant(_encoderPosition);
-                        if (_lastQuadrant.getValue() == 4 && currentQuadrant == 1)
-                        {
-                            _turnCount.writeValue(_turnCount.getValue() + 1);
-                        }
-                        else if (_lastQuadrant.getValue() == 1 && currentQuadrant == 4)
-                        {
-                            _turnCount.writeValue(_turnCount.getValue() - 1);
-                        }
-                        _lastQuadrant.writeValue(currentQuadrant);
-
-                        float rawCurrentPosition = _encoderPosition + std::numbers::pi_v<float> * 2.0F * _turnCount.getValue();
-                        _currentPosition = _filterPos.addValue(rawCurrentPosition);
-
-                        LOG_PLOT(Logger::Nodes::AMT222XPlot, rawCurrentPosition)
-                        LOG_PLOT(Logger::Nodes::AMT222XPlot, _currentPosition)
-
                         _currentState = eState::ASK_POSITION;
                     }
                     break;
@@ -205,7 +188,7 @@ namespace Encoders
 
             if (!this->validateChecksum(std::array<uint8_t, 2U>{data[0], data[1]}))
             {
-                return true;
+                return false;
             }
 
             uint16_t newPos = data[0] << 8 | data[1];
@@ -231,13 +214,46 @@ namespace Encoders
 
             _dataValidWatchdog.reset();
 
-            // Filter
+            uint8_t currentQuadrant = this->getQuadrant(_encoderPosition);
+            if (_lastQuadrant.getValue() == 4 && currentQuadrant == 1)
+            {
+                _turnCount.writeValue(_turnCount.getValue() + 1);
+            }
+            else if (_lastQuadrant.getValue() == 1 && currentQuadrant == 4)
+            {
+                _turnCount.writeValue(_turnCount.getValue() - 1);
+            }
+            _lastQuadrant.writeValue(currentQuadrant);
+
+            float rawCurrentPosition = _encoderPosition + std::numbers::pi_v<float> * 2.0F * _turnCount.getValue();
+
+            if (_isFirstRead)
+            {
+                _filterPos.reset(rawCurrentPosition);
+                _currentPosition = rawCurrentPosition;
+                _lastPosition = this->getPosition();
+            }
+            else
+            {
+                _currentPosition = _filterPos.addValue(rawCurrentPosition);
+            }
+
             float rawCurrentSpeed
                 = (this->getPosition() - _lastPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
-            _currentSpeed = _filterSpeed.addValue(rawCurrentSpeed);
+
+            if (_isFirstRead)
+            {
+                _filterSpeed.reset(rawCurrentSpeed);
+            }
+            else
+            {
+                _currentSpeed = _filterSpeed.addValue(rawCurrentSpeed);
+            }
+
             _dtSpeedCalc.restart();
             _lastPosition = this->getPosition();
 
+            _isFirstRead = false;
             return true;
         }
 
@@ -287,6 +303,8 @@ namespace Encoders
         SPIDevice<TRANSACTION_MAX_LENGTH> _spiDevice;
         eState _currentState = eState::ASK_POSITION;
         LoopTimer<uint64_t, &Time::micros> loopExec = {LOOP_PERIOD_US};
+
+        bool _isFirstRead = true;
 
         float _encoderPosition = 0.0F;  // Constrained around 2*PI
         float _prevEncoderPosition = _encoderPosition;

@@ -47,7 +47,7 @@ namespace Encoders
       private:
         SPIBus __spiBus = SPIBus(spi_host_device_t::SPI2_HOST, PIN_ENC_MOSI, PIN_ENC_MISO, PIN_ENC_CLK, 32U);
         Filters::LowPassEMA __lowPassPos = Filters::LowPassEMA(0.6);
-        Filters::LowPassEMA __lowPassSpeed = Filters::LowPassEMA(0.1);
+        Filters::LowPassEMA __lowPassSpeed = Filters::LowPassEMA(0.05);
         Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
             = {__spiBus, PIN_ENC_CS, "JL", __lowPassPos, __lowPassSpeed, true};
 
