@@ -22,7 +22,6 @@ void setup(void)
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);
     RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &canLed);
     RoverCan2::ManagerSlave canManager(canDriver, jL.getCanDevice());
-    RoverCan2::ManagerSlave canManager(canDriver);
     canManager.init();
 
     LOG_INFO(Logger::Nodes::Main, "JL Init done, starting main loop!");

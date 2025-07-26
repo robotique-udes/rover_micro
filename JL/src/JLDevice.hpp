@@ -30,7 +30,7 @@ class JLDevice
 
     using CanDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
                                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, JLDevice>>;
-  
+
   public:
     void init()
     {
@@ -51,9 +51,6 @@ class JLDevice
             _actuator.setSpeed(FULL_STOP_SPEED);
 
             constexpr uint64_t CALIB_STOP_TIME = 1'000ULL;
-            _actuator.setSpeed(0.0);
-
-            constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
             OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
             do
             {
@@ -108,9 +105,6 @@ class JLDevice
         _cmdWatchdog.reset();
     }
 
-    }
-
-  private:
     PushButton _pbFwd = PushButton(PIN_PB_FWD);
     PushButton _pbRev = PushButton(PIN_PB_REV);
     PushButton _pbCalib = PushButton(PIN_PB_CALIB);
