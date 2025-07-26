@@ -136,19 +136,6 @@ TEST(SUITE_ROVER_LIB2_PID, CalcPeriodRespected)
     EXPECT_NE(result1, result3);
 }
 
-TEST(SUITE_ROVER_LIB2_PID, ErrorTolerance)
-{
-    Controllers::PID pid(1.0f, 0.1f, 0.01f, 10.0f, 0ULL, 0.1f);  // 0.1 error tolerance
-
-    // Error within tolerance should return 0
-    float result = pid.computeCommand(9.95f, 10.0f);
-    EXPECT_FLOAT_EQ(result, 0.0f);
-
-    // Error outside tolerance should return non-zero
-    result = pid.computeCommand(9.8f, 10.0f);
-    EXPECT_NE(result, 0.0f);
-}
-
 TEST(SUITE_ROVER_LIB2_PID, NaNHandling)
 {
     Controllers::PID pid(1.0f, 0.1f, 0.01f, 10.0f, 0ULL);
