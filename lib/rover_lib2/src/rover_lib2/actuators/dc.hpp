@@ -242,7 +242,7 @@ namespace Actuators
                              this->getSpeed(),
                              cmd);
 
-                    LOG_PLOT(Logger::Nodes::ActuatorDcPlot, _goalSpeed, this->getSpeed(), cmd);
+                    LOG_PLOT(Logger::Nodes::ActuatorDcPlot, _goalSpeed, cmd, this->getSpeed(), this->getPosition());
                     break;
                 }
 

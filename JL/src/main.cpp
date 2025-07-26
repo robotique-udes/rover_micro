@@ -1,10 +1,10 @@
+#include "config.hpp"
+#include "JLDevice.hpp"
+
 #include <Arduino.h>
 #include <rover_lib2/LED/led_blinker.hpp>
-
-#include "config.hpp"
-#include "rover_lib2/helpers/loop_timer.hpp"
-#include "rover_can2/rover_can2.hpp"
-#include "JLDevice.hpp"
+#include <rover_lib2/helpers/loop_timer.hpp>
+#include <rover_can2/rover_can2.hpp>
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::ON);

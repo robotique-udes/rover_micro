@@ -3,6 +3,7 @@
 
 #include <rover_lib2/rover_object.hpp>
 #include <rover_lib2/helpers/macros.hpp>
+#include <rover_lib2/helpers/assert.hpp>
 
 #include <concepts>
 
