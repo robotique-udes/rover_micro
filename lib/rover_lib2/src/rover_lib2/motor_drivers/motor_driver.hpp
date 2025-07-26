@@ -9,6 +9,9 @@
 
 namespace MotorDrivers
 {
+    constexpr float MIN_CMD_OPEN_LOOP = -100.0F;
+    constexpr float MAX_CMD_OPEN_LOOP = 100.0F;
+    static_assert(MIN_CMD_OPEN_LOOP <= MAX_CMD_OPEN_LOOP);
 
     enum class eBrakeMode : uint8_t
     {
@@ -39,6 +42,10 @@ namespace MotorDrivers
         { impl_.setBrakeMode(eBrakeMode{} /*mode_*/) } -> std::same_as<void>;
 
         { std::as_const(impl_).getBrakeMode() } -> std::same_as<eBrakeMode>;
+
+        { impl_.setMaxCmd(float{} /*cmd_*/) } -> std::same_as<void>;
+
+        { impl_.setMaxVoltage(float{} /*alim_*/, float{} /*max_*/) } -> std::same_as<void>;
         // clang-format on
     };
 
