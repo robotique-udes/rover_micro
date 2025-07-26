@@ -156,6 +156,7 @@ namespace Actuators
                 return 0.0F;
             }
 
+            // LOG_DEBUG(Logger::Nodes::ActuatorDc, "Position: %.3f", _pEncoder->getPosition());
             return _pEncoder->getPosition();
         }
 
@@ -205,7 +206,7 @@ namespace Actuators
       private:
         void speedModeUpdate(void)
         {
-            LOG_DEBUG(Logger::Nodes::ActuatorDc, "In Speed Mode update");
+            // LOG_DEBUG(Logger::Nodes::ActuatorDc, "In Speed Mode update");
             switch (_feedbackType)
             {
                 case eFeedbackType::OPEN_LOOP:
@@ -215,7 +216,7 @@ namespace Actuators
 
                 case eFeedbackType::CLOSE_LOOP:
                 {
-                    LOG_DEBUG(Logger::Nodes::ActuatorDc, "In closed loop mode");
+                    // LOG_DEBUG(Logger::Nodes::ActuatorDc, "In closed loop mode");
                     if (!_pControllerSpeed || !_pEncoder)
                     {
                         _errorMode = true;
@@ -241,7 +242,7 @@ namespace Actuators
                              this->getSpeed(),
                              cmd);
 
-                    LOG_PLOT(Logger::Nodes::ActuatorDcPlot, _goalSpeed, this->getSpeed());
+                    LOG_PLOT(Logger::Nodes::ActuatorDcPlot, _goalSpeed, this->getSpeed(), cmd);
                     break;
                 }
 

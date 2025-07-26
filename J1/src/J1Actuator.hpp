@@ -13,20 +13,21 @@
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_lib2/helpers/time.hpp"
+#include "rover_lib2/filters/none.hpp"
 
 #include <algorithm>
 
-DEFINE_LOG_NODE(J1Actuator, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(J1Actuator, Logger::eNodeState::ON);
 
 class J1Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
-    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.7F;
+    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.3F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J1_MIN_JOINT_LIMIT = degToRad(-40.0F);
-    static constexpr float J1_MAX_JOINT_LIMIT = degToRad(40.0F);
+    static constexpr float J1_MIN_JOINT_LIMIT = degToRad(-360.0F);
+    static constexpr float J1_MAX_JOINT_LIMIT = degToRad(360.0F);
     static_assert(J1_MIN_JOINT_LIMIT <= J1_MAX_JOINT_LIMIT);
 
     static constexpr float ZERO_ERROR_EPSILON = 0.01F;
@@ -60,10 +61,6 @@ class J1Actuator
 
         _j1.update();
 
-        _j1CurrentPosition = _j1.getPosition();
-
-        _j1CurrentSpeed = _j1.getSpeed();
-
         switch (_currentState)
         {
             default:
@@ -95,19 +92,13 @@ class J1Actuator
     {
         float speedCmdJ1 = _j1SpeedGoal;
 
-        if (_j1CurrentPosition <= J1_MIN_JOINT_LIMIT)
+        if (_j1.getPosition() <= J1_MIN_JOINT_LIMIT)
         {
             speedCmdJ1 = std::clamp(speedCmdJ1, 0.0F, MAX_MOTOR_SPEED_RAD_S);
         }
-        else if (_j1CurrentPosition >= J1_MAX_JOINT_LIMIT)
+        else if (_j1.getPosition() >= J1_MAX_JOINT_LIMIT)
         {
             speedCmdJ1 = std::clamp(speedCmdJ1, -MAX_MOTOR_SPEED_RAD_S, 0.0F);
-        }
-
-        if (speedCmdJ1 > MAX_MOTOR_SPEED_RAD_S)
-        {
-            float scaleFactor = MAX_MOTOR_SPEED_RAD_S / speedCmdJ1;
-            speedCmdJ1 *= scaleFactor;
         }
 
         _j1.setSpeed(speedCmdJ1);
@@ -146,6 +137,9 @@ class J1Actuator
     eState _currentState = eState::RUNNING;
     OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
+    Filters::LowPassEMA __filterJ1Speed = {0.1F, 0.0F};
+    Filters::LowPassEMA __filterJ1Position = {0.1F, 0.0F};
+
     PWMGenerators::MCPWMTimer __j1_pwmGeneratorTimer = {1'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0};
     SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_ENC_MOSI, PIN_ENC_MISO, PIN_ENC_CLK, 32U);
     // ===========================================================================================================================
@@ -162,18 +156,24 @@ class J1Actuator
                                                       gpio_pull_mode_t::GPIO_PULLDOWN_ONLY);
 
     MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM> __motorDriver
-        = {__bridgeAEn, __pwmBridgeA, __bridgeBEn, __pwmBridgeB, false};
+        = {__bridgeAEn, __pwmBridgeA, __bridgeBEn, __pwmBridgeB, true};
 
     // Encoder
-    Encoders::AMT222A __j1_encoder = {__spi, PIN_ENC_CS, false};
+    Encoders::AMT222A<Filters::None, Filters::None> __j1_encoder = {__spi, PIN_ENC_CS, false};
 
     // Controller
-    Controllers::PID __j1_controllerSpeed = {50.0F, 12.5F, 0.1F, 100.0F, 20'000ULL};
+    Controllers::PID __j1_controllerSpeed = {500.0F, 0.0F, 0.0F, 100.0F, 10'000ULL};
 
-    Actuators::
-        DC<MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>, Encoders::AMT222A, Controllers::None, Controllers::PID>
-            _j1
-        = {Actuators::eControlType::SPEED, Actuators::eFeedbackType::CLOSE_LOOP, __motorDriver, &__j1_encoder, nullptr, &__j1_controllerSpeed};
+    Actuators::DC<MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>,
+                  Encoders::AMT222A<Filters::None, Filters::None>,
+                  Controllers::None,
+                  Controllers::PID>
+        _j1 = {Actuators::eControlType::SPEED,
+               Actuators::eFeedbackType::CLOSE_LOOP,
+               __motorDriver,
+               &__j1_encoder,
+               nullptr,
+               &__j1_controllerSpeed};
 };
 
 #endif  // J1_HPP

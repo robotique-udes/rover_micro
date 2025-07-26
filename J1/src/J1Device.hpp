@@ -18,7 +18,7 @@ class J1Device
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 10.0F;
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.1F;
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J1Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
@@ -52,11 +52,12 @@ class J1Device
 
         if (_pbFwd.isClicked())
         {
-            _j1.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
+            _j1.setSpeed(PUSH_BUTTON_SPEED_RAD_S);
         }
         else if (_pbRev.isClicked())
         {
-            _j1.setSpeed(PUSH_BUTTON_SPEED_RAD_S);
+            LOG_DEBUG(Logger::Nodes::J1Actuator, "Push button reverse clicked");
+            _j1.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
         }
         else
         {

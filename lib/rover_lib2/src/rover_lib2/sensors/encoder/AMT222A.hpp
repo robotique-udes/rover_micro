@@ -8,11 +8,14 @@
 #include "rover_lib2/helpers/watchdog.hpp"
 #include "rover_lib2/helpers/one_shot_timer.hpp"
 #include "rover_lib2/helpers/macros.hpp"
+#include "rover_lib2/filters/none.hpp"
 
 #include <bit>
 #include <array>
 
-DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::ON);
+
+// TODO reset on first read (check in ATM222X) Also apply to speed filter
 
 namespace Encoders
 {
@@ -22,6 +25,7 @@ namespace Encoders
      * support one turn and will always return a position value between [0; 2PI[]
      *
      */
+    template<Filters::Filter FilterPosT = Filters::None, Filters::Filter FilterSpeedT = Filters::None>
     class AMT222A
     {
         // Clock speed this low necessary because the ESP-IDF doesn't support adding clean delay between bytes in same
@@ -57,8 +61,14 @@ namespace Encoders
         };
 
       public:
-        AMT222A(SPIBus& spiBus_, gpio_num_t pinCS_, bool reversed_ = false):
+        AMT222A(SPIBus& spiBus_,
+                gpio_num_t pinCS_,
+                bool reversed_ = false,
+                FilterPosT posFilter_ = Filters::None(),
+                FilterSpeedT speedFilter_ = Filters::None()):
             _spiDevice(spiBus_, pinCS_, SPI_CLOCK_SPEED_HZ, 3U, 3U, SPIDeviceT::eSPIMode::MODE_0),
+            _filterPos(posFilter_),
+            _filterSpeed(speedFilter_),
             _reversed(reversed_)
         {
         }
@@ -115,6 +125,10 @@ namespace Encoders
                             _calibRequested = false;
                             _currentState = eState::READY;
                         }
+                        break;
+                    default:
+                        ASSERT_MSG("Shouldn't fall here, implementation error");
+                        _currentState = eState::READY; // TODO Set case failure
                         break;
                 }
             }
@@ -185,6 +199,9 @@ namespace Encoders
                     return true;
                 case SPIDeviceT::eReturnCode::TRANSMISSION_DONE_SUCCESS:
                     break;
+                default:
+                    ASSERT_MSG("Shouldn't fall here, implementation error");
+                    return false;
             }
 
             if (!this->validateChecksum(std::array<uint8_t, 2U>{data[0], data[1]}))
@@ -196,31 +213,56 @@ namespace Encoders
             newPos &= VALID_DATA_BIT_MASK;
             newPos >>= 2;
 
+            float currentPosTemp = 0.0F;
+
             if (_reversed)
             {
-                _currentPosition = MAP(static_cast<float>(newPos),
-                                       0.0F,
-                                       static_cast<float>((1U << 12) - 1U),
-                                       0.0F,
-                                       ((2.0F * std::numbers::pi_v<float>)-0.000'001F));
+                currentPosTemp = MAP(static_cast<float>(newPos),
+                                     0.0F,
+                                     static_cast<float>((1U << 12) - 1U),
+                                     0.0F,
+                                     ((2.0F * std::numbers::pi_v<float>)-0.000'001F));
             }
             else
             {
-                _currentPosition = MAP(static_cast<float>(newPos),
-                                       0.0F,
-                                       static_cast<float>((1U << 12) - 1U),
-                                       ((2.0F * std::numbers::pi_v<float>)-0.000'001F),
-                                       0.0F);
+                currentPosTemp = MAP(static_cast<float>(newPos),
+                                     0.0F,
+                                     static_cast<float>((1U << 12) - 1U),
+                                     ((2.0F * std::numbers::pi_v<float>)-0.000'001F),
+                                     0.0F);
+            }
+
+            if (_isFirstRead)
+            {
+                _filterPos.reset(currentPosTemp);
+                _currentPosition = currentPosTemp;
+                _lastPosition = _currentPosition;
+            }
+            else
+            {
+                _currentPosition = _filterPos.addValue(currentPosTemp);
             }
 
             _dataValidWatchdog.reset();
 
             if (_dtSpeedCalc.getTime() >= MIN_TIME_BETWEEN_SPEED_CALC_US)
             {
-                _currentSpeed = (_currentPosition - _lastPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
+                float currentSpeedTemp
+                    = (_currentPosition - _lastPosition) * (1'000'000.0F / static_cast<float>(_dtSpeedCalc.getTime()));
+                if (_isFirstRead)
+                {
+                    _filterSpeed.reset(currentSpeedTemp);
+                }
+                else
+                {
+                    _currentSpeed = _filterSpeed.addValue(currentSpeedTemp);
+                }
+
                 _dtSpeedCalc.restart();
                 _lastPosition = _currentPosition;
             }
+
+            _isFirstRead = false;
 
             return true;
         }
@@ -247,10 +289,15 @@ namespace Encoders
         LoopTimer<uint64_t, &Time::micros> loopExec = {LOOP_PERIOD_US};
 
         bool _calibRequested = false;
+        bool _isFirstRead = true;
         float _calibOffset = 0.0F;
         float _currentPosition = 0.0F;
         float _lastPosition = 0.0F;
         float _currentSpeed = 0.0F;
+
+        FilterPosT _filterPos;
+        FilterSpeedT _filterSpeed;
+
         Watchdog<uint64_t, &Time::micros> _dataValidWatchdog = {WATCHDOG_DATA_VALID_PERIOD};
         Chrono<uint64_t, &Time::micros> _dtSpeedCalc;
         OneShotTimer<uint64_t, &Time::micros> _timerTimingDelay = {0};
