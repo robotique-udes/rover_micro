@@ -15,13 +15,13 @@
 // ===============================================================================================================================
 #define PCB_ROVER_JL_REV0
 
-constexpr float ALIM_VOLTAGE = 25.2F;
-constexpr float MAX_MOTOR_VOLTAGE = 12.0F;
-
 // ===============================================================================================================================
 // PCB Specific - Only change after pcb revisions
 // ===============================================================================================================================
 #if defined(PCB_ROVER_JL_REV0)
+
+constexpr float ALIM_VOLTAGE = 25.2F;
+constexpr float MAX_MOTOR_VOLTAGE = 18.0F;
 
 constexpr gpio_num_t PIN_MOTOR_A_IN = GPIO_NUM_1;
 constexpr gpio_num_t PIN_MOTOR_A_EN = GPIO_NUM_2;

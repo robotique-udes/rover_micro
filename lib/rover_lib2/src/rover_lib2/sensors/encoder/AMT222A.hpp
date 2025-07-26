@@ -151,9 +151,13 @@ namespace Encoders
 
         void calib(float offset_)
         {
+            LOG_DEBUG(Logger::Nodes::AMT222A, "Calibration requested with offset: %f", offset_);
             offset_ = CONSTRAIN_TO_CIRCLE(offset_);
+
+            float calibOffset = offset_ - _currentPosition;
+
             _calibRequested = true;
-            _calibOffset = offset_;
+            _calibOffset = calibOffset;
         }
 
       private:

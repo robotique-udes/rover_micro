@@ -36,7 +36,7 @@ class JLDevice
 
         if (_pbCalib.isClicked())
         {
-            _actuator.setSpeed(0.0);
+            _actuator.setSpeed(FULL_STOP_SPEED);
 
             constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
             OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);

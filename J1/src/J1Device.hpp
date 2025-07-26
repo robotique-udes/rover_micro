@@ -18,7 +18,11 @@ class J1Device
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.1F;
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.17F;
+    static constexpr float FULL_STOP_SPEED = 0.0F;
+    static constexpr float CALIB_POSITION = 0.25F;
+
+    static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J1Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
@@ -29,6 +33,7 @@ class J1Device
     void init()
     {
         _j1.init();
+        _j1.setSpeed(FULL_STOP_SPEED);
     }
 
     void update()
@@ -47,7 +52,22 @@ class J1Device
 
         if (_pbCalib.isClicked())
         {
-            _j1.calib(0.0F);
+            _j1.setSpeed(FULL_STOP_SPEED);
+
+            constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
+            OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
+            do
+            {
+                _j1.update();
+
+                if (!IN_ERROR(_j1.getSpeed(), FULL_STOP_SPEED_ERROR_TELORANCE, FULL_STOP_SPEED))
+                {
+                    timerStop = OneShotTimer<uint64_t, &Time::millis>(CALIB_STOP_TIME);
+                }
+            }
+            while (!timerStop.isReady());
+
+            _j1.calib(CALIB_POSITION);
         }
 
         if (_pbFwd.isClicked())
@@ -61,7 +81,7 @@ class J1Device
         }
         else
         {
-            _j1.setSpeed(0.0F);
+            _j1.setSpeed(FULL_STOP_SPEED);
         }
     }
 
@@ -70,15 +90,14 @@ class J1Device
         return _j1CanDevice;
     }
 
-
   private:
     void sendCanMsgs()
     {
         float j1Pos = 0.0F;
-        _j1.getPositions(j1Pos);
+        _j1.getPositions();
 
         float j1Speed = 0.0F;
-        _j1.getSpeed(j1Speed);
+        _j1.getSpeed();
 
         RoverCan2::Msgs::ArmJointStatus j1Status;
         j1Status.data().currentPosition = j1Pos;

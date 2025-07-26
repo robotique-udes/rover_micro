@@ -17,14 +17,15 @@
 
 #include <algorithm>
 
-DEFINE_LOG_NODE(J1Actuator, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(J1Actuator, Logger::eNodeState::OFF);
 
 class J1Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
-    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.3F;
+    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.17F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
+    static constexpr float RAD_TO_M = 0.05026F / (2.0F * std::numbers::pi_v<float>);
 
     static constexpr float J1_MIN_JOINT_LIMIT = degToRad(-360.0F);
     static constexpr float J1_MAX_JOINT_LIMIT = degToRad(360.0F);
@@ -50,6 +51,8 @@ class J1Actuator
         _j1.setMaxSpeed(MAX_MOTOR_SPEED_RAD_S);
 
         _j1.init();
+
+        __motorDriver.setMaxVoltage(ALIM_VOLTAGE, MAX_MOTOR_VOLTAGE);
     }
 
     void update()
@@ -61,6 +64,7 @@ class J1Actuator
 
         _j1.update();
 
+        // TODO redo switch
         switch (_currentState)
         {
             default:
@@ -68,22 +72,6 @@ class J1Actuator
                 [[fallthrough]];
             case eState::RUNNING:
                 this->runningUpdateLoop();
-                break;
-
-            case eState::CALIB_REQUESTED:
-                _j1.setSpeed(0.0F);
-                _j1.calib(_j1_requestedCalibPos);
-
-                _timerWaitAfterCalib = OneShotTimer<uint64_t, &Time::millis>{WAIT_TIME_AFTER_CALIB_MS};
-
-                _currentState = eState::WAIT_ON_CALIB;
-                break;
-
-            case eState::WAIT_ON_CALIB:
-                if (_timerWaitAfterCalib.isReady())
-                {
-                    _currentState = eState::RUNNING;
-                }
                 break;
         }
     }
@@ -109,20 +97,19 @@ class J1Actuator
         _j1SpeedGoal = speedJ1_;
     }
 
-    void getSpeed(float& speedJ1_) const
+    float getSpeed() const
     {
-        speedJ1_ = _j1CurrentSpeed;
+        return __j1_encoder.getSpeed() * RAD_TO_M;
     }
 
-    void getPositions(float& posJ1_) const
+    float getPositions(void) const
     {
-        posJ1_ = _j1CurrentPosition;
+        return __j1_encoder.getPosition() * RAD_TO_M;
     }
 
     void calib(float posJ1_)
     {
-        _j1_requestedCalibPos = posJ1_;
-        _currentState = eState::CALIB_REQUESTED;
+        __j1_encoder.calib(posJ1_ * std::numbers::pi_v<float>);
     }
 
   private:
@@ -131,8 +118,6 @@ class J1Actuator
     float _j1SpeedGoal = 0.0F;
     float _j1CurrentPosition = 0.0F;
     float _j1CurrentSpeed = 0.0F;
-
-    float _j1_requestedCalibPos = 0.0F;
 
     eState _currentState = eState::RUNNING;
     OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
@@ -162,7 +147,7 @@ class J1Actuator
     Encoders::AMT222A<Filters::None, Filters::None> __j1_encoder = {__spi, PIN_ENC_CS, false};
 
     // Controller
-    Controllers::PID __j1_controllerSpeed = {500.0F, 0.0F, 0.0F, 100.0F, 10'000ULL};
+    Controllers::PID __j1_controllerSpeed = {175.0F, 0.0F, 0.0F, 100.0F, 25'000ULL};
 
     Actuators::DC<MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>,
                   Encoders::AMT222A<Filters::None, Filters::None>,
