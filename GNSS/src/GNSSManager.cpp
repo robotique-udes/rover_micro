@@ -1,6 +1,6 @@
 #include "GNSSManager.hpp"
 
-DEFINE_LOG_NODE(GNSS, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(GNSS, Logger::eNodeState::OFF);
 
 constexpr size_t maxLoopCount = 1000UL;
 
@@ -16,7 +16,6 @@ GNSSManager::GNSSManager(Stream& serial_):
 
 void GNSSManager::update(void)
 {
-    LOG_DEBUG(Logger::Nodes::GNSS, "dick");
     for (size_t i = 0UL; i < maxLoopCount && _GNSSSerial.available(); ++i)
     {
         int c = _GNSSSerial.read();
@@ -25,29 +24,15 @@ void GNSSManager::update(void)
             continue;
         }
 
-        // Check for invalid characters that could cause issues
-        if (c < 0x20 && c != '\r' && c != '\n') {
-            // Control character (except CR/LF) - skip it
-            LOG_DEBUG(Logger::Nodes::GNSS, "Skipping control char: 0x%02X", (unsigned char)c);
-            continue;
-        }
-        
-        if (c > 0x7F) {
-            // Non-ASCII character - likely corruption
-            LOG_WARN(Logger::Nodes::GNSS, "Invalid char received: 0x%02X at buffer pos %zu", (unsigned char)c, _bufferIndex);
-            // Reset buffer to resync
-            _bufferIndex = 0;
-            continue;
-        }
         char ch = static_cast<char>(c);
-        LOG_DEBUG(Logger::Nodes::GNSS, "Charactere recu: %c", ch);
+        // LOG_DEBUG(Logger::Nodes::GNSS, "Charactere recu: %c", ch);
 
         if (ch == '\n' || ch == '\r')
         {
             if (_bufferIndex > 0UL && _bufferIndex < MAX_SENTENCE_LENGTH - 1UL)
             {
                 _sentenceBuffer[_bufferIndex] = '\0';
-                LOG_DEBUG(Logger::Nodes::GNSS, "%s", _sentenceBuffer);
+                LOG_DEBUG(Logger::Nodes::GNSS, "%s", _sentenceBuffer.data());
 
                 if (_sentenceBuffer[0] == '$' || _sentenceBuffer[0] == '#')
                 {
@@ -83,9 +68,9 @@ void GNSSManager::parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_
     bool isGGA = (buffer_[1] == 'G' && buffer_[2] == 'P' && buffer_[3] == 'G' && buffer_[4] == 'G' && buffer_[5] == 'A')
                  || (buffer_[1] == 'G' && buffer_[2] == 'N' && buffer_[3] == 'G' && buffer_[4] == 'G' && buffer_[5] == 'A');
 
-    bool isUniHeading
-        = (buffer_[1] == 'U' && buffer_[2] == 'N' && buffer_[3] == 'I' && buffer_[4] == 'H' && buffer_[5] == 'E'
-           && buffer_[6] == 'A' && buffer_[7] == 'D' && buffer_[8] == 'I' && buffer_[9] == 'N' && buffer_[10] == 'G');
+    bool isUniHeading = (buffer_[1] == 'U' && buffer_[2] == 'N' && buffer_[3] == 'I' && buffer_[4] == 'H' && buffer_[5] == 'E'
+                         && buffer_[6] == 'A' && buffer_[7] == 'D' && buffer_[8] == 'I' && buffer_[9] == 'N' && buffer_[10] == 'G'
+                         && buffer_[11] == 'A');
 
     if (isGGA)
     {

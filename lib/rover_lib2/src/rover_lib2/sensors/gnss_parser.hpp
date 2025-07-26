@@ -278,6 +278,7 @@ namespace GNSSParser
 
                 out_.satellitesUsed = tempSatellites;
             }
+            return true;
         }
         return false;
     }
@@ -318,7 +319,7 @@ namespace GNSSParser
             }
 
             if (getField(rawSentence_, commaIndices, field, 12)
-                && out_.headingQuality == Constants::eUniHeadingQuality::NO_HEADING)
+                && out_.headingQuality != Constants::eUniHeadingQuality::NO_HEADING)
             {
                 float heading = 0.0f;
                 auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), heading);

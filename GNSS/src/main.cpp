@@ -43,7 +43,6 @@ void setup()
         {
             LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
         }
-        delay(500);
         canManager.update();
     }
 }
