@@ -1,6 +1,6 @@
 #include "GNSSManager.hpp"
 
-DEFINE_LOG_NODE(GNSS, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(GNSS, Logger::eNodeState::ON);
 
 constexpr size_t maxLoopCount = 1000UL;
 
@@ -16,7 +16,7 @@ GNSSManager::GNSSManager(Stream& serial_):
 
 void GNSSManager::update(void)
 {
-    size_t bufferIndex = 0UL;
+    LOG_DEBUG(Logger::Nodes::GNSS, "dick");
     for (size_t i = 0UL; i < maxLoopCount && _GNSSSerial.available(); ++i)
     {
         int c = _GNSSSerial.read();
@@ -24,26 +24,41 @@ void GNSSManager::update(void)
         {
             continue;
         }
+
+        // Check for invalid characters that could cause issues
+        if (c < 0x20 && c != '\r' && c != '\n') {
+            // Control character (except CR/LF) - skip it
+            LOG_DEBUG(Logger::Nodes::GNSS, "Skipping control char: 0x%02X", (unsigned char)c);
+            continue;
+        }
+        
+        if (c > 0x7F) {
+            // Non-ASCII character - likely corruption
+            LOG_WARN(Logger::Nodes::GNSS, "Invalid char received: 0x%02X at buffer pos %zu", (unsigned char)c, _bufferIndex);
+            // Reset buffer to resync
+            _bufferIndex = 0;
+            continue;
+        }
         char ch = static_cast<char>(c);
-        // LOG_DEBUG(Logger::Nodes::GNSS, "Charactere recu: %c", ch);
+        LOG_DEBUG(Logger::Nodes::GNSS, "Charactere recu: %c", ch);
 
         if (ch == '\n' || ch == '\r')
         {
-            if (bufferIndex > 0UL && bufferIndex < MAX_SENTENCE_LENGTH - 1UL)
+            if (_bufferIndex > 0UL && _bufferIndex < MAX_SENTENCE_LENGTH - 1UL)
             {
-                _sentenceBuffer[bufferIndex] = '\0';
+                _sentenceBuffer[_bufferIndex] = '\0';
                 LOG_DEBUG(Logger::Nodes::GNSS, "%s", _sentenceBuffer);
 
                 if (_sentenceBuffer[0] == '$' || _sentenceBuffer[0] == '#')
                 {
-                    parseMSG(_sentenceBuffer, bufferIndex);
+                    parseMSG(_sentenceBuffer, _bufferIndex);
                 }
             }
-            bufferIndex = 0UL;
+            _bufferIndex = 0UL;
         }
-        else if (ch != '\r' && bufferIndex < MAX_SENTENCE_LENGTH - 1UL)
+        else if (ch != '\r' && _bufferIndex < MAX_SENTENCE_LENGTH - 1UL)
         {
-            _sentenceBuffer[bufferIndex++] = ch;
+            _sentenceBuffer[_bufferIndex++] = ch;
         }
     }
 }
@@ -74,7 +89,7 @@ void GNSSManager::parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_
 
     if (isGGA)
     {
-        GNSSParser::sGGAData GGA;
+        GNSSParser::sGGADataUsed GGA;
         if (GNSSParser::parseGGA(buffer_, GGA, _currentData.headingQuality))
         {
             _currentData.latitude = GGA.latitude;
@@ -85,7 +100,7 @@ void GNSSManager::parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_
     }
     else if (isUniHeading)
     {
-        GNSSParser::sUniHeadingData heading;
+        GNSSParser::sUniHeadingDataUsed heading;
         if (GNSSParser::parseUniHeading(buffer_, heading))
         {
             _currentData.headingDeg = radToDeg(_headingFilter.addValue(degToRad(heading.headingDeg)));
@@ -101,5 +116,5 @@ sGNSSData GNSSManager::getData(void)
 
 float GNSSManager::getFilteredHeading(void)
 {
-    return radToDeg(_headingFilter.getAverage());
+    return radToDeg(_headingFilter.getFilteredValue());
 }

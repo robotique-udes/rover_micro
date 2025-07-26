@@ -1,4 +1,4 @@
 #include "rover_lib2/helpers/constants.hpp"
-Constants::GGAQuality fixQuality;
-Constants::UniHeadingQuality headingQuality;
+Constants::eGGAQuality fixQuality;
+Constants::eUniHeadingQuality headingQuality;
 uint8_t satelliteCount;

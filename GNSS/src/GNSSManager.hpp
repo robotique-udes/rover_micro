@@ -32,9 +32,10 @@ class GNSSManager
 
     Stream& _GNSSSerial;
     sGNSSData _currentData;
-    CircularMovingAverage<CIRCULAR_WINDOW_SIZE> _headingFilter;
+    Filters::CircularMovingAverage<CIRCULAR_WINDOW_SIZE> _headingFilter;
 
     std::array<char, MAX_SENTENCE_LENGTH> _sentenceBuffer{};
+    size_t _bufferIndex = 0;
 
   public:
     explicit GNSSManager(Stream& serial_);

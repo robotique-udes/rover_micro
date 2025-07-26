@@ -1,13 +1,7 @@
 #include <Arduino.h>
 #include "GNSSManager.hpp"
 #include "CanGNSS.hpp"
-
-// Configure UART pins
-constexpr gpio_num_t PIN_UART_TX = GPIO_NUM_47;
-constexpr gpio_num_t PIN_UART_RX = GPIO_NUM_13;
-constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_5;
-constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_4;
-constexpr gpio_num_t PIN_LED_CAN = GPIO_NUM_2;
+#include "config.hpp"
 
 constexpr uint32_t UART_BAUD_RATE = 115200UL;
 
@@ -47,11 +41,9 @@ void setup()
         }
         else
         {
-            sGNSSData invalidData;  // set all values to default (zeros everywhere)
-            device.set(invalidData);
             LOG_INFO(Logger::Nodes::Main, "Waiting for a valid fix...");
         }
-
+        delay(500);
         canManager.update();
     }
 }

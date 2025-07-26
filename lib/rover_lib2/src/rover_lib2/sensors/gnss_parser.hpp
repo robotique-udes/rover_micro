@@ -5,6 +5,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <charconv>
+#include <system_error>
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/helpers/constants.hpp"
@@ -22,6 +24,46 @@ namespace GNSSParser
     constexpr size_t MAX_FIELDS = 16UL;
     constexpr size_t MAX_FIELD_LENGTH = 16UL;
 
+    enum class eGGAFields : size_t
+    {
+        MESSAGE_ID = 0,       // GGA protocol header
+        UTC_TIME,             // UTC time (hhmmss.sss)
+        LATITUDE,             // Latitude (ddmm.mmmm)
+        NS_INDICATOR,         // N/S Indicator ('N' or 'S')
+        LONGITUDE,            // Longitude (dddmm.mmmm)
+        EW_INDICATOR,         // E/W Indicator ('E' or 'W')
+        FIX_QUALITY,          // Position Fix Indicator
+        SATELLITES_USED,      // Number of satellites used
+        HDOP,                 // Horizontal Dilution of Precision
+        MSL_ALTITUDE,         // Mean Sea Level Altitude
+        ALTITUDE_UNITS,       // Altitude units ('M' for meters)
+        GEOID_SEPERATION,     // Geoid separation
+        GEOID_UNITS,          // Geoid separation units ('M' for meters)
+        AGE_OF_DIFF_CORR,     // Age of differential corrections (seconds)
+        DIFF_RED_STATION_ID,  // Differential reference station ID
+        CHECKSUM,             // Checksum
+        eLAST,                // Number of GGA fields
+    };
+
+    enum class eUniHeadingFields : size_t
+    {
+        MYSTERE0 = 0,
+        MYSTERE1,
+        MYSTERE2,
+        MYSTERE3,
+        MYSTERE4,
+        MYSTERE5,
+        MYSTERE6,
+        MYSTERE7,
+        MYSTERE8,
+        MYSTERE9,
+        HEADING_QUALITY,
+        MYSTERE11,
+        HEADING,
+        MYSTERE13,  // There is 26 fields in total, but all the next are unknown
+        eLAST,
+    };
+
     struct sUTCTime
     {
         uint8_t hours = 0U;
@@ -29,54 +71,42 @@ namespace GNSSParser
         float seconds = 0.0F;
     };
 
-    struct sGGAData
+    struct sGGADataUsed
     {
-        char messageID[7] = "";                                               // GGA protocol header
-        sUTCTime utcTime;                                                     // UTC time (hhmmss.sss)
-        float latitude = 0.0F;                                                // Latitude (ddmm.mmmm)
-        char nsIndicator = 'N';                                               // N/S Indicator ('N' or 'S')
-        float longitude = 0.0F;                                               // Longitude (dddmm.mmmm)
-        char ewIndicator = 'E';                                               // E/W Indicator ('E' or 'W')
-        Constants::eGGAQuality fixQuality = Constants::eGGAQuality::UNKNOWN;  // Position Fix Indicator
-        uint8_t satellitesUsed = 0U;                                          // Number of satellites used
-        float hdop = 0.0F;                                                    // Horizontal Dilution of Precision
-        float mslAltitude = 0.0F;                                             // Mean Sea Level Altitude
-        char altitudeUnits = 'M';                                             // Altitude units ('M' for meters)
-        float geoidSeparation = 0.0F;                                         // Geoid separation
-        char geoidUnits = 'M';                                                // Geoid separation units ('M' for meters)
-        float ageOfDiffCorr = 0.0F;                                           // Age of differential corrections (seconds)
-        uint16_t diffRefStationID = 0U;                                       // Differential reference station ID
-        char checksum[3] = "";                                                // Checksum
+        float latitude = 0.0F;
+        float longitude = 0.0F;
+        Constants::eGGAQuality fixQuality = Constants::eGGAQuality::UNKNOWN;
+        uint8_t satellitesUsed = 0U;
     };
 
-    struct sUniHeadingData  // Pas un message standard jsp c'est quoi les autres champs
+    struct sUniHeadingDataUsed
     {
         float headingDeg = 0.0F;
         Constants::eUniHeadingQuality headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
     };
 
     template<size_t SENTENCE_LENGTH>
-    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_, sGGAData& out_, Constants::eUniHeadingQuality uhQuality_);
+    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_, sGGADataUsed& out_, Constants::eUniHeadingQuality uhQuality_);
     template<size_t SENTENCE_LENGTH>
-    bool parseUniHeading(std::array<char, SENTENCE_LENGTH>& rawSentence_, sUniHeadingData& out_);
+    bool parseUniHeading(std::array<char, SENTENCE_LENGTH>& rawSentence_, sUniHeadingDataUsed& out_);
 
-    ///////////////////////////
-    // Functions definitions //
-    ///////////////////////////
+    // ======================================================================================================================
+    // Functions definitions
+    // ======================================================================================================================
 
     /**
      * @brief Find all the comma indices from a sentence
      *
      */
-    template<size_t SENTENCE_LENGTH>
-    inline size_t commaSegmenter(std::array<char, SENTENCE_LENGTH>& sentence_, std::array<size_t, MAX_FIELDS>& commaIndices_)
+    template<size_t SENTENCE_LENGTH, size_t FIELD_COUNT>
+    size_t commaSegmenter(std::array<char, SENTENCE_LENGTH>& sentence_, std::array<size_t, FIELD_COUNT>& commaIndices_)
     {
         size_t count = 0UL;
-        for (size_t i = 0UL; i < SENTENCE_LENGTH && sentence_[i] != '\0'; ++i)
+        for (size_t i = 0UL; i < sentence_.size() && sentence_[i] != '\0'; ++i)
         {
             if (sentence_[i] == ',')
             {
-                if (count < MAX_FIELDS)
+                if (count < commaIndices_.size())
                 {
                     commaIndices_[count++] = i;
                 }
@@ -84,7 +114,7 @@ namespace GNSSParser
         }
 
         // Add end of sentence as final index
-        if (count < MAX_FIELDS)
+        if (count < commaIndices_.size())
         {
             commaIndices_[count++] = sentence_.size();
         }
@@ -92,15 +122,28 @@ namespace GNSSParser
         return count;
     }
 
-    inline float convertToDecimalDegrees(const char* nmeaCoord_, char direction_)
+    template<size_t N>
+    inline std::optional<float> convertToDecimalDegrees(const std::array<char, N>& nmeaCoord_, char direction_)
     {
-        if (!nmeaCoord_ || strlen(nmeaCoord_) < 6U)
+        if (nmeaCoord_[0] == '\0' || std::strlen(nmeaCoord_.data()) < 6U)
         {
-            LOG_WARN(Logger::Nodes::GNSS_PARSER, "Invalid NMEA Coord: %s", nmeaCoord_);
-            return 0.0F;
+            LOG_WARN(Logger::Nodes::GNSS_PARSER, "Invalid NMEA Coord: %s", nmeaCoord_.data());
+            return std::nullopt;
         }
 
-        float degMin = atof(nmeaCoord_);
+        if (direction_ != 'N' && direction_ != 'S' && direction_ != 'E' && direction_ != 'W')
+        {
+            LOG_WARN(Logger::Nodes::GNSS_PARSER, "Invalid latitude/longitude direction: %c", direction_);
+            return std::nullopt;
+        }
+
+        float degMin = 0.0F;
+        auto result = std::from_chars(nmeaCoord_.data(), nmeaCoord_.data() + std::strlen(nmeaCoord_.data()), degMin);
+        if (result.ec != std::errc())
+        {
+            LOG_WARN(Logger::Nodes::GNSS_PARSER, "Failed to parse NMEA Coord: %s", nmeaCoord_.data());
+            return std::nullopt;
+        }
         int degrees = static_cast<int>(degMin / 100.0F);
         float minutes = degMin - degrees * 100.0F;
         float decimal = degrees + minutes / 60.0F;
@@ -145,40 +188,30 @@ namespace GNSSParser
      * @attention Assume rawSentence is a GGA message
      */
     template<size_t SENTENCE_LENGTH>
-    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_, sGGAData& out_, Constants::eUniHeadingQuality headingQuality_)
+    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_,
+                  sGGADataUsed& out_,
+                  Constants::eUniHeadingQuality headingQuality_)
     {
-        std::array<size_t, MAX_FIELDS> commaIndices{};
+        std::array<size_t, std::to_underlying(eGGAFields::eLAST)> commaIndices = {};
         size_t count = commaSegmenter(rawSentence_, commaIndices);
 
-        if (count >= 15UL)
+        if (count >= 7UL)
         {
             std::array<char, MAX_FIELD_LENGTH> field{};
-            if (getField(rawSentence_, commaIndices, field, 0))
-            {
-                strncpy(out_.messageID, field.data(), 6U);
-                out_.messageID[6] = '\0';
-            }
-            if (getField(rawSentence_, commaIndices, field, 1))
-            {
-                float time = std::atof(field.data());
-                out_.utcTime.hours = static_cast<uint8_t>(time / 10000.0F);
-                out_.utcTime.minutes = static_cast<uint8_t>((static_cast<int>(time) % 10000) / 100);
-                out_.utcTime.seconds = fmod(time, 100.0F);
-            }
             std::array<char, MAX_FIELD_LENGTH> secondField{};
-            if (getField(rawSentence_, commaIndices, field, 2) && getField(rawSentence_, commaIndices, secondField, 3))
-            {
-                out_.latitude = convertToDecimalDegrees(field.data(), secondField[0]);
-            }
-            if (getField(rawSentence_, commaIndices, field, 4) && getField(rawSentence_, commaIndices, secondField, 5))
-            {
-                out_.longitude = convertToDecimalDegrees(field.data(), secondField[0]);
-            }
+            bool problem = false;
+
             if (getField(rawSentence_, commaIndices, field, 6))
             {
-                // Fix quality compared with uniheading for GPS vs GNSS
-                uint8_t tempQuality = static_cast<uint8_t>(std::atoi(field.data()));
+                uint8_t tempQuality = 0U;
+                auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), tempQuality);
+                if (result.ec != std::errc())
+                {
+                    LOG_WARN(Logger::Nodes::GNSS_PARSER, "Failed to parse the heading");
+                    tempQuality = 0U;
+                }
 
+                // Fix quality compared with uniheading for GPS vs GNSS
                 if (tempQuality == 4U)
                 {
                     out_.fixQuality = Constants::eGGAQuality::RTK;
@@ -194,45 +227,57 @@ namespace GNSSParser
                 else
                 {
                     out_.fixQuality = Constants::eGGAQuality::UNKNOWN;
+                    problem = true;
                 }
             }
+
+            if (getField(rawSentence_, commaIndices, field, 2) && getField(rawSentence_, commaIndices, secondField, 3)
+                && !problem)
+            {
+                auto latitude = convertToDecimalDegrees(field, secondField[0]);
+                if (latitude)
+                {
+                    out_.latitude = *latitude;
+                }
+                else
+                {
+                    problem = true;
+                }
+            }
+
+            if (getField(rawSentence_, commaIndices, field, 4) && getField(rawSentence_, commaIndices, secondField, 5)
+                && !problem)
+            {
+                auto longitude = convertToDecimalDegrees(field, secondField[0]);
+                if (longitude)
+                {
+                    out_.longitude = *longitude;
+                }
+                else
+                {
+                    problem = true;
+                }
+            }
+
+            if (problem)
+            {
+                out_.latitude = 0.0F;
+                out_.longitude = 0.0F;
+                out_.fixQuality = Constants::eGGAQuality::UNKNOWN;
+            }
+
             if (getField(rawSentence_, commaIndices, field, 7))
             {
-                out_.satellitesUsed = static_cast<uint8_t>(std::atoi(field.data()));
+                uint8_t tempSatellites = 0U;
+                auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), tempSatellites);
+                if (result.ec != std::errc())
+                {
+                    LOG_WARN(Logger::Nodes::GNSS_PARSER, "Failed to parse the Satellites Used");
+                    tempSatellites = 0U;
+                }
+
+                out_.satellitesUsed = tempSatellites;
             }
-            if (getField(rawSentence_, commaIndices, field, 8))
-            {
-                out_.hdop = std::atof(field.data());
-            }
-            if (getField(rawSentence_, commaIndices, field, 9))
-            {
-                out_.mslAltitude = std::atof(field.data());
-            }
-            if (getField(rawSentence_, commaIndices, field, 10))
-            {
-                out_.altitudeUnits = field[0];
-            }
-            if (getField(rawSentence_, commaIndices, field, 11))
-            {
-                out_.geoidSeparation = std::atof(field.data());
-            }
-            if (getField(rawSentence_, commaIndices, field, 12))
-            {
-                out_.geoidUnits = field[0];
-            }
-            if (getField(rawSentence_, commaIndices, field, 13))
-            {
-                out_.ageOfDiffCorr = std::atof(field.data());
-            }
-            if (getField(rawSentence_, commaIndices, field, 14))
-            {
-                out_.diffRefStationID = static_cast<uint16_t>(std::atoi(field.data()));
-            }
-            if (getField(rawSentence_, commaIndices, field, 15))
-            {
-                strncpy(out_.checksum, field.data(), sizeof(out_.checksum) - 1);
-            }
-            return true;
         }
         return false;
     }
@@ -243,7 +288,7 @@ namespace GNSSParser
      * @attention Assume rawSentence is a UniHeading message
      */
     template<size_t SENTENCE_LENGTH>
-    bool parseUniHeading(std::array<char, SENTENCE_LENGTH>& rawSentence_, sUniHeadingData& out_)
+    bool parseUniHeading(std::array<char, SENTENCE_LENGTH>& rawSentence_, sUniHeadingDataUsed& out_)
     {
         std::array<size_t, MAX_FIELDS> commaIndices{};
         size_t count = commaSegmenter(rawSentence_, commaIndices);
@@ -268,12 +313,25 @@ namespace GNSSParser
                 else
                 {
                     out_.headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
+                    out_.headingDeg = 0.0F;
                 }
             }
 
-            if (getField(rawSentence_, commaIndices, field, 12))
+            if (getField(rawSentence_, commaIndices, field, 12)
+                && out_.headingQuality == Constants::eUniHeadingQuality::NO_HEADING)
             {
-                out_.headingDeg = std::atof(field.data());
+                float heading = 0.0f;
+                auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), heading);
+                if (result.ec == std::errc())
+                {
+                    out_.headingDeg = heading;
+                }
+                else
+                {
+                    out_.headingDeg = 0.0F;
+                    out_.headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
+                    LOG_WARN(Logger::Nodes::GNSS_PARSER, "Failed to parse the heading");
+                }
             }
             return true;
         }

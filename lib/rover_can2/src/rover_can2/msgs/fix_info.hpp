@@ -26,6 +26,10 @@ namespace RoverCan2::Msgs
             Constants::eGGAQuality fixQuality;
             Constants::eUniHeadingQuality headingQuality;
             uint8_t satelliteCount;
+
+            static_assert(sizeof(fixQuality) <= 4, "Can messages cannot include field longer than 4 bytes");
+            static_assert(sizeof(headingQuality) <= 4, "Can messages cannot include field longer than 4 bytes");
+            static_assert(sizeof(satelliteCount) <= 4, "Can messages cannot include field longer than 4 bytes");
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
