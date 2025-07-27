@@ -115,7 +115,6 @@ namespace Actuators
             }
 
             float cmd = _pSpeedController->computeCommand(this->getSpeed(), _goalSpeed);
-            // LOG_DEBUG(Logger::Nodes::AK109, "goalSpeed: %f, cmd: %f", _goalSpeed, cmd);
 
             if (_maxJointLimit.has_value() && this->getPosition() >= _maxJointLimit.value())
             {
@@ -127,11 +126,11 @@ namespace Actuators
                 cmd = std::clamp(cmd, 0.0F, std::numeric_limits<float>::max());
             }
 
-            LOG_DEBUG(Logger::Nodes::AK109, "_goalSpeed: %f, this->getSpeed(): %f | cmd: %f", _goalSpeed, this->getSpeed(), cmd);
+            LOG_DEBUG(Logger::Nodes::AK109, "_goalSpeed: %f | cmd: %f", _goalSpeed, cmd);
 
             LOG_PLOT(Logger::Nodes::AK109Plot, _goalSpeed, cmd, this->getSpeed(), this->getPosition());
 
-            this->setSpeed(cmd);
+            this->sendCmd(cmd);
         }
 
         void setPosition(float goalPosition_)
@@ -153,7 +152,11 @@ namespace Actuators
         void setSpeed(float goalSpeedRad_)
         {
             _goalSpeed = goalSpeedRad_;
-            float rpm = goalSpeedRad_ * RAD_S_TO_RPM;
+        }
+
+        void sendCmd(float cmd_)
+        {
+            float rpm = cmd_ * RAD_S_TO_RPM;
 
             float eRpm_f = rpm * N_POLE_PAIRS * MOTOR_REDUCTION;
 
@@ -189,7 +192,6 @@ namespace Actuators
             buffer[9] = AK10_9::FRAME_TAIL;
 
             _motorSerial->write(buffer, 10);
-            // LOG_DEBUG(Logger::Nodes::AK109, "Set speed command sent: %.3f rad/s (%.3f RPM)", goalSpeedRad_, rpm);
         }
 
         float getSpeed(void) const

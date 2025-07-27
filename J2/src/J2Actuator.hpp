@@ -20,7 +20,7 @@ class J2Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
-    static constexpr float MAX_MOTOR_SPEED_RAD_S = 10.0F;
+    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.8F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
     static constexpr float RAD_TO_M = 0.05026F / (2.0F * std::numbers::pi_v<float>);
 
@@ -108,7 +108,7 @@ class J2Actuator
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _j2Encoder
         = {__spi, PIN_ENC_CS, "J2", _j2PositionFilter, _j2SpeedFilter, false};
 
-    Controllers::PID __j1_controllerSpeed = {250.0F, 0.0F, 0.0F, 100.0F, 25'000ULL};
+    Controllers::PID __j1_controllerSpeed = {75.0F, 150.0F, 20.0F, 100.0F, 25'000ULL};
 
     Actuators::AK109<Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA>, Controllers::None, Controllers::PID> _j2
         = {Actuators::eControlType::SPEED, &_motorSerial, &_j2Encoder, nullptr, &__j1_controllerSpeed};
