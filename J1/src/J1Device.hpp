@@ -76,7 +76,6 @@ class J1Device
         }
         else if (_pbRev.isClicked())
         {
-            LOG_DEBUG(Logger::Nodes::J1Actuator, "Push button reverse clicked");
             _j1.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
         }
         else

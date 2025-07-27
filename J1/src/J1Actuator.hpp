@@ -1,5 +1,5 @@
-#ifndef J34_HPP
-#define J34_HPP
+#ifndef J1_Actuator_HPP
+#define J1_Actuator_HPP
 
 #include "config.hpp"
 #include "rover_lib2/actuators/dc.hpp"
@@ -64,7 +64,7 @@ class J1Actuator
 
         _j1.update();
 
-        // TODO redo switch
+        // TODO redo switch to have whole logic in update
         switch (_currentState)
         {
             default:

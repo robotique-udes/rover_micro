@@ -1,4 +1,4 @@
-// #ifndef ROVER_LIB2_SENSORS_ENCODER_AMT222X_HPP
+#ifndef ROVER_LIB2_SENSORS_ENCODER_AMT222X_HPP
 #define ROVER_LIB2_SENSORS_ENCODER_AMT222X_HPP
 
 #include "rover_lib2/rover_object.hpp"
@@ -23,7 +23,6 @@ DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::OFF);
 
 namespace Encoders
 {
-
     /**
      * @brief AMT222X is meant to provide a universal encoder object for any type of AMT222* encoders by keeping track of the
      * position data between power cycle. This is meant to mimick a absolute multiturn encoder. The position data will stay valid

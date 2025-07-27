@@ -61,7 +61,7 @@ class J2Controller
     };
     MotorParam sMotorParam;
 
-  private:
+  // private:
     Stream* _motorSerial;  // Declare motorSerial as a reference to HardwareSerial
 
     // Ramp variables
