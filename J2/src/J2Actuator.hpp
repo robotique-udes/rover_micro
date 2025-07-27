@@ -13,6 +13,9 @@
 
 #include <algorithm>
 
+DEFINE_LOG_NODE(J1Actuator, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(J1ActuatorPlot, Logger::eNodeState::OFF);
+
 class J2Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
@@ -29,11 +32,17 @@ class J2Actuator
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
 
   public:
+    // J2Actuator(Stream* motorSerial_):
+    //     _motorSerial(motorSerial_)
+    // {
+    // }
+
     void init()
     {
         _j2.setJointLimit(std::nullopt, std::nullopt);
 
         _j2.setSpeed(0.0F);
+        LOG_DEBUG(Logger::Nodes::J1Actuator, "HERE");
 
         _j2.setMaxSpeed(MAX_MOTOR_SPEED_RAD_S);
 
@@ -70,17 +79,17 @@ class J2Actuator
 
     float getSpeed() const
     {
-        return _j2.getSpeed() * RAD_TO_M;
+        return _j2Encoder.getSpeed() * RAD_TO_M;
     }
 
     float getPosition() const
     {
-        return _j2.getPosition() * RAD_TO_M;
+        return _j2Encoder.getPosition() * RAD_TO_M;
     }
 
     void calib(float offset_)
     {
-        _j2.calib(offset_ * std::numbers::pi_v<float>);
+        _j2Encoder.calib(offset_ * std::numbers::pi_v<float>);
     }
 
   private:
@@ -90,7 +99,7 @@ class J2Actuator
     float _j2CurrentPosition = 0.0F;
     float _j2CurrentSpeed = 0.0F;
 
-    Stream* _motorSerial;
+    HardwareSerial _motorSerial = HardwareSerial(UART_PORT);
 
     OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
@@ -104,11 +113,8 @@ class J2Actuator
 
     Controllers::PID __j1_controllerSpeed = {250.0F, 0.0F, 0.0F, 100.0F, 25'000ULL};
 
-    Actuators::AK109<Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA>, Controllers::PID, Controllers::None> _j2
-        = {Actuators::eControlType::SPEED,
-            _motorSerial,
-            &_j2Encoder,
-            &__j1_controllerSpeed};
+    Actuators::AK109<Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA>, Controllers::None, Controllers::PID> _j2
+        = {Actuators::eControlType::SPEED, &_motorSerial, &_j2Encoder, nullptr, &__j1_controllerSpeed};
 };
 
 #endif

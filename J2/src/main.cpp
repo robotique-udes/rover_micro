@@ -10,8 +10,6 @@
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::OFF);
 
-HardwareSerial motorSerial(2);
-
 void setup(void)
 {
     Serial.begin(115200);
@@ -23,8 +21,9 @@ void setup(void)
     statusLed.init();
 
     J2Device j2;
-    
+
     motorSerial.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
+
     j2.init();
 
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);

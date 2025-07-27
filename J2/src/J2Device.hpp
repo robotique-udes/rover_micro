@@ -5,6 +5,8 @@
 
 #include <rover_lib2/sensors/push_button.hpp>
 
+HardwareSerial motorSerial(UART_PORT);
+
 DEFINE_LOG_NODE(J2Device, Logger::eNodeState::ON);
 
 class J2Device
