@@ -22,8 +22,6 @@ void setup(void)
 
     J2Device j2;
 
-    motorSerial.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
-
     j2.init();
 
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);

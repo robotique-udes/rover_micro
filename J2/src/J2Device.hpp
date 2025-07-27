@@ -5,13 +5,11 @@
 
 #include <rover_lib2/sensors/push_button.hpp>
 
-HardwareSerial motorSerial(UART_PORT);
-
-DEFINE_LOG_NODE(J2Device, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(J2Device, Logger::eNodeState::OFF);
 
 class J2Device
 {
-    static constexpr uint64_t LOOP_PERIOD_US = 250ULL;
+    static constexpr uint64_t LOOP_PERIOD_US = 1'000ULL;
 
     static constexpr float PUSH_BUTTON_SPEED_RAD_S = 10.0F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
@@ -33,30 +31,32 @@ class J2Device
             return;
         }
 
-        if (_pbCalib.isClicked())
-        {
-            _j2.setSpeed(FULL_STOP_SPEED);
+        // if (_pbCalib.isClicked())
+        // {
+            // LOG_DEBUG(Logger::Nodes::J2Device, "HERE");
+            // _j2.setSpeed(FULL_STOP_SPEED);
 
-            constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
-            OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
-            do
-            {
-                _j2.update();
+            // constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
+            // OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
+            // do
+            // {
+            //     _j2.update();
 
-                if (!IN_ERROR(_j2.getSpeed(), FULL_STOP_SPEED_ERROR_TELORANCE, FULL_STOP_SPEED))
-                {
-                    timerStop = OneShotTimer<uint64_t, &Time::millis>(CALIB_STOP_TIME);
-                }
-            }
-            while (!timerStop.isReady());
+            //     if (!IN_ERROR(_j2.getSpeed(), FULL_STOP_SPEED_ERROR_TELORANCE, FULL_STOP_SPEED))
+            //     {
+            //         timerStop = OneShotTimer<uint64_t, &Time::millis>(CALIB_STOP_TIME);
+            //     }
+            // }
+            // while (!timerStop.isReady());
 
-            _j2.calib(CALIB_POSITION);
-        }
+            // _j2.calib(CALIB_POSITION);
+        // }
 
         _j2.update();
 
         if (_pbJogPlus.isClicked())
         {
+
             _j2.setSpeed(PUSH_BUTTON_SPEED_RAD_S);
         }
         else if (_pbJogNeg.isClicked())

@@ -20,7 +20,7 @@ class J2Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
-    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.17F;
+    static constexpr float MAX_MOTOR_SPEED_RAD_S = 10.0F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
     static constexpr float RAD_TO_M = 0.05026F / (2.0F * std::numbers::pi_v<float>);
 
@@ -32,21 +32,17 @@ class J2Actuator
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
 
   public:
-    // J2Actuator(Stream* motorSerial_):
-    //     _motorSerial(motorSerial_)
-    // {
-    // }
-
     void init()
     {
         _j2.setJointLimit(std::nullopt, std::nullopt);
 
         _j2.setSpeed(0.0F);
-        LOG_DEBUG(Logger::Nodes::J1Actuator, "HERE");
 
         _j2.setMaxSpeed(MAX_MOTOR_SPEED_RAD_S);
 
         _j2.init();
+
+        _motorSerial.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
     }
 
     void update()
@@ -58,6 +54,7 @@ class J2Actuator
 
         _j2.update();
 
+        
         if (_j2.getPosition() <= J2_MIN_JOINT_LIMIT)
         {
             _j2.setSpeed(std::clamp(_j2SpeedGoal, 0.0F, MAX_MOTOR_SPEED_RAD_S));

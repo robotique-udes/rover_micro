@@ -19,7 +19,7 @@
 #include "rover_lib2/controllers/PID.hpp"
 #include "rover_lib2/rover_object.hpp"
 
-DEFINE_LOG_NODE(AK109, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(AK109, Logger::eNodeState::OFF);
 DEFINE_LOG_NODE(AK109Plot, Logger::eNodeState::ON);
 
 namespace Actuators
@@ -90,7 +90,6 @@ namespace Actuators
                 case eControlType::SPEED:
                     if (_pSpeedController)
                     {
-                        LOG_DEBUG(Logger::Nodes::AK109, "Speed control mode selected");
                         this->speedModeUpdate();
                     }
                     break;
@@ -116,6 +115,7 @@ namespace Actuators
             }
 
             float cmd = _pSpeedController->computeCommand(this->getSpeed(), _goalSpeed);
+            // LOG_DEBUG(Logger::Nodes::AK109, "goalSpeed: %f, cmd: %f", _goalSpeed, cmd);
 
             if (_maxJointLimit.has_value() && this->getPosition() >= _maxJointLimit.value())
             {
@@ -127,10 +127,11 @@ namespace Actuators
                 cmd = std::clamp(cmd, 0.0F, std::numeric_limits<float>::max());
             }
 
-            this->setSpeed(cmd);
             LOG_DEBUG(Logger::Nodes::AK109, "_goalSpeed: %f, this->getSpeed(): %f | cmd: %f", _goalSpeed, this->getSpeed(), cmd);
 
             LOG_PLOT(Logger::Nodes::AK109Plot, _goalSpeed, cmd, this->getSpeed(), this->getPosition());
+
+            this->setSpeed(cmd);
         }
 
         void setPosition(float goalPosition_)
@@ -151,7 +152,9 @@ namespace Actuators
 
         void setSpeed(float goalSpeedRad_)
         {
+            _goalSpeed = goalSpeedRad_;
             float rpm = goalSpeedRad_ * RAD_S_TO_RPM;
+
             float eRpm_f = rpm * N_POLE_PAIRS * MOTOR_REDUCTION;
 
             float capRpm = rpm;
@@ -186,6 +189,7 @@ namespace Actuators
             buffer[9] = AK10_9::FRAME_TAIL;
 
             _motorSerial->write(buffer, 10);
+            // LOG_DEBUG(Logger::Nodes::AK109, "Set speed command sent: %.3f rad/s (%.3f RPM)", goalSpeedRad_, rpm);
         }
 
         float getSpeed(void) const
