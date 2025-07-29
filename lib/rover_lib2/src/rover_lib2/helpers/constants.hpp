@@ -2,6 +2,7 @@
 #define ROVER_LIB2_HELPERS_CONSTANTS_HPP
 #include <array>
 #include <cstddef>
+#include <utility>
 
 #if defined(__linux__)
 #include <map>
