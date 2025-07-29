@@ -3,7 +3,6 @@
 
 #include "config.hpp"
 #include "J1Device.hpp"
-#include "J1Device.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_can2/rover_can2.hpp"

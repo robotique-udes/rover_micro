@@ -28,7 +28,7 @@ constexpr gpio_num_t PIN_ENC_CS = GPIO_NUM_2;
 constexpr gpio_num_t PIN_UART_TX = GPIO_NUM_6;
 constexpr gpio_num_t PIN_UART_RX = GPIO_NUM_7;
 constexpr int UART_BAUD_RATE = 921600;
-constexpr int UART_PORT = 2; 
+constexpr int UART_PORT = 2;
 
 constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_21;
 constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_48;

@@ -61,7 +61,7 @@ class J1Actuator
         {
             return;
         }
-        
+
         this->runningUpdateLoop();
     }
 

@@ -35,7 +35,6 @@ class J2Device
 
         if (_pbJogPlus.isClicked())
         {
-
             _j2.setSpeed(PUSH_BUTTON_SPEED_RAD_S);
         }
         else if (_pbJogNeg.isClicked())

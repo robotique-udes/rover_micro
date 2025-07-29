@@ -128,7 +128,7 @@ namespace Encoders
                         break;
                     default:
                         ASSERT_MSG("Shouldn't fall here, implementation error");
-                        _currentState = eState::READY; // TODO Set case failure
+                        _currentState = eState::READY;  // TODO Set case failure
                         break;
                 }
             }

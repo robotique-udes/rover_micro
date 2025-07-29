@@ -54,7 +54,6 @@ class J2Actuator
 
         _j2.update();
 
-        
         if (_j2.getPosition() <= J2_MIN_JOINT_LIMIT)
         {
             _j2.setSpeed(std::clamp(_j2SpeedGoal, 0.0F, MAX_MOTOR_SPEED_RAD_S));
