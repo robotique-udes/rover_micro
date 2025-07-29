@@ -1,5 +1,5 @@
-#ifndef ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_HPP
-#define ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_HPP
+#ifndef ROVER_LIB2_ACTUATORS_AK10 - 9_AK10 - 9_HPP
+#define ROVER_LIB2_ACTUATORS_AK10 -9_AK10 - 9_HPP
 
 #include <concepts>
 #include <Stream.h>
