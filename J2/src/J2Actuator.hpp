@@ -2,7 +2,7 @@
 #define J2_ACTUATOR
 
 #include "config.hpp"
-#include "rover_lib2/actuators/AK10-9/AK10-9.hpp"
+#include "rover_lib2/actuators/AK10_9/AK10_9.hpp"
 #include "rover_lib2/sensors/encoder/AMT222X.hpp"
 #include "rover_lib2/filters/low_pass_EMA.hpp"
 #include "rover_lib2/controllers/PID.hpp"

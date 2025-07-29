@@ -4,7 +4,7 @@
 #include <concepts>
 #include <Stream.h>
 
-#include "AK10-9_internals.hpp"
+#include "AK10_9_internals.hpp"
 
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/log_plot.hpp"
@@ -157,12 +157,12 @@ namespace Actuators
         void sendCmd(float cmd_)
         {
             float rpm = cmd_ * RAD_S_TO_RPM;
-            float eRpm_f = rpm * N_POLE_PAIRS * MOTOR_REDUCTION;
+            float elecRpm_f = rpm * N_POLE_PAIRS * MOTOR_REDUCTION;
 
             constexpr float MAX_ERPM = AK10_9::RATED_SPEED_ERPM;
-            eRpm_f = std::clamp(eRpm_f, -MAX_ERPM, MAX_ERPM);
+            elecRpm_f = std::clamp(elecRpm_f, -MAX_ERPM, MAX_ERPM);
 
-            int32_t eRpm = static_cast<int32_t>(eRpm_f);
+            int32_t eRpm = static_cast<int32_t>(elecRpm_f);
 
             uint8_t buffer[10];
             buffer[0] = AK10_9::FRAME_HEAD;
