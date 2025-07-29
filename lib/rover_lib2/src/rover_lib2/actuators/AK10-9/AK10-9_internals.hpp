@@ -1,5 +1,5 @@
-#ifndef ROVER_LIB2_ACTUATORS_AK10_9_INTERNALS_HPP
-#define ROVER_LIB2_ACTUATORS_AK10_9_INTERNALS_HPP
+#ifndef ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_INTERNALS_HPP
+#define ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_INTERNALS_HPP
 
 #include <cstdint>
 #include <driver/gpio.h>
@@ -44,4 +44,4 @@ namespace AK10_9
     static constexpr uint8_t COMMAND_GET_VALUES = 0x45;
 }  // namespace AK10_9
 
-#endif
+#endif  // ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_INTERNALS_HPP
