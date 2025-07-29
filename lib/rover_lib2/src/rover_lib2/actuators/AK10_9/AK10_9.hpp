@@ -1,5 +1,5 @@
-#ifndef ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_HPP
-#define ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_HPP
+#ifndef ROVER_LIB2_ACTUATORS_AK10_9_AK10_9_HPP
+#define ROVER_LIB2_ACTUATORS_AK10_9_AK10_9_HPP
 
 #include <concepts>
 #include <Stream.h>
@@ -251,4 +251,4 @@ namespace Actuators
     };
 }  // namespace Actuators
 
-#endif  // ROVER_LIB2_ACTUATORS_AK10-9_AK10-9_HPP
+#endif  // ROVER_LIB2_ACTUATORS_AK10_9_AK10_9_HPP
