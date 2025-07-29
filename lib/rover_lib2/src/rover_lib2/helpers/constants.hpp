@@ -1,5 +1,7 @@
 #ifndef ROVER_LIB2_HELPERS_CONSTANTS_HPP
 #define ROVER_LIB2_HELPERS_CONSTANTS_HPP
+#include <array>
+#include <cstddef>
 
 #if defined(__linux__)
 #include <map>
@@ -40,7 +42,7 @@ namespace Constants
 
     namespace AntennaInfo
     {
-        enum class eAntennaType : size_t
+        enum class eAntennaType : std::size_t
         {
             BASE = 0,
             ROVER = 1,
