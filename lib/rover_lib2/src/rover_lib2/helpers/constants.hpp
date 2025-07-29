@@ -38,6 +38,26 @@ namespace Constants
 #endif  // defined(__linux__)
     }   // namespace CameraInfo
 
+    namespace AntennaInfo
+    {
+        enum class eAntennaType : size_t
+        {
+            BASE = 0,
+            ROVER = 1,
+            eLast
+        };
+
+        static constexpr std::array<const char*, std::to_underlying(eAntennaType::eLast)> ANTENNA_URLS
+            = {"https://192.168.144.55", "https://192.168.144.50"};
+
+        template<eAntennaType antenna_>
+        constexpr const char* getURL()
+        {
+            static_assert(static_cast<size_t>(antenna_) < ANTENNA_URLS.size(), "Invalid antenna index");
+            return ANTENNA_URLS[static_cast<size_t>(antenna_)];
+        }
+    }  // namespace AntennaInfo
+
     namespace DriveTrain
     {
         constexpr float SPEED_FACTOR_CRAWLER = 0.2f;
