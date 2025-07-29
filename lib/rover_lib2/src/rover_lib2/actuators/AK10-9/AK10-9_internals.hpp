@@ -31,19 +31,13 @@ namespace AK10_9
     static constexpr gpio_num_t BUT_JOG_PLUS = GPIO_NUM_10;
     static constexpr gpio_num_t BUT_JOG_MOINS = GPIO_NUM_11;
 
-    // Motor UART config
     static constexpr gpio_num_t UART_TX_PIN = GPIO_NUM_6;
     static constexpr gpio_num_t UART_RX_PIN = GPIO_NUM_7;
     static constexpr uint32_t UART_BAUD_RATE = 921600;
 
-    // Motor limtis
     static constexpr int32_t RATED_SPEED_ERPM = 19572;
     static constexpr int32_t MAX_SPEED_ERPM = 26880;  // no load
 
-    // Checksum hash table (fuck le constexpr, faudrait que je déclare mon giga tableau ici, ça serait laid pas mal)
-    // static const unsigned short CRC16_TAB[];
-
-    // Motor Protocol Constants
     static constexpr uint8_t FRAME_HEAD = 0xAA;
     static constexpr uint8_t FRAME_TAIL = 0xBB;
     static constexpr uint8_t COMMAND_SET_RPM = 0x49;

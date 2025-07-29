@@ -157,36 +157,23 @@ namespace Actuators
         void sendCmd(float cmd_)
         {
             float rpm = cmd_ * RAD_S_TO_RPM;
-
             float eRpm_f = rpm * N_POLE_PAIRS * MOTOR_REDUCTION;
 
-            float capRpm = rpm;
-            if (eRpm_f > AK10_9::RATED_SPEED_ERPM)
-            {
-                eRpm_f = AK10_9::RATED_SPEED_ERPM;
-                capRpm = AK10_9::RATED_SPEED_ERPM / (100.0 * 6.0 * 14.0);
-            }
-            else if (eRpm_f < -AK10_9::RATED_SPEED_ERPM)
-            {
-                eRpm_f = -AK10_9::RATED_SPEED_ERPM;
-                capRpm = -AK10_9::RATED_SPEED_ERPM / (100.0 * 6.0 * 14.0);
-            }
+            constexpr float MAX_ERPM = AK10_9::RATED_SPEED_ERPM;
+            eRpm_f = std::clamp(eRpm_f, -MAX_ERPM, MAX_ERPM);
 
             int32_t eRpm = static_cast<int32_t>(eRpm_f);
 
             uint8_t buffer[10];
-
-            // TODO Make this cleaner
-            //* Could make enum for buffer indices
             buffer[0] = AK10_9::FRAME_HEAD;
-            buffer[1] = 0x05;  // Data length : 1 byte command + 4 bytes speed
+            buffer[1] = 0x05;
             buffer[2] = AK10_9::COMMAND_SET_RPM;
             buffer[3] = (eRpm >> 24) & 0xFF;
             buffer[4] = (eRpm >> 16) & 0xFF;
             buffer[5] = (eRpm >> 8) & 0xFF;
             buffer[6] = eRpm & 0xFF;
 
-            uint16_t checksum = this->calcCheckSum(buffer + 2, 5);  // wtf is this
+            uint16_t checksum = this->calcCheckSum(buffer + 2, 5);
             buffer[7] = (checksum >> 8) & 0xFF;
             buffer[8] = checksum & 0xFF;
             buffer[9] = AK10_9::FRAME_TAIL;

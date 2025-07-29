@@ -61,23 +61,14 @@ class J1Actuator
         {
             return;
         }
-
-        _j1.update();
-
-        // TODO redo switch to have whole logic in update
-        switch (_currentState)
-        {
-            default:
-                ASSERT_MSG("Shouldn't fall here 0_0");
-                [[fallthrough]];
-            case eState::RUNNING:
-                this->runningUpdateLoop();
-                break;
-        }
+        
+        this->runningUpdateLoop();
     }
 
     void runningUpdateLoop()
     {
+        _j1.update();
+
         float speedCmdJ1 = _j1SpeedGoal;
 
         if (_j1.getPosition() <= J1_MIN_JOINT_LIMIT)

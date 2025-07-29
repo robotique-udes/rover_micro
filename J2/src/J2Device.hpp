@@ -31,27 +31,6 @@ class J2Device
             return;
         }
 
-        // if (_pbCalib.isClicked())
-        // {
-            // LOG_DEBUG(Logger::Nodes::J2Device, "HERE");
-            // _j2.setSpeed(FULL_STOP_SPEED);
-
-            // constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
-            // OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
-            // do
-            // {
-            //     _j2.update();
-
-            //     if (!IN_ERROR(_j2.getSpeed(), FULL_STOP_SPEED_ERROR_TELORANCE, FULL_STOP_SPEED))
-            //     {
-            //         timerStop = OneShotTimer<uint64_t, &Time::millis>(CALIB_STOP_TIME);
-            //     }
-            // }
-            // while (!timerStop.isReady());
-
-            // _j2.calib(CALIB_POSITION);
-        // }
-
         _j2.update();
 
         if (_pbJogPlus.isClicked())
