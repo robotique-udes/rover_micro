@@ -147,7 +147,7 @@ class J1Actuator
     Encoders::AMT222A<Filters::None, Filters::None> __j1_encoder = {__spi, PIN_ENC_CS, false};
 
     // Controller
-    Controllers::PID __j1_controllerSpeed = {175.0F, 0.0F, 0.0F, 100.0F, 25'000ULL};
+    Controllers::PID __j1_controllerSpeed = {600.0F, 100.0F, 10.0F, 100.0F, 25'000ULL};
 
     Actuators::DC<MotorDrivers::IFX007T<PWMGenerators::MCPWM, PWMGenerators::MCPWM>,
                   Encoders::AMT222A<Filters::None, Filters::None>,
