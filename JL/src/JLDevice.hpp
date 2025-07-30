@@ -9,6 +9,10 @@
 #include <rover_lib2/actuators/PWM_generators/MCPWM.hpp>
 #include <rover_lib2/sensors/push_button.hpp>
 
+#include <rover_can2/rover_can2.hpp>
+#include <rover_can2/msgs/arm_joint_cmd.hpp>
+#include <rover_can2/msgs/arm_joint_status.hpp>
+
 DEFINE_LOG_NODE(JLDevice, Logger::eNodeState::ON);
 class JLDevice
 {
@@ -18,6 +22,14 @@ class JLDevice
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.25F;                   // m
     static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
+
+    static constexpr float CAN_SEND_FREQ = 20.0F;
+    static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQ);
+    static constexpr float CAN_RECV_FREQ = 20.0F;
+    static constexpr uint64_t CAN_RECV_WATCHDOG_PERIOD = static_cast<uint64_t>(2.0F * 1'000.0F / CAN_RECV_FREQ);
+
+    using CanDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
+                                         RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, JLDevice>>;
 
   public:
     void init()
@@ -38,7 +50,7 @@ class JLDevice
         {
             _actuator.setSpeed(FULL_STOP_SPEED);
 
-            constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
+            constexpr uint64_t CALIB_STOP_TIME = 1'000ULL;
             OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
             do
             {
@@ -62,18 +74,52 @@ class JLDevice
         {
             _actuator.setSpeed(-JOG_SPEED);
         }
+        else if (_cmdWatchdog.isOk())
+        {
+            _actuator.setSpeed(_cmdLastMsg.getData().targetSpeed);
+        }
         else
         {
             _actuator.setSpeed(FULL_STOP_SPEED);
         }
+
+        if (_timerCanSend.isReady())
+        {
+            RoverCan2::Msgs::ArmJointStatus msg;
+            msg.data().currentPosition = _actuator.getPosition();
+            msg.data().currentSpeed = _actuator.getSpeed();
+
+            _canDevice.sendMsg(msg);
+        }
+    }
+
+    CanDeviceT& getCanDevice()
+    {
+        return _canDevice;
     }
 
   private:
+    void CB_armCmd(const RoverCan2::Msgs::ArmJointCmd& msg_)
+    {
+        _cmdLastMsg.data() = msg_.getData();
+        _cmdWatchdog.reset();
+    }
+
     PushButton _pbFwd = PushButton(PIN_PB_FWD);
     PushButton _pbRev = PushButton(PIN_PB_REV);
     PushButton _pbCalib = PushButton(PIN_PB_CALIB);
 
     LoopTimer<uint64_t, &Time::micros> timerControlLoop{CONTROL_LOOP_PERIOD_US};
+
+    CanDeviceT _canDevice = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
+                                              RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, JLDevice>>(
+        RoverCan2::Constant::eDeviceId::JL_CONTROLLER,
+        RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>(),
+        RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, JLDevice>(*this, &JLDevice::CB_armCmd));
+
+    RoverCan2::Msgs::ArmJointCmd _cmdLastMsg;
+    Watchdog<uint64_t, &Time::millis> _cmdWatchdog = {CAN_RECV_WATCHDOG_PERIOD};
+    LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
 
     // ===========================================================================================================================
     // Actuator Config
