@@ -18,8 +18,8 @@
 #include <bit>
 #include <limits>
 
-DEFINE_LOG_NODE(AMT222X, Logger::eNodeState::ON);
-DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(AMT222X, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::OFF);
 
 namespace Encoders
 {

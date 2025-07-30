@@ -18,6 +18,12 @@ class J2Device
     static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
 
   public:
+    J2Device(Stream* motorSerial_ = nullptr):
+        _motorSerial(motorSerial_),
+        _j2(motorSerial_)
+    {
+    }
+
     void init()
     {
         _j2.init();
@@ -53,6 +59,8 @@ class J2Device
     PushButton _pbCalib = {PIN_PB_CALIB};
 
     LoopTimer<uint64_t, &Time::micros> _controlLoopTimer = {LOOP_PERIOD_US};
+
+    Stream* _motorSerial = nullptr;
 
     J2Actuator _j2;
     float _j2SpeedGoal = 0.0F;

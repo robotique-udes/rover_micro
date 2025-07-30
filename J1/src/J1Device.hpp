@@ -105,13 +105,7 @@ class J1Device
         _j1CanDevice.sendMsg(j1Status);
     }
 
-    void CB_J3Cmd(const RoverCan2::Msgs::ArmJointCmd& msg_)
-    {
-        _j1CanWatchdog.reset();
-        _j1TargetSpeed = msg_.getData().targetSpeed;
-    }
-
-    void CB_J4Cmd(const RoverCan2::Msgs::ArmJointCmd& msg_)
+    void CB_J1Cmd(const RoverCan2::Msgs::ArmJointCmd& msg_)
     {
         _j1CanWatchdog.reset();
         _j1TargetSpeed = msg_.getData().targetSpeed;
@@ -130,8 +124,8 @@ class J1Device
     PushButton _pbRev = {PIN_PB_REV};
 
     JointCanDeviceT _j1CanDevice
-        = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_TILT_CONTROLLER,
-                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J1Device>(*this, &J1Device::CB_J3Cmd),
+        = JointCanDeviceT(RoverCan2::Constant::eDeviceId::J1_CONTROLLER,
+                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J1Device>(*this, &J1Device::CB_J1Cmd),
                           RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
 
     VALIDATE_CONCEPT(RoverObject, J1Device);

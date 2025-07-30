@@ -13,9 +13,7 @@
 #include <bit>
 #include <array>
 
-DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::ON);
-
-// TODO reset on first read (check in ATM222X) Also apply to speed filter
+DEFINE_LOG_NODE(AMT222A, Logger::eNodeState::OFF);
 
 namespace Encoders
 {

@@ -1,7 +1,6 @@
 #ifndef __ENCODER_HPP__
 #define __ENCODER_HPP__
 
-// TODO TEMPORARY
 #if !defined(ESP32)
 #error CPU is not supported
 #else

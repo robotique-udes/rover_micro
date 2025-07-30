@@ -36,6 +36,21 @@ namespace Actuators
         TORQUE,
     };
 
+    enum class eSendCmd
+    {
+        FRAME_HEAD = 0,
+        DATA_LENGTH,
+        COMMAND_SET_RPM,
+        RPM_MSB,
+        RPM_BYTE2,
+        RPM_BYTE1,
+        RPM_LSB,
+        CHECKSUM_MSB,
+        CHECKSUM_LSB,
+        FRAME_TAIL,
+        eLAST
+    };
+
     template<Encoders::Encoder EncoderT = Encoders::None,
              Controllers::Controller PositionControllerT = Controllers::None,
              Controllers::Controller SpeedControllerT = Controllers::None>
@@ -105,8 +120,6 @@ namespace Actuators
 
         void speedModeUpdate(void)
         {
-            // TODO support open loop?
-
             if (!_pSpeedController || !_pEncoder)
             {
                 LOG_ERROR(Logger::Nodes::AK109, "No speed controller or encoder attached, falling in error mode");
@@ -156,29 +169,29 @@ namespace Actuators
 
         void sendCmd(float cmd_)
         {
-            float rpm = cmd_ * RAD_S_TO_RPM;
-            float elecRpm_f = rpm * N_POLE_PAIRS * MOTOR_REDUCTION;
+            float rpm = toRPM(cmd_);
+            float elecRpm_f = toelectricRPM(rpm);
 
             constexpr float MAX_ERPM = AK10_9::RATED_SPEED_ERPM;
             elecRpm_f = std::clamp(elecRpm_f, -MAX_ERPM, MAX_ERPM);
 
             int32_t eRpm = static_cast<int32_t>(elecRpm_f);
 
-            uint8_t buffer[10];
-            buffer[0] = AK10_9::FRAME_HEAD;
-            buffer[1] = 0x05;
-            buffer[2] = AK10_9::COMMAND_SET_RPM;
-            buffer[3] = (eRpm >> 24) & 0xFF;
-            buffer[4] = (eRpm >> 16) & 0xFF;
-            buffer[5] = (eRpm >> 8) & 0xFF;
-            buffer[6] = eRpm & 0xFF;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::FRAME_HEAD)] = AK10_9::FRAME_HEAD;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::DATA_LENGTH)] = 0x05;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::COMMAND_SET_RPM)] = AK10_9::COMMAND_SET_RPM;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::RPM_MSB)] = (eRpm >> 24) & 0xFF;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::RPM_BYTE2)] = (eRpm >> 16) & 0xFF;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::RPM_BYTE1)] = (eRpm >> 8) & 0xFF;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::RPM_LSB)] = eRpm & 0xFF;
 
-            uint16_t checksum = this->calcCheckSum(buffer + 2, 5);
-            buffer[7] = (checksum >> 8) & 0xFF;
-            buffer[8] = checksum & 0xFF;
-            buffer[9] = AK10_9::FRAME_TAIL;
+            uint16_t checksum = this->calcCheckSum(_sendCmdBuffer.data() + 2, 5);
 
-            _motorSerial->write(buffer, 10);
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::CHECKSUM_MSB)] = (checksum >> 8) & 0xFF;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::CHECKSUM_LSB)] = checksum & 0xFF;
+            _sendCmdBuffer[TO_UNDERLYING(eSendCmd::FRAME_TAIL)] = AK10_9::FRAME_TAIL;
+
+            _motorSerial->write(_sendCmdBuffer.data(), sizeof(_sendCmdBuffer));
         }
 
         float getSpeed(void) const
@@ -219,15 +232,24 @@ namespace Actuators
             _maxJointLimit = max_;
         }
 
-        unsigned short calcCheckSum(unsigned char* buf_, unsigned int len_) const
+        uint16_t calcCheckSum(unsigned char* buf_, unsigned int len_) const
         {
-            unsigned int i;
-            unsigned short cksum = 0;
-            for (i = 0; i < len_; i++)
+            uint16_t cksum = 0;
+            for (size_t i = 0; i < len_; i++)
             {
                 cksum = AK10_9::CRC16_TAB[(((cksum >> 8) ^ *buf_++) & 0xFF)] ^ (cksum << 8);
             }
             return cksum;
+        }
+
+        float toRPM(float radPerSec_) const
+        {
+            return radPerSec_ * RAD_S_TO_RPM;
+        }
+
+        float toelectricRPM(float radPerSec_) const
+        {
+            return radPerSec_ * RAD_S_TO_RPM * N_POLE_PAIRS * MOTOR_REDUCTION;
         }
 
       private:
@@ -235,10 +257,12 @@ namespace Actuators
 
         bool _errorMode = false;
 
-        Stream* _motorSerial;
-        EncoderT* _pEncoder;
-        PositionControllerT* _pPositionController;
-        SpeedControllerT* _pSpeedController;
+        std::array<uint8_t, TO_UNDERLYING(eSendCmd::eLAST)> _sendCmdBuffer = {0};
+
+        Stream* _motorSerial = nullptr;
+        EncoderT* _pEncoder = nullptr;
+        PositionControllerT* _pPositionController = nullptr;
+        SpeedControllerT* _pSpeedController = nullptr;
 
         float _goalPos = 0.0F;
         std::optional<float> _minJointLimit = std::nullopt;

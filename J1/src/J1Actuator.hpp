@@ -3,10 +3,8 @@
 
 #include "config.hpp"
 #include "rover_lib2/actuators/dc.hpp"
-// TODO rm IFX9201SG
 #include "rover_lib2/motor_drivers/IFX007T.hpp"
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
-// TODO rm ATM222X
 #include "rover_lib2/sensors/encoder/AMT222A.hpp"
 #include "rover_lib2/filters/low_pass_EMA.hpp"
 #include "rover_lib2/controllers/PID.hpp"
@@ -45,13 +43,9 @@ class J1Actuator
     void init()
     {
         _j1.setJointLimit(std::nullopt, std::nullopt);
-
         _j1.setSpeed(0.0F);
-
         _j1.setMaxSpeed(MAX_MOTOR_SPEED_RAD_S);
-
         _j1.init();
-
         __motorDriver.setMaxVoltage(ALIM_VOLTAGE, MAX_MOTOR_VOLTAGE);
     }
 
@@ -68,7 +62,6 @@ class J1Actuator
     void runningUpdateLoop()
     {
         _j1.update();
-
         float speedCmdJ1 = _j1SpeedGoal;
 
         if (_j1.getPosition() <= J1_MIN_JOINT_LIMIT)
@@ -100,7 +93,7 @@ class J1Actuator
 
     void calib(float posJ1_)
     {
-        __j1_encoder.calib(posJ1_ * std::numbers::pi_v<float>);
+        __j1_encoder.calib(posJ1_);
     }
 
   private:
@@ -111,7 +104,6 @@ class J1Actuator
     float _j1CurrentSpeed = 0.0F;
 
     eState _currentState = eState::RUNNING;
-    OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
     Filters::LowPassEMA __filterJ1Speed = {0.1F, 0.0F};
     Filters::LowPassEMA __filterJ1Position = {0.1F, 0.0F};
