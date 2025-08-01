@@ -13,37 +13,32 @@
 // ===============================================================================================================================
 // Device specific
 // ===============================================================================================================================
-#define PCB_ROVER_JL_REV0
+#define PCB_ROVER_J2_REV0
 
 // ===============================================================================================================================
 // PCB Specific - Only change after pcb revisions
 // ===============================================================================================================================
-#if defined(PCB_ROVER_JL_REV0)
+#if defined(PCB_ROVER_J2_REV0)
 
-constexpr float ALIM_VOLTAGE = 25.2F;
-constexpr float MAX_MOTOR_VOLTAGE = 18.0F;
+constexpr gpio_num_t PIN_ENC_MISO = GPIO_NUM_12;
+constexpr gpio_num_t PIN_ENC_MOSI = GPIO_NUM_13;
+constexpr gpio_num_t PIN_ENC_CLK = GPIO_NUM_14;
+constexpr gpio_num_t PIN_ENC_CS = GPIO_NUM_2;
 
-constexpr gpio_num_t PIN_MOTOR_A_IN = GPIO_NUM_1;
-constexpr gpio_num_t PIN_MOTOR_A_EN = GPIO_NUM_2;
-
-constexpr gpio_num_t PIN_MOTOR_B_IN = GPIO_NUM_48;
-constexpr gpio_num_t PIN_MOTOR_B_EN = GPIO_NUM_47;
-
-constexpr gpio_num_t PIN_ENC_MISO = GPIO_NUM_4;
-constexpr gpio_num_t PIN_ENC_MOSI = GPIO_NUM_5;
-constexpr gpio_num_t PIN_ENC_CLK = GPIO_NUM_6;
-constexpr gpio_num_t PIN_ENC_CS = GPIO_NUM_7;
+constexpr gpio_num_t PIN_UART_TX = GPIO_NUM_6;
+constexpr gpio_num_t PIN_UART_RX = GPIO_NUM_7;
+constexpr int UART_BAUD_RATE = 921600;
 
 constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_21;
-constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_9;
-constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_10;
+constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_48;
+constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_47;
 
 constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_13;
-constexpr gpio_num_t PIN_PB_FWD = GPIO_NUM_14;
-constexpr gpio_num_t PIN_PB_REV = GPIO_NUM_38;
+constexpr gpio_num_t PIN_PB_PLUS = GPIO_NUM_11;
+constexpr gpio_num_t PIN_PB_NEG = GPIO_NUM_10;
 
-constexpr gpio_num_t PIN_POT_ANAL = GPIO_NUM_15;
+constexpr gpio_num_t PIN_POT_ANAL = GPIO_NUM_1;
 
-#endif  // PCB_ROVER_JL_REV0
+#endif  // PCB_ROVER_J1_REV0
 
 #endif  // CONFIG_HPP
