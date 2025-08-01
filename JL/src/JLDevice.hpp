@@ -20,13 +20,17 @@ class JLDevice
     static constexpr uint32_t CONTROL_LOOP_PERIOD_US = 1'000UL;
     static constexpr float JOG_SPEED = 0.04F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
-    static constexpr float CALIB_POSITION = 0.25F;                   // m
+    static constexpr float CALIB_POSITION = 0.0F;                    // m
     static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
 
     static constexpr float CAN_SEND_FREQ = 20.0F;
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQ);
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_RECV_WATCHDOG_PERIOD = static_cast<uint64_t>(2.0F * 1'000.0F / CAN_RECV_FREQ);
+
+    static constexpr float J1_MIN_JOINT_LIMIT = -0.43F; // m
+    static constexpr float J1_MAX_JOINT_LIMIT = 0.0F;  // m
+    static_assert(J1_MIN_JOINT_LIMIT <= J1_MAX_JOINT_LIMIT);
 
     using CanDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
                                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, JLDevice>>;
@@ -36,6 +40,7 @@ class JLDevice
     {
         _actuator.init();
         _actuator.setSpeed(FULL_STOP_SPEED);
+        _actuator.setJointLimit(J1_MIN_JOINT_LIMIT, J1_MAX_JOINT_LIMIT);
         __motorDriver.setMaxVoltage(ALIM_VOLTAGE, MAX_MOTOR_VOLTAGE);
     }
 
