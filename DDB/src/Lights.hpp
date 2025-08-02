@@ -66,7 +66,9 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
   private:
     void CB_pwmControl(const RoverCan2::Msgs::PwmCmd& msg_)
     {
-        _lightSignal.setDutyCycle(msg_.getData().dutyCycle);
+        float value = msg_.getData().dutyCycle;
+        value = std::clamp(value, 40.0f, 100.0f);
+        _lightSignal.setDutyCycle(value);
     }
 
     PWMGenerators::MCPWMTimer __mcpwmTimer;
