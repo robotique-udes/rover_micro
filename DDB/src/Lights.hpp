@@ -7,7 +7,6 @@
 #include "rover_can2/msgs/PWM_info.hpp"
 #include "rover_lib2/helpers/macros.hpp"
 
-
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 
@@ -69,7 +68,7 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
     void CB_pwmControl(const RoverCan2::Msgs::PwmCmd& msg_)
     {
         float value = msg_.getData().dutyCycle;
-        if(value != 0.0F)
+        if (value != 0.0F)
         {
             value = MAP(value, 0.0F, 100.0F, 40.0F, 100.0F);
         }
