@@ -5,7 +5,7 @@
 
 #include <rover_lib2/sensors/push_button.hpp>
 
-DEFINE_LOG_NODE(J2Device, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(J2Device, Logger::eNodeState::ON);
 
 class J2Device
 {
@@ -38,6 +38,27 @@ class J2Device
         }
 
         _j2.update();
+
+        if (_pbCalib.isClicked())
+        {
+            LOG_DEBUG(Logger::Nodes::J2Device, "Calibration requested");
+            _j2.setSpeed(FULL_STOP_SPEED);
+
+            constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
+            OneShotTimer<uint64_t, &Time::millis> timerStop(CALIB_STOP_TIME);
+            do
+            {
+                _j2.update();
+
+                if (!IN_ERROR(_j2.getSpeed(), FULL_STOP_SPEED_ERROR_TELORANCE, FULL_STOP_SPEED))
+                {
+                    timerStop = OneShotTimer<uint64_t, &Time::millis>(CALIB_STOP_TIME);
+                }
+            }
+            while (!timerStop.isReady());
+
+            _j2.calib(CALIB_POSITION);
+        }
 
         if (_pbJogPlus.isClicked())
         {

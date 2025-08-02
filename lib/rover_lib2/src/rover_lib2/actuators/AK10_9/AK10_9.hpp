@@ -96,7 +96,7 @@ namespace Actuators
             if (_errorMode)
             {
                 LOG_WARN(Logger::Nodes::AK109, "Fallen in error mode, motor stopped");
-                this->setSpeed(FULL_STOP_SPEED);
+                // this->setSpeed(FULL_STOP_SPEED);
                 return;
             }
 
@@ -129,15 +129,15 @@ namespace Actuators
 
             float cmd = _pSpeedController->computeCommand(this->getSpeed(), _goalSpeed);
 
-            if (_maxJointLimit.has_value() && this->getPosition() >= _maxJointLimit.value())
-            {
-                cmd = std::clamp(cmd, std::numeric_limits<float>::lowest(), 0.0F);
-            }
+            // if (_maxJointLimit.has_value() && this->getPosition() >= _maxJointLimit.value())
+            // {
+            //     cmd = std::clamp(cmd, std::numeric_limits<float>::lowest(), 0.0F);
+            // }
 
-            if (_minJointLimit.has_value() && this->getPosition() <= _minJointLimit.value())
-            {
-                cmd = std::clamp(cmd, 0.0F, std::numeric_limits<float>::max());
-            }
+            // if (_minJointLimit.has_value() && this->getPosition() <= _minJointLimit.value())
+            // {
+            //     cmd = std::clamp(cmd, 0.0F, std::numeric_limits<float>::max());
+            // }
 
             LOG_DEBUG(Logger::Nodes::AK109, "_goalSpeed: %f | cmd: %f", _goalSpeed, cmd);
 

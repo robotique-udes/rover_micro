@@ -62,12 +62,14 @@ namespace Encoders
         AMT222A(SPIBus& spiBus_,
                 gpio_num_t pinCS_,
                 bool reversed_ = false,
+                float ratio_ = 1.0F,
                 FilterPosT posFilter_ = Filters::None(),
                 FilterSpeedT speedFilter_ = Filters::None()):
             _spiDevice(spiBus_, pinCS_, SPI_CLOCK_SPEED_HZ, 3U, 3U, SPIDeviceT::eSPIMode::MODE_0),
+            _reversed(reversed_),
+            _ratio(ratio_),
             _filterPos(posFilter_),
-            _filterSpeed(speedFilter_),
-            _reversed(reversed_)
+            _filterSpeed(speedFilter_)
         {
         }
 
@@ -156,6 +158,11 @@ namespace Encoders
 
             _calibRequested = true;
             _calibOffset = calibOffset;
+        }
+
+        float adaptRatio(float rawData_) const
+        {
+            return rawData_ * _ratio;
         }
 
       private:
@@ -296,6 +303,8 @@ namespace Encoders
         float _currentPosition = 0.0F;
         float _lastPosition = 0.0F;
         float _currentSpeed = 0.0F;
+        bool _reversed = false;
+        float _ratio = 1.0F;
 
         FilterPosT _filterPos;
         FilterSpeedT _filterSpeed;
@@ -304,7 +313,6 @@ namespace Encoders
         Chrono<uint64_t, &Time::micros> _dtSpeedCalc;
         OneShotTimer<uint64_t, &Time::micros> _timerTimingDelay = {0};
 
-        bool _reversed;
 
         VALIDATE_CONCEPT(Encoder, AMT222A);
     };

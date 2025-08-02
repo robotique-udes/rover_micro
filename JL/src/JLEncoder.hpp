@@ -10,6 +10,7 @@ namespace Encoders
     class JL
     {
         // From mec team: 50.26mm per turn
+        static constexpr float RATIO = 1.0F; // Ratio is 1:1 because joint is linear. RAD_TO_M and M_TO_RAD are used to convert between
         static constexpr float RAD_TO_M = 0.05026F / (2.0F * std::numbers::pi_v<float>);
         static constexpr float M_TO_RAD = 1.0F / RAD_TO_M;
 
@@ -49,7 +50,7 @@ namespace Encoders
         Filters::LowPassEMA __lowPassPos = Filters::LowPassEMA(0.6);
         Filters::LowPassEMA __lowPassSpeed = Filters::LowPassEMA(0.05);
         Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
-            = {__spiBus, PIN_ENC_CS, "JL", __lowPassPos, __lowPassSpeed, true};
+            = {__spiBus, PIN_ENC_CS, "JL", true, 1.0F, __lowPassPos, __lowPassSpeed};
 
         VALIDATE_CONCEPT(Encoder, JL);
     };

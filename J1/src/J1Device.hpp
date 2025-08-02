@@ -108,7 +108,7 @@ class J1Device
     void CB_J1Cmd(const RoverCan2::Msgs::ArmJointCmd& msg_)
     {
         _j1CanWatchdog.reset();
-        _j1TargetSpeed = msg_.getData().targetSpeed;
+        // _j1TargetSpeed = msg_.getData().targetSpeed;
     }
 
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};
