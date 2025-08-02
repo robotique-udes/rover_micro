@@ -69,7 +69,10 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
     void CB_pwmControl(const RoverCan2::Msgs::PwmCmd& msg_)
     {
         float value = msg_.getData().dutyCycle;
-        value = MAP(value, 0.0F, 100.0F, 40.0F, 100.0F);
+        if(value != 0.0F)
+        {
+            value = MAP(value, 0.0F, 100.0F, 40.0F, 100.0F);
+        }
         _lightSignal.setDutyCycle(value);
     }
 
