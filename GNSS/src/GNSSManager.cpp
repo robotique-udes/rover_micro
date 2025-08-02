@@ -94,14 +94,10 @@ void GNSSManager::parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_
         }
 
         case eGpsMsgType::OTHER:
-        {
-            break;
-        }
+            [[fallthrough]];
 
         default:
-        {
             break;
-        }
     }
 }
 
