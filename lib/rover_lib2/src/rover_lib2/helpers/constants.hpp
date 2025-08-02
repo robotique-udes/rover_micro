@@ -85,7 +85,7 @@ namespace Constants
 
     enum class eGGAQuality : uint8_t
     {
-        UNKNOWN = 0U,
+        NO_FIX = 0U,
         GPS = 1U,
         GNSS = 2U,
         RTK = 3U,

@@ -75,7 +75,7 @@ namespace GNSSParser
     {
         float latitude = 0.0F;
         float longitude = 0.0F;
-        Constants::eGGAQuality fixQuality = Constants::eGGAQuality::UNKNOWN;
+        Constants::eGGAQuality fixQuality = Constants::eGGAQuality::NO_FIX;
         uint8_t satellitesUsed = 0U;
     };
 
@@ -232,7 +232,7 @@ namespace GNSSParser
                 }
                 else
                 {
-                    out_.fixQuality = Constants::eGGAQuality::UNKNOWN;
+                    out_.fixQuality = Constants::eGGAQuality::NO_FIX;
                     problem = true;
                 }
             }
@@ -269,7 +269,7 @@ namespace GNSSParser
             {
                 out_.latitude = 0.0F;
                 out_.longitude = 0.0F;
-                out_.fixQuality = Constants::eGGAQuality::UNKNOWN;
+                out_.fixQuality = Constants::eGGAQuality::NO_FIX;
             }
 
             if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eGGAFields::SATELLITES_USED)))

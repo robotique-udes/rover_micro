@@ -6,7 +6,7 @@ constexpr size_t maxLoopCount = 1'000UL;
 
 bool sGNSSData::hasValidFix() const
 {
-    return fixQuality != Constants::eGGAQuality::UNKNOWN;
+    return fixQuality != Constants::eGGAQuality::NO_FIX;
 }
 
 GNSSManager::GNSSManager(Stream& serial_):
