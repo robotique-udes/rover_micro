@@ -2,7 +2,7 @@
 
 DEFINE_LOG_NODE(GNSS, Logger::eNodeState::OFF);
 
-constexpr size_t maxLoopCount = 1000UL;
+constexpr size_t maxLoopCount = 1'000UL;
 
 bool sGNSSData::hasValidFix() const
 {
@@ -29,7 +29,7 @@ void GNSSManager::update(void)
 
         if (ch == '\n' || ch == '\r')
         {
-            if (_bufferIndex > 0UL && _bufferIndex < MAX_SENTENCE_LENGTH - 1UL)
+            if (_bufferIndex > 0UL && _bufferIndex < _sentenceBuffer.size() - 1UL)
             {
                 _sentenceBuffer[_bufferIndex] = '\0';
                 LOG_DEBUG(Logger::Nodes::GNSS, "%s", _sentenceBuffer.data());
@@ -50,7 +50,7 @@ void GNSSManager::update(void)
 
 void GNSSManager::parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_t length_)
 {
-    if (length_ < 10UL || (buffer_[0] != '$' && buffer_[0] != '#'))
+    if (length_ < 11UL || (buffer_[0] != '$' && buffer_[0] != '#'))
     {
         LOG_WARN(Logger::Nodes::GNSS,
                  "Le message reçu est tout cassé bozo: length: %zu, sentence: %.*s",
@@ -60,46 +60,81 @@ void GNSSManager::parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_
         return;
     }
 
-    if (length_ < MAX_SENTENCE_LENGTH && buffer_[length_] != '\0')
+    if (length_ < buffer_.size() && buffer_[length_] != '\0')
     {
         buffer_[length_] = '\0';
     }
 
-    bool isGGA = (buffer_[1] == 'G' && buffer_[2] == 'P' && buffer_[3] == 'G' && buffer_[4] == 'G' && buffer_[5] == 'A')
-                 || (buffer_[1] == 'G' && buffer_[2] == 'N' && buffer_[3] == 'G' && buffer_[4] == 'G' && buffer_[5] == 'A');
+    eGpsMsgType msgType = findGpsMsgType(buffer_, length_);
 
-    bool isUniHeading = (buffer_[1] == 'U' && buffer_[2] == 'N' && buffer_[3] == 'I' && buffer_[4] == 'H' && buffer_[5] == 'E'
-                         && buffer_[6] == 'A' && buffer_[7] == 'D' && buffer_[8] == 'I' && buffer_[9] == 'N' && buffer_[10] == 'G'
-                         && buffer_[11] == 'A');
-
-    if (isGGA)
+    switch (msgType)
     {
-        GNSSParser::sGGADataUsed GGA;
-        if (GNSSParser::parseGGA(buffer_, GGA, _currentData.headingQuality))
+        case eGpsMsgType::GGA:
         {
-            _currentData.latitude = GGA.latitude;
-            _currentData.longitude = GGA.longitude;
-            _currentData.fixQuality = GGA.fixQuality;
-            _currentData.satellites = GGA.satellitesUsed;
+            GNSSParser::sGGADataUsed GGA;
+            if (GNSSParser::parseGGA(buffer_, GGA, _currentData.headingQuality))
+            {
+                _currentData.latitude = GGA.latitude;
+                _currentData.longitude = GGA.longitude;
+                _currentData.fixQuality = GGA.fixQuality;
+                _currentData.satellites = GGA.satellitesUsed;
+            }
+            break;
         }
-    }
-    else if (isUniHeading)
-    {
-        GNSSParser::sUniHeadingDataUsed heading;
-        if (GNSSParser::parseUniHeading(buffer_, heading))
+
+        case eGpsMsgType::UNI_HEADING:
         {
-            _currentData.headingDeg = radToDeg(_headingFilter.addValue(degToRad(heading.headingDeg)));
-            _currentData.headingQuality = heading.headingQuality;
+            GNSSParser::sUniHeadingDataUsed heading;
+            if (GNSSParser::parseUniHeading(buffer_, heading))
+            {
+                _currentData.headingDeg = radToDeg(_headingFilter.addValue(degToRad(heading.headingDeg)));
+                _currentData.headingQuality = heading.headingQuality;
+            }
+            break;
+        }
+
+        case eGpsMsgType::OTHER:
+        {
+            break;
+        }
+
+        default:
+        {
+            break;
         }
     }
 }
 
-sGNSSData GNSSManager::getData(void)
+eGpsMsgType GNSSManager::findGpsMsgType(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_t length_)
+{
+    eGpsMsgType msgType = eGpsMsgType::OTHER;
+
+    if (length_ < 11UL)
+    {
+        return msgType;
+    }
+
+    if ((buffer_[1] == 'G' && buffer_[2] == 'P' && buffer_[3] == 'G' && buffer_[4] == 'G' && buffer_[5] == 'A')
+        || (buffer_[1] == 'G' && buffer_[2] == 'N' && buffer_[3] == 'G' && buffer_[4] == 'G' && buffer_[5] == 'A'))
+    {
+        msgType = eGpsMsgType::GGA;
+    }
+
+    if (buffer_[1] == 'U' && buffer_[2] == 'N' && buffer_[3] == 'I' && buffer_[4] == 'H' && buffer_[5] == 'E' && buffer_[6] == 'A'
+        && buffer_[7] == 'D' && buffer_[8] == 'I' && buffer_[9] == 'N' && buffer_[10] == 'G' && buffer_[11] == 'A')
+    {
+        msgType = eGpsMsgType::UNI_HEADING;
+    }
+
+    return msgType;
+}
+
+sGNSSData GNSSManager::getData(void) const
 {
     return _currentData;
 }
 
-float GNSSManager::getFilteredHeading(void)
+float GNSSManager::getFilteredHeading(void) const
 {
     return radToDeg(_headingFilter.getFilteredValue());
 }

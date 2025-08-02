@@ -14,9 +14,16 @@ struct sGNSSData
     Constants::eGGAQuality fixQuality = Constants::eGGAQuality::UNKNOWN;
     uint8_t satellites = 0U;
     float headingDeg = 0.0F;
-    Constants::eUniHeadingQuality headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
+    Constants::eHeadingQuality headingQuality = Constants::eHeadingQuality::NO_HEADING;
 
     bool hasValidFix() const;
+};
+
+enum class eGpsMsgType : uint8_t
+{
+    GGA,
+    UNI_HEADING,
+    OTHER,
 };
 
 /**
@@ -40,11 +47,12 @@ class GNSSManager
   public:
     explicit GNSSManager(Stream& serial_);
     void update(void);
-    sGNSSData getData(void);
-    float getFilteredHeading(void);
+    sGNSSData getData(void) const;
+    float getFilteredHeading(void) const;
 
   private:
     void parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_t length_);
+    eGpsMsgType findGpsMsgType(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_t length_);
 };
 
 #endif  // GNSS_MANAGER_H

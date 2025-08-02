@@ -5,8 +5,8 @@
 #include "rover_can2/msgs/fix_info.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 
-constexpr uint32_t PUBLISH_PERIOD_FAST_MS = 50UL;
-constexpr uint32_t PUBLISH_PERIOD_SLOW_MS = 1000UL;
+constexpr uint32_t PUBLISH_PERIOD_TELEMETRY_MS = 50UL;
+constexpr uint32_t PUBLISH_PERIOD_MSG_QUALITY_MS = 1000UL;
 
 class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>,
                                          RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>,
@@ -20,8 +20,8 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
                                                                           RoverCan2::Publisher<RoverCan2::Msgs::FixPosition>(),
                                                                           RoverCan2::Publisher<RoverCan2::Msgs::FixHeading>(),
                                                                           RoverCan2::Publisher<RoverCan2::Msgs::FixInfo>()),
-        updateTimerFast(PUBLISH_PERIOD_FAST_MS),
-        updateTimerSlow(PUBLISH_PERIOD_SLOW_MS)
+        _updateTimerTelemetry(PUBLISH_PERIOD_TELEMETRY_MS),
+        _updateTimerMsgQuality(PUBLISH_PERIOD_MSG_QUALITY_MS)
     {
     }
 
@@ -29,33 +29,33 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
 
     void _update(void)
     {
-        if (updateTimerFast.isReady())
+        if (_updateTimerTelemetry.isReady())
         {
-            this->sendMsg(posMsg);
-            this->sendMsg(headingMsg);
+            this->sendMsg(_posMsg);
+            this->sendMsg(_headingMsg);
         }
-        if (updateTimerSlow.isReady())
+        if (_updateTimerMsgQuality.isReady())
         {
-            this->sendMsg(infoMsg);
+            this->sendMsg(_infoMsg);
         }
     }
 
     void set(const sGNSSData& newData_)
     {
-        posMsg.data().latitude = newData_.latitude;
-        posMsg.data().longitude = newData_.longitude;
+        _posMsg.data().latitude = newData_.latitude;
+        _posMsg.data().longitude = newData_.longitude;
 
-        headingMsg.data().headingDeg = newData_.headingDeg;
+        _headingMsg.data().headingDeg = newData_.headingDeg;
 
-        infoMsg.data().fixQuality = newData_.fixQuality;
-        infoMsg.data().headingQuality = newData_.headingQuality;
-        infoMsg.data().satelliteCount = newData_.satellites;
+        _infoMsg.data().fixQuality = newData_.fixQuality;
+        _infoMsg.data().headingQuality = newData_.headingQuality;
+        _infoMsg.data().satelliteCount = newData_.satellites;
     }
 
   private:
-    RoverCan2::Msgs::FixPosition posMsg;
-    RoverCan2::Msgs::FixHeading headingMsg;
-    RoverCan2::Msgs::FixInfo infoMsg;
-    LoopTimer<uint64_t, Time::millis> updateTimerFast;
-    LoopTimer<uint64_t, Time::millis> updateTimerSlow;
+    RoverCan2::Msgs::FixPosition _posMsg;
+    RoverCan2::Msgs::FixHeading _headingMsg;
+    RoverCan2::Msgs::FixInfo _infoMsg;
+    LoopTimer<uint64_t, Time::millis> _updateTimerTelemetry;
+    LoopTimer<uint64_t, Time::millis> _updateTimerMsgQuality;
 };

@@ -1,15 +1,15 @@
 #ifndef ROVER_LIB2_SENSORS_GNSS_PARSER_HPP
 #define ROVER_LIB2_SENSORS_GNSS_PARSER_HPP
 
+#include "rover_lib2/helpers/log.hpp"
+#include "rover_lib2/helpers/macros.hpp"
+#include "rover_lib2/helpers/constants.hpp"
 #include <array>
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
 #include <charconv>
 #include <system_error>
-#include "rover_lib2/helpers/log.hpp"
-#include "rover_lib2/helpers/macros.hpp"
-#include "rover_lib2/helpers/constants.hpp"
 
 DEFINE_LOG_NODE(GNSS_PARSER, Logger::eNodeState::ON);
 
@@ -82,11 +82,11 @@ namespace GNSSParser
     struct sUniHeadingDataUsed
     {
         float headingDeg = 0.0F;
-        Constants::eUniHeadingQuality headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
+        Constants::eHeadingQuality headingQuality = Constants::eHeadingQuality::NO_HEADING;
     };
 
     template<size_t SENTENCE_LENGTH>
-    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_, sGGADataUsed& out_, Constants::eUniHeadingQuality uhQuality_);
+    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_, sGGADataUsed& out_, Constants::eHeadingQuality uhQuality_);
     template<size_t SENTENCE_LENGTH>
     bool parseUniHeading(std::array<char, SENTENCE_LENGTH>& rawSentence_, sUniHeadingDataUsed& out_);
 
@@ -162,20 +162,28 @@ namespace GNSSParser
                   std::array<char, MAX_FIELD_LENGTH>& field_,
                   size_t index_)
     {
-        if (index_ >= MAX_FIELDS)
+        if (index_ >= commaIndices_.size())
         {
             return false;
         }
 
-        size_t start = (index_ == 0) ? 0 : commaIndices_[index_ - 1] + 1;
+        size_t start;
+        if (index_ == 0)
+        {
+            start = 0;
+        }
+        else
+        {
+            start = commaIndices_[index_ - 1] + 1;
+        }
         size_t end = commaIndices_[index_];
 
-        if (start >= end || end > SENTENCE_LENGTH)
+        if (start >= end || end > sentence_.size())
         {
             return false;
         }
 
-        size_t length = std::min(end - start, MAX_FIELD_LENGTH - 1);
+        size_t length = std::min(end - start, field_.size() - 1);
         std::copy_n(&sentence_[start], length, field_.data());
         field_[length] = '\0';
 
@@ -188,20 +196,18 @@ namespace GNSSParser
      * @attention Assume rawSentence is a GGA message
      */
     template<size_t SENTENCE_LENGTH>
-    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_,
-                  sGGADataUsed& out_,
-                  Constants::eUniHeadingQuality headingQuality_)
+    bool parseGGA(std::array<char, SENTENCE_LENGTH>& rawSentence_, sGGADataUsed& out_, Constants::eHeadingQuality headingQuality_)
     {
         std::array<size_t, std::to_underlying(eGGAFields::eLAST)> commaIndices = {};
         size_t count = commaSegmenter(rawSentence_, commaIndices);
 
-        if (count >= 7UL)
+        if (count >= static_cast<size_t>(eGGAFields::SATELLITES_USED))
         {
             std::array<char, MAX_FIELD_LENGTH> field{};
             std::array<char, MAX_FIELD_LENGTH> secondField{};
             bool problem = false;
 
-            if (getField(rawSentence_, commaIndices, field, 6))
+            if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eGGAFields::FIX_QUALITY)))
             {
                 uint8_t tempQuality = 0U;
                 auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), tempQuality);
@@ -216,7 +222,7 @@ namespace GNSSParser
                 {
                     out_.fixQuality = Constants::eGGAQuality::RTK;
                 }
-                else if (tempQuality == 1U && headingQuality_ != Constants::eUniHeadingQuality::NO_HEADING)
+                else if (tempQuality == 1U && headingQuality_ != Constants::eHeadingQuality::NO_HEADING)
                 {
                     out_.fixQuality = Constants::eGGAQuality::GNSS;
                 }
@@ -231,8 +237,8 @@ namespace GNSSParser
                 }
             }
 
-            if (getField(rawSentence_, commaIndices, field, 2) && getField(rawSentence_, commaIndices, secondField, 3)
-                && !problem)
+            if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eGGAFields::LATITUDE))
+                && getField(rawSentence_, commaIndices, secondField, static_cast<size_t>(eGGAFields::NS_INDICATOR)) && !problem)
             {
                 auto latitude = convertToDecimalDegrees(field, secondField[0]);
                 if (latitude)
@@ -245,8 +251,8 @@ namespace GNSSParser
                 }
             }
 
-            if (getField(rawSentence_, commaIndices, field, 4) && getField(rawSentence_, commaIndices, secondField, 5)
-                && !problem)
+            if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eGGAFields::LONGITUDE))
+                && getField(rawSentence_, commaIndices, secondField, static_cast<size_t>(eGGAFields::EW_INDICATOR)) && !problem)
             {
                 auto longitude = convertToDecimalDegrees(field, secondField[0]);
                 if (longitude)
@@ -266,7 +272,7 @@ namespace GNSSParser
                 out_.fixQuality = Constants::eGGAQuality::UNKNOWN;
             }
 
-            if (getField(rawSentence_, commaIndices, field, 7))
+            if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eGGAFields::SATELLITES_USED)))
             {
                 uint8_t tempSatellites = 0U;
                 auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), tempSatellites);
@@ -294,32 +300,32 @@ namespace GNSSParser
         std::array<size_t, MAX_FIELDS> commaIndices{};
         size_t count = commaSegmenter(rawSentence_, commaIndices);
 
-        if (count >= 12)
+        if (count >= static_cast<size_t>(eUniHeadingFields::HEADING))
         {
             std::array<char, MAX_FIELD_LENGTH> field{};
-            if (getField(rawSentence_, commaIndices, field, 10))
+            if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eUniHeadingFields::HEADING_QUALITY)))
             {
                 if (std::strncmp(field.data(), "L1_FLOAT", MAX_FIELD_LENGTH) == 0)
                 {
-                    out_.headingQuality = Constants::eUniHeadingQuality::UNRELIABLE;
+                    out_.headingQuality = Constants::eHeadingQuality::UNRELIABLE;
                 }
                 else if (std::strncmp(field.data(), "L1_INT", MAX_FIELD_LENGTH) == 0)
                 {
-                    out_.headingQuality = Constants::eUniHeadingQuality::RELIABLE;
+                    out_.headingQuality = Constants::eHeadingQuality::RELIABLE;
                 }
                 else if (std::strncmp(field.data(), "L1_FIXED", MAX_FIELD_LENGTH) == 0)
                 {
-                    out_.headingQuality = Constants::eUniHeadingQuality::BEST;
+                    out_.headingQuality = Constants::eHeadingQuality::BEST;
                 }
                 else
                 {
-                    out_.headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
+                    out_.headingQuality = Constants::eHeadingQuality::NO_HEADING;
                     out_.headingDeg = 0.0F;
                 }
             }
 
-            if (getField(rawSentence_, commaIndices, field, 12)
-                && out_.headingQuality != Constants::eUniHeadingQuality::NO_HEADING)
+            if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eUniHeadingFields::HEADING))
+                && out_.headingQuality != Constants::eHeadingQuality::NO_HEADING)
             {
                 float heading = 0.0f;
                 auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), heading);
@@ -330,7 +336,7 @@ namespace GNSSParser
                 else
                 {
                     out_.headingDeg = 0.0F;
-                    out_.headingQuality = Constants::eUniHeadingQuality::NO_HEADING;
+                    out_.headingQuality = Constants::eHeadingQuality::NO_HEADING;
                     LOG_WARN(Logger::Nodes::GNSS_PARSER, "Failed to parse the heading");
                 }
             }

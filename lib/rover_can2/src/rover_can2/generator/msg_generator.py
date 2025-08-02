@@ -72,7 +72,7 @@ def generate_cpp_header(input_file_path):
             member_name_capital_snake_case = camel_to_upper_snake(member_name)
             enum_class_eMsgContentID_members += f"{' ' * 12}{member_name_capital_snake_case},\n"
             struct_sMsgData_members += f"{' ' * 12}{member}\n"
-            static_asserts += f"{' ' * 12}static_assert(sizeof({member_name}) <= 4, \"Can messages cannot include field longer than 4 bytes\");\n"
+            static_asserts += f"{' ' * 12}static_assert(sizeof({member_name}) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), \"Can messages cannot include field longer than 6 bytes\");\n"
             valid_msg_ids_member += f"eMsgContentID::{member_name_capital_snake_case}, "
             constructor_init_to_zero += f"{' ' * 12}_data.{member_name} = static_cast<decltype(_data.{member_name})>(0);\n"
 

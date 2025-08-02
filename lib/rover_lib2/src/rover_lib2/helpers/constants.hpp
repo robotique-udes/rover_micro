@@ -91,7 +91,7 @@ namespace Constants
         RTK = 3U,
     };
 
-    enum class eUniHeadingQuality : uint8_t
+    enum class eHeadingQuality : uint8_t
     {
         NO_HEADING = 0U,
         UNRELIABLE = 1U,

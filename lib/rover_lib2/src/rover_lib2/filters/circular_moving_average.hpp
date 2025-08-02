@@ -1,11 +1,11 @@
 #ifndef ROVER_LIB2_FILTERS_CIRCULAR_MOVING_AVERAGE_HPP
 #define ROVER_LIB2_FILTERS_CIRCULAR_MOVING_AVERAGE_HPP
 
+#include "filter.hpp"
+#include "rover_lib2/helpers/log.hpp"
 #include <array>
 #include <numbers>
 #include <cmath>
-#include "filter.hpp"
-#include "rover_lib2/helpers/log.hpp"
 
 DEFINE_LOG_NODE(CircMovAvg, Logger::eNodeState::OFF);
 
@@ -21,19 +21,12 @@ namespace Filters
     template<size_t WINDOW_SIZE>
     class CircularMovingAverage
     {
-      private:
-        std::array<float, WINDOW_SIZE> _buffer = {0.0F};
-        uint16_t _index = 0U;
-        uint16_t _count = 0U;
-        float _sinSum = 0.0F;
-        float _cosSum = 0.0F;
-
       public:
         float addValue(float angleRad_)
         {
             float oldRad = _buffer[_index];
 
-            if (_count < WINDOW_SIZE)
+            if (_count < _buffer.size())
             {
                 _count++;
             }
@@ -44,7 +37,11 @@ namespace Filters
             }
 
             _buffer[_index] = angleRad_;
-            _index = (++_index >= WINDOW_SIZE) ? 0 : _index;
+            _index++;
+            if (_index >= _buffer.size())
+            {
+                _index = 0;
+            }
 
             _sinSum += std::sin(angleRad_);
             _cosSum += std::cos(angleRad_);
@@ -79,6 +76,11 @@ namespace Filters
         }
 
       private:
+        std::array<float, WINDOW_SIZE> _buffer = {0.0F};
+        uint16_t _index = 0U;
+        uint16_t _count = 0U;
+        float _sinSum = 0.0F;
+        float _cosSum = 0.0F;
         VALIDATE_CONCEPT(Filter, CircularMovingAverage);
     };
 

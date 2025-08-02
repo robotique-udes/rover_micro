@@ -1,5 +1,5 @@
-#ifndef ROVER_CAN2_MSGS_FIX_INFO_HPP
-#define ROVER_CAN2_MSGS_FIX_INFO_HPP
+#ifndef FIX_INFO_HPP
+#define FIX_INFO_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
@@ -24,12 +24,18 @@ namespace RoverCan2::Msgs
         struct sMsgData
         {
             Constants::eGGAQuality fixQuality;
-            Constants::eUniHeadingQuality headingQuality;
+            Constants::eHeadingQuality headingQuality;
             uint8_t satelliteCount;
 
-            static_assert(sizeof(fixQuality) <= 4, "Can messages cannot include field longer than 4 bytes");
-            static_assert(sizeof(headingQuality) <= 4, "Can messages cannot include field longer than 4 bytes");
-            static_assert(sizeof(satelliteCount) <= 4, "Can messages cannot include field longer than 4 bytes");
+            static_assert(sizeof(fixQuality) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                    - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(headingQuality) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                        - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(satelliteCount) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                        - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
@@ -164,4 +170,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // ROVER_CAN2_MSGS_FIX_INFO_HPP
+#endif  // FIX_INFO_HPP
