@@ -28,8 +28,7 @@ class DDB : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs
                           RoverCan2::Publisher<RoverCan2::Msgs::DdbStatus, 1UL>>(
             RoverCan2::Constant::eDeviceId::DDB_CONTROLLER,
             RoverCan2::SubscriberMember<RoverCan2::Msgs::DdbCmd, DDB>(*this, &DDB::CB_controlMsgs),
-            RoverCan2::Publisher<RoverCan2::Msgs::DdbStatus, 1UL>()),
-        _sendTimer(CAN_SEND_PERIOD_MS)
+            RoverCan2::Publisher<RoverCan2::Msgs::DdbStatus, 1UL>())
     {
     }
 
@@ -97,7 +96,7 @@ class DDB : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs
     IO::DigitalOutput _bank1_ch2 = IO::DigitalOutput(PIN_BANK1_CH2);
     IO::DigitalOutput _bank1_ch3 = IO::DigitalOutput(PIN_BANK1_CH3);
 
-    LoopTimer<uint64_t, Time::millis> _sendTimer;
+    LoopTimer<uint64_t, &Time::millis> _sendTimer = {CAN_SEND_PERIOD_MS};
 
     VALIDATE_CONCEPT(RoverObject, DDB);
 };

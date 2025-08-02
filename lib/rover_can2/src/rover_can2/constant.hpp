@@ -18,6 +18,7 @@ namespace RoverCan2::Constant
         BATTERY = 0x021,
         PDB_CONTROLLER = 0x022,
         DDB_CONTROLLER = 0x023,
+        ROUTER=0x040,
 
     _RESERVED_PROPULSION = 0x100,
         FRONTLEFT_MOTOR = 0x101,
