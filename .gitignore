@@ -3,3 +3,4 @@
 lib_developpement/src/main.cpp
 **/compile_commands.json
 **.orig
+.platformio/packages/framework-arduinoespressif32/idf_component.yml.orig

@@ -12,7 +12,7 @@
 
 #include <rover_lib2/motor_drivers/IFX007T.hpp>
 #include <rover_lib2/actuators/PWM_generators/MCPWM.hpp>
-#include <rover_lib2/helpers/moving_average.hpp>
+#include <rover_lib2/filters/moving_average.hpp>
 #include <rover_lib2/helpers/watchdog.hpp>
 #include <rover_lib2/LED/led_blinker.hpp>
 #include <rover_lib2/helpers/log.hpp>
