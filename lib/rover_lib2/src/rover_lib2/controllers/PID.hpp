@@ -6,6 +6,8 @@
 
 #include <cmath>
 
+DEFINE_LOG_NODE(PID, Logger::eNodeState::ON);
+
 namespace Controllers
 {
     static constexpr uint64_t PERIOD_CALC_US = 10'000ULL;

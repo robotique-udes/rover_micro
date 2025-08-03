@@ -34,6 +34,8 @@ class J34Actuator
     static constexpr float ZERO_ERROR_EPSILON = 0.01F;
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
 
+    static constexpr float RATIO = 1.0F;
+
     enum class eState : uint8_t
     {
         RUNNING,
@@ -207,10 +209,10 @@ class J34Actuator
     Filters::LowPassEMA __j34L_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34L_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34L_encoder
-        = {__spi, PIN_J34_L_CS, "J34L", __j34L_encFilterPos, __j34L_encFilterSpeed, true};
+        = {__spi, PIN_J34_L_CS, "J34L", true, RATIO, __j34L_encFilterPos, __j34L_encFilterSpeed};
 
     // Controller
-    Controllers::PID __j34L_controllerSpeed = {50.0F, 12.5F, 0.1F, 100.0F, 20'000ULL};
+    Controllers::PID __j34L_controllerSpeed = {50.0F, 5.0F, 0.1F, 100.0F, 20'000ULL};
 
     Actuators::DC<MotorDrivers::IFX9201SG<PWMGenerators::MCPWM>,
                   Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA>,
@@ -234,10 +236,10 @@ class J34Actuator
     Filters::LowPassEMA __j34R_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34R_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34R_encoder
-        = {__spi, PIN_J34_R_CS, "J34R", __j34R_encFilterPos, __j34R_encFilterSpeed, false};
+        = {__spi, PIN_J34_R_CS, "J34R", false, RATIO, __j34R_encFilterPos, __j34R_encFilterSpeed};
 
     // Controller
-    Controllers::PID __j34R_controllerSpeed = {50.0F, 12.5F, 0.1F, 100.0F, 20'000ULL};
+    Controllers::PID __j34R_controllerSpeed = {50.0F, 5.0F, 0.1F, 100.0F, 20'000ULL};
 
     Actuators::DC<MotorDrivers::IFX9201SG<PWMGenerators::MCPWM>,
                   Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA>,

@@ -19,7 +19,7 @@
 #include <limits>
 
 DEFINE_LOG_NODE(AMT222X, Logger::eNodeState::OFF);
-DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::ON);
 
 namespace Encoders
 {
@@ -136,7 +136,7 @@ namespace Encoders
 
         float getPosition(void) const
         {
-            return (_currentPosition + _calibOffset.getValue());
+            return this->adaptRatio(_currentPosition + _calibOffset.getValue());
         }
 
         float getSpeed(void) const

@@ -31,7 +31,7 @@ namespace Encoders
         static constexpr uint32_t SPI_CLOCK_SPEED_HZ = 250'000UL;
         static constexpr uint64_t LOOP_PERIOD_US = 1UL;
         static constexpr uint64_t WATCHDOG_DATA_VALID_PERIOD = 500ULL;
-        static constexpr uint64_t MIN_TIME_BETWEEN_SPEED_CALC_US = 25'000ULL;
+        static constexpr uint64_t MIN_TIME_BETWEEN_SPEED_CALC_US = 40'000ULL;
         static constexpr uint64_t ENC_BOOT_TIME_US = 50ULL;
 
         static constexpr size_t TRANSACTION_MAX_LENGTH = 2UL;

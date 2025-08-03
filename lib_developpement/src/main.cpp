@@ -30,6 +30,8 @@
 #include <Arduino.h>
 #include <rover_lib2/LED/led_blinker.hpp>
 
+
+
 #include "rover_lib2/actuators/dc.hpp"
 #include "rover_lib2/motor_drivers/IFX9201SG.hpp"
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
@@ -43,17 +45,17 @@
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
 constexpr gpio_num_t PIN_J34_L_PWM = GPIO_NUM_16;
 constexpr gpio_num_t PIN_J34_L_DIR = GPIO_NUM_15;
-constexpr gpio_num_t PIN_J34_L_CS = GPIO_NUM_7;
+constexpr gpio_num_t PIN_J34_L_CS = GPIO_NUM_2;
 
-constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_48;
-constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_21;
-constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_47;
+constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_13;
+constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_12;
+constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_14;
 
-constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_40;
-constexpr gpio_num_t PIN_FWD = GPIO_NUM_42;
-constexpr gpio_num_t PIN_REV = GPIO_NUM_41;
+constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_1;
+constexpr gpio_num_t PIN_FWD = GPIO_NUM_11;
+constexpr gpio_num_t PIN_REV = GPIO_NUM_10;
 
-DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::ON);
 
 void setup(void)
@@ -70,6 +72,7 @@ void setup(void)
     LoopTimer<uint64_t, &Time::millis> updateTimer(1);
     for (EVER)
     {
+
         led.update();
     }
 }

@@ -18,19 +18,19 @@ DEFINE_LOG_NODE(J1ActuatorPlot, Logger::eNodeState::OFF);
 
 class J2Actuator
 {
-    static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
+    static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 250.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.8F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J2_MIN_JOINT_LIMIT = -2.5F;
-    static constexpr float J2_MAX_JOINT_LIMIT = 20.0F;
+    static constexpr float J2_MIN_JOINT_LIMIT = -0.75F;
+    static constexpr float J2_MAX_JOINT_LIMIT = 2.8F;
     static_assert(J2_MIN_JOINT_LIMIT <= J2_MAX_JOINT_LIMIT);
 
     static constexpr float ZERO_ERROR_EPSILON = 0.01F;
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
 
-    static constexpr float RATIO = 1.0F;
+    static constexpr float RATIO = 1.0F / 3.0F;
 
   public:
     J2Actuator(Stream* motorSerial_ = nullptr):
@@ -76,12 +76,12 @@ class J2Actuator
 
     float getSpeed() const
     {
-        return _j2Encoder.getSpeed();
+        return _j2.getSpeed();
     }
 
     float getPosition() const
     {
-        return _j2Encoder.getPosition();
+        return _j2.getPosition();
     }
 
     void calib(float offset_)
@@ -100,15 +100,15 @@ class J2Actuator
 
     OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
-    Filters::LowPassEMA _j2SpeedFilter = {0.1F, 0.0F};
-    Filters::LowPassEMA _j2PositionFilter = {0.1F, 0.0F};
+    Filters::LowPassEMA _j2SpeedFilter = {0.9F, 0.0F};
+    Filters::LowPassEMA _j2PositionFilter = {0.9F, 0.0F};
 
     SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_ENC_MOSI, PIN_ENC_MISO, PIN_ENC_CLK, 32U);
 
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _j2Encoder
         = {__spi, PIN_ENC_CS, "J2", false, RATIO, _j2PositionFilter, _j2SpeedFilter};
 
-    Controllers::PID __j1_controllerSpeed = {75.0F, 150.0F, 20.0F, 100.0F, 10'000ULL};
+    Controllers::PID __j1_controllerSpeed = {1'000.0F, 0.0F, 0.0F, 100.0F, 10'000ULL};
 
     Actuators::AK109<Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA>, Controllers::None, Controllers::PID> _j2
         = {Actuators::eControlType::SPEED, _motorSerial, &_j2Encoder, nullptr, &__j1_controllerSpeed};

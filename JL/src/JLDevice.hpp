@@ -20,7 +20,7 @@ class JLDevice
     static constexpr uint32_t CONTROL_LOOP_PERIOD_US = 1'000UL;
     static constexpr float JOG_SPEED = 0.04F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
-    static constexpr float CALIB_POSITION = 0.0F;                    // m
+    static constexpr float CALIB_POSITION = -0.025F;                    // m
     static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
 
     static constexpr float CAN_SEND_FREQ = 20.0F;

@@ -41,7 +41,6 @@ class J2Device
 
         if (_pbCalib.isClicked())
         {
-            LOG_DEBUG(Logger::Nodes::J2Device, "Calibration requested");
             _j2.setSpeed(FULL_STOP_SPEED);
 
             constexpr uint64_t CALIB_STOP_TIME = 1000ULL;
