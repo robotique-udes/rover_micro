@@ -16,6 +16,8 @@ class J2Device
     static constexpr uint64_t LOOP_PERIOD_US = 1'000ULL;
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
+    static constexpr float CAN_SEND_FREQ = 20.0F;
+    static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQ);
 
     static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.20F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
@@ -44,6 +46,11 @@ class J2Device
         if (!_controlLoopTimer.isReady())
         {
             return;
+        }
+
+        if (_timerCanSend.isReady())
+        {
+            sendCanMsgs();
         }
 
         _j2.update();
@@ -75,6 +82,10 @@ class J2Device
         else if (_pbJogNeg.isClicked())
         {
             _j2.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
+        }
+        else if( _j2CanWatchdog.isOk())
+        {
+            _j2.setSpeed(_j2SpeedGoal);
         }
         else
         {
@@ -115,6 +126,7 @@ class J2Device
     float _j2SpeedGoal = 0.0F;
 
     Watchdog<uint64_t, &Time::millis> _j2CanWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
+    LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
 
     JointCanDeviceT _j2CanDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::J2_CONTROLLER,
