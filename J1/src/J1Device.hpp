@@ -92,15 +92,9 @@ class J1Device
   private:
     void sendCanMsgs()
     {
-        float j1Pos = 0.0F;
-        _j1.getPositions();
-
-        float j1Speed = 0.0F;
-        _j1.getSpeed();
-
         RoverCan2::Msgs::ArmJointStatus j1Status;
-        j1Status.data().currentPosition = j1Pos;
-        j1Status.data().currentSpeed = j1Speed;
+        j1Status.data().currentPosition = _j1.getPositions();
+        j1Status.data().currentSpeed = _j1.getSpeed();
 
         _j1CanDevice.sendMsg(j1Status);
     }
@@ -108,7 +102,7 @@ class J1Device
     void CB_J1Cmd(const RoverCan2::Msgs::ArmJointCmd& msg_)
     {
         _j1CanWatchdog.reset();
-        // _j1TargetSpeed = msg_.getData().targetSpeed;
+        _j1TargetSpeed = msg_.getData().targetSpeed;
     }
 
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};

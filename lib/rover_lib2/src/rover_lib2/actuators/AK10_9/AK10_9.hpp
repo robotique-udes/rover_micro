@@ -20,7 +20,7 @@
 #include "rover_lib2/rover_object.hpp"
 
 DEFINE_LOG_NODE(AK109, Logger::eNodeState::OFF);
-DEFINE_LOG_NODE(AK109Plot, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(AK109Plot, Logger::eNodeState::OFF);
 
 namespace Actuators
 {

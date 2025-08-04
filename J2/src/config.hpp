@@ -27,11 +27,15 @@ constexpr gpio_num_t PIN_ENC_CS = GPIO_NUM_2;
 
 constexpr gpio_num_t PIN_UART_TX = GPIO_NUM_6;
 constexpr gpio_num_t PIN_UART_RX = GPIO_NUM_7;
-constexpr int UART_BAUD_RATE = 921600;    static constexpr float CALIB_POSITION = 0.0F;
 
-constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_21;
-constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_48;
 constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_47;
+constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_48;
+
+constexpr int UART_BAUD_RATE = 921600;
+constexpr float CALIB_POSITION = 0.0F;
+
+constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_9;
+constexpr gpio_num_t PIN_HEARTBEAT_LED = GPIO_NUM_8;
 
 constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_1;
 constexpr gpio_num_t PIN_PB_PLUS = GPIO_NUM_11;
