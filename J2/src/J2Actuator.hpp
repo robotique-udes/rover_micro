@@ -23,8 +23,8 @@ class J2Actuator
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.8F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J2_MIN_JOINT_LIMIT = -0.75F;
-    static constexpr float J2_MAX_JOINT_LIMIT = 2.8F;
+    static constexpr float J2_MIN_JOINT_LIMIT = -0.95F;
+    static constexpr float J2_MAX_JOINT_LIMIT = 3.95F;
     static_assert(J2_MIN_JOINT_LIMIT <= J2_MAX_JOINT_LIMIT);
 
     static constexpr float ZERO_ERROR_EPSILON = 0.01F;
@@ -100,7 +100,7 @@ class J2Actuator
 
     OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
-    Filters::LowPassEMA _j2SpeedFilter = {0.9F, 0.0F};
+    Filters::LowPassEMA _j2SpeedFilter = {0.3F, 0.0F};
     Filters::LowPassEMA _j2PositionFilter = {0.9F, 0.0F};
 
     SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_ENC_MOSI, PIN_ENC_MISO, PIN_ENC_CLK, 32U);
@@ -108,7 +108,7 @@ class J2Actuator
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _j2Encoder
         = {__spi, PIN_ENC_CS, "J2", false, RATIO, _j2PositionFilter, _j2SpeedFilter};
 
-    Controllers::PID __j1_controllerSpeed = {1'000.0F, 0.0F, 0.0F, 100.0F, 10'000ULL};
+    Controllers::PID __j1_controllerSpeed = {40.0F, 0.125F, 0.0F, 10.0F, 15'000ULL};
 
     Actuators::AK109<Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA>, Controllers::None, Controllers::PID> _j2
         = {Actuators::eControlType::SPEED, _motorSerial, &_j2Encoder, nullptr, &__j1_controllerSpeed};

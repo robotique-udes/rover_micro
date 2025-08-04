@@ -11,7 +11,7 @@ class J2Device
 {
     static constexpr uint64_t LOOP_PERIOD_US = 1'000ULL;
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.75F;
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.20F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.0F;
 
