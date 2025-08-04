@@ -78,6 +78,10 @@ class J1Device
         {
             _j1.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
         }
+        else if (_j1CanWatchdog.isOk())
+        {
+            _j1.setSpeed(_j1TargetSpeed);
+        }
         else
         {
             _j1.setSpeed(FULL_STOP_SPEED);

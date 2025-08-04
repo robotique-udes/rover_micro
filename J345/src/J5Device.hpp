@@ -6,10 +6,12 @@
 #include "rover_lib2/sensors/push_button.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "config.hpp"
+#include "rover_lib2/sensors/INA219.hpp"
 
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
 
+DEFINE_LOG_NODE(J5Device, Logger::eNodeState::ON);
 class J5Device
 {
     static constexpr uint64_t LOOP_PERIOD_US = 500ULL;
@@ -28,6 +30,8 @@ class J5Device
 
     void init()
     {
+        Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL, 100'000);
+        _currentSensor.init();
         _driver.init();
         _driver.setEnabled(true);
     }
@@ -72,6 +76,8 @@ class J5Device
 
             _canDevice.sendMsg(armStatusMsg);
         }
+
+        LOG_INFO(Logger::Nodes::J5Device, "_currentSensor.getCurrent(): %f", _currentSensor.getCurrent());
     }
 
     JointCanDeviceT& getUnderlyingCanDevice()
@@ -104,6 +110,8 @@ class J5Device
     float targetSpeed_ = 0.0F;
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
+
+    INA219 _currentSensor = INA219(Wire, 0x85, 0.05F, 4.0F);
 };
 
 #endif  // J5ACTUATOR_HPP
