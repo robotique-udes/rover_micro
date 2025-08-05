@@ -13,7 +13,7 @@
 #include <rover_can2/msgs/arm_joint_cmd.hpp>
 #include <rover_can2/msgs/arm_joint_status.hpp>
 
-DEFINE_LOG_NODE(JLDevice, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(JLDevice, Logger::eNodeState::OFF);
 class JLDevice
 {
     static constexpr uint32_t PWM_FREQUENCY = 1'000UL;
