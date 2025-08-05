@@ -73,7 +73,7 @@ namespace Encoders
                 gpio_num_t pinCS_,
                 const char* nvsNamespace_,
                 bool reversed_ = false,
-                float ratio_ = 1.0F,
+                float ratioOutputToEnc_ = 1.0F,
                 FilterPosT& filterPos_ = Filters::None(),
                 FilterSpeedT& filterSpeed_ = Filters::None()):
             _spiDevice(spiBus_, pinCS_, SPI_CLOCK_SPEED_HZ, SPI_TIME_BEFORE_FIRST_BIT_US, SPI_TIME_AFTER_LAST_BIT_US, SPI_MODE),
@@ -81,7 +81,7 @@ namespace Encoders
             _calibOffset(nvsNamespace_, NVS_KEY_CALIB_OFFSET, 0.0F),
             _lastQuadrant(nvsNamespace_, NVS_KEY_LAST_QUADRANT, 0.0F),
             _reversed(reversed_),
-            _ratio(ratio_),
+            _ratioOutputToEnc(ratioOutputToEnc_),
             _filterPos(filterPos_),
             _filterSpeed(filterSpeed_)
         {
@@ -136,7 +136,7 @@ namespace Encoders
 
         float getPosition(void) const
         {
-            return this->adaptRatio(_currentPosition + _calibOffset.getValue());
+            return this->applyRatio(_currentPosition + _calibOffset.getValue());
         }
 
         float getSpeed(void) const
@@ -162,9 +162,9 @@ namespace Encoders
             _dataValidNVS = calibValid;
         }
 
-        float adaptRatio(float rawData_) const
+        float applyRatio(float rawData_) const
         {
-            return rawData_ * _ratio;
+            return rawData_ * _ratioOutputToEnc;
         }
 
       private:
@@ -325,7 +325,7 @@ namespace Encoders
         float _lastPosition = 0.0F;
         float _currentSpeed = 0.0F;
         bool _reversed = false;
-        float _ratio = 0.0F;
+        float _ratioOutputToEnc = 0.0F;
 
         Watchdog<uint64_t, &Time::micros> _dataValidWatchdog = {WATCHDOG_DATA_VALID_PERIOD_US};
         Chrono<uint64_t, &Time::micros> _dtSpeedCalc;

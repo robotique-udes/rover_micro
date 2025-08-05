@@ -25,15 +25,15 @@ class J1Actuator
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.80F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J1_MIN_JOINT_LIMIT = -3.75F;
-    static constexpr float J1_MAX_JOINT_LIMIT = 4.0;
+    static constexpr float J1_MIN_JOINT_LIMIT = -1.20F;
+    static constexpr float J1_MAX_JOINT_LIMIT = 1.50F;
     static_assert(J1_MIN_JOINT_LIMIT <= J1_MAX_JOINT_LIMIT);
 
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
 
     static constexpr uint16_t MOVING_AVERAGE_COEFF = 10;
 
-    static constexpr float RATIO = 1.8F;
+    static constexpr float RATIO = 0.6153F;
 
     enum class eState : uint8_t
     {

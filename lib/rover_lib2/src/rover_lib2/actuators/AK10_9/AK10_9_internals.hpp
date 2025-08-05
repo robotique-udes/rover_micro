@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <driver/gpio.h>
 
-namespace AK10_9
+namespace Actuators::AK10_9_Constants
 {
     static constexpr gpio_num_t LED_BTLN = GPIO_NUM_9;
     static constexpr gpio_num_t BUT_JOG_PLUS = GPIO_NUM_10;

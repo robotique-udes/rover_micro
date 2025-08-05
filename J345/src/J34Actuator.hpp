@@ -20,18 +20,18 @@ class J34Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
-    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.7F;
+    static constexpr float MAX_MOTOR_SPEED_RAD_S = 2.0F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J3_MIN_JOINT_LIMIT = degToRad(-40.0F);
-    static constexpr float J3_MAX_JOINT_LIMIT = degToRad(40.0F);
+    static constexpr float J3_MIN_JOINT_LIMIT = degToRad(-90.0F);
+    static constexpr float J3_MAX_JOINT_LIMIT = degToRad(100.0F);
     static_assert(J3_MIN_JOINT_LIMIT <= J3_MAX_JOINT_LIMIT);
 
-    static constexpr float J4_MIN_JOINT_LIMIT = degToRad(-5.0F * 360.0F);
-    static constexpr float J4_MAX_JOINT_LIMIT = degToRad(5.0F * 360.0F);
+    static constexpr float J4_MIN_JOINT_LIMIT = degToRad(-4.0F * 360.0F);
+    static constexpr float J4_MAX_JOINT_LIMIT = degToRad(4.0F * 360.0F);
     static_assert(J4_MIN_JOINT_LIMIT <= J4_MAX_JOINT_LIMIT);
 
-    static constexpr float ZERO_ERROR_EPSILON = 0.01F;
+    static constexpr float ZERO_ERROR_EPSILON = 0.001F;
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
 
     static constexpr float RATIO = 1.0F;
@@ -203,13 +203,13 @@ class J34Actuator
     // ===========================================================================================================================
     // Motor
     PWMGenerators::MCPWM __j34L_pwmGen = {PIN_J34_L_PWM, __j34_pwmGeneratorTimer};
-    MotorDrivers::IFX9201SG<PWMGenerators::MCPWM> __j34L_driver = {__j34L_pwmGen, PIN_J34_L_DIR, false};
+    MotorDrivers::IFX9201SG<PWMGenerators::MCPWM> __j34L_driver = {__j34L_pwmGen, PIN_J34_L_DIR, true};
 
     // Encoder
     Filters::LowPassEMA __j34L_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34L_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34L_encoder
-        = {__spi, PIN_J34_L_CS, "J34L", true, RATIO, __j34L_encFilterPos, __j34L_encFilterSpeed};
+        = {__spi, PIN_J34_L_CS, "J34L", false, RATIO, __j34L_encFilterPos, __j34L_encFilterSpeed};
 
     // Controller
     Controllers::PID __j34L_controllerSpeed = {50.0F, 5.0F, 0.1F, 100.0F, 20'000ULL};
@@ -230,13 +230,13 @@ class J34Actuator
     // ===========================================================================================================================
     // Motor
     PWMGenerators::MCPWM __j34R_pwmGen = {PIN_J34_R_PWM, __j34_pwmGeneratorTimer};
-    MotorDrivers::IFX9201SG<PWMGenerators::MCPWM> __j34R_driver = {__j34R_pwmGen, PIN_J34_R_DIR, true};
+    MotorDrivers::IFX9201SG<PWMGenerators::MCPWM> __j34R_driver = {__j34R_pwmGen, PIN_J34_R_DIR, false};
 
     // Encoder
     Filters::LowPassEMA __j34R_encFilterPos = Filters::LowPassEMA(0.05F);
     Filters::LowPassEMA __j34R_encFilterSpeed = Filters::LowPassEMA(0.4F);
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> __j34R_encoder
-        = {__spi, PIN_J34_R_CS, "J34R", false, RATIO, __j34R_encFilterPos, __j34R_encFilterSpeed};
+        = {__spi, PIN_J34_R_CS, "J34R", true, RATIO, __j34R_encFilterPos, __j34R_encFilterSpeed};
 
     // Controller
     Controllers::PID __j34R_controllerSpeed = {50.0F, 5.0F, 0.1F, 100.0F, 20'000ULL};

@@ -19,18 +19,17 @@ class J2Device
     static constexpr float CAN_SEND_FREQ = 20.0F;
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQ);
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.20F;
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.10F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.0F;
 
-    static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
+    static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m/s
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J2Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
 
   public:
-    J2Device(Stream* motorSerial_ = nullptr):
-        _motorSerial(motorSerial_),
+    explicit J2Device(std::reference_wrapper<Stream> motorSerial_):
         _j2(motorSerial_)
     {
     }
@@ -64,6 +63,7 @@ class J2Device
             do
             {
                 _j2.update();
+                LOG_INFO(Logger::Nodes::J2Device, "_j2.getSpeed(): %f", _j2.getSpeed());
 
                 if (!IN_ERROR(_j2.getSpeed(), FULL_STOP_SPEED_ERROR_TELORANCE, FULL_STOP_SPEED))
                 {
@@ -83,7 +83,7 @@ class J2Device
         {
             _j2.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
         }
-        else if( _j2CanWatchdog.isOk())
+        else if (_j2CanWatchdog.isOk())
         {
             _j2.setSpeed(_j2SpeedGoal);
         }
@@ -119,8 +119,6 @@ class J2Device
     PushButton _pbCalib = {PIN_PB_CALIB};
 
     LoopTimer<uint64_t, &Time::micros> _controlLoopTimer = {LOOP_PERIOD_US};
-
-    Stream* _motorSerial = nullptr;
 
     J2Actuator _j2;
     float _j2SpeedGoal = 0.0F;

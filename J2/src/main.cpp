@@ -24,7 +24,7 @@ void setup(void)
 
     Serial2.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
 
-    J2Device j2(motorSerial);
+    J2Device j2(*motorSerial);
 
     j2.init();
 
