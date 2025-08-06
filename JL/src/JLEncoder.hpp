@@ -10,7 +10,8 @@ namespace Encoders
     class JL
     {
         // From mec team: 50.26mm per turn
-        static constexpr float RATIO = 1.0F; // Ratio is 1:1 because joint is linear. RAD_TO_M and M_TO_RAD are used to convert between
+        static constexpr float RATIO
+            = 1.0F;  // Ratio is 1:1 because joint is linear. RAD_TO_M and M_TO_RAD are used to convert between
         static constexpr float RAD_TO_M = 0.05026F / (2.0F * std::numbers::pi_v<float>);
         static constexpr float M_TO_RAD = 1.0F / RAD_TO_M;
 

@@ -1,5 +1,5 @@
-#ifndef INA219_HPP
-#define INA219_HPP
+#ifndef ROVER_LIB2_SENSORS_INA219_HPP
+#define ROVER_LIB2_SENSORS_INA219_HPP
 
 #include "rover_lib2/communication/I2C_utils.hpp"
 #include <limits>
@@ -196,4 +196,4 @@ class INA219
     bool _isInitialized = false;
 };
 
-#endif  // INA219_HPP
+#endif  // ROVER_LIB2_SENSORS_INA219_HPP

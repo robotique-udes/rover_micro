@@ -1,5 +1,5 @@
-#ifndef I2C_UTILS_HPP
-#define I2C_UTILS_HPP
+#ifndef ROVER_LIB2_COMMUNICATION_I2C_UTILS_HPP
+#define ROVER_LIB2_COMMUNICATION_I2C_UTILS_HPP
 
 #include "Wire.h"
 #include <type_traits>
@@ -45,4 +45,4 @@ namespace I2CUtils
 
 };  // namespace I2CUtils
 
-#endif  // I2C_UTILS_HPP
+#endif  // ROVER_LIB2_COMMUNICATION_I2C_UTILS_HPP

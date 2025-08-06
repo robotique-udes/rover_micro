@@ -59,17 +59,6 @@ namespace Encoders
             ASSERT_MSG("Interface");
         }
 
-        void setReversed(bool /*reverse_*/)
-        {
-            ASSERT_MSG("Interface");
-        }
-
-        float adaptRatio(float ) const
-        {
-            ASSERT_MSG("Interface");
-            return 0.0F;
-        }
-
         VALIDATE_CONCEPT(Encoder, None);
     };
 

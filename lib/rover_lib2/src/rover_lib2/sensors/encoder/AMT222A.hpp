@@ -313,7 +313,6 @@ namespace Encoders
         Chrono<uint64_t, &Time::micros> _dtSpeedCalc;
         OneShotTimer<uint64_t, &Time::micros> _timerTimingDelay = {0};
 
-
         VALIDATE_CONCEPT(Encoder, AMT222A);
     };
 
