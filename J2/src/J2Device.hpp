@@ -110,6 +110,8 @@ class J2Device
 
     void CB_J2Cmd(const RoverCan2::Msgs::ArmJointCmd& msgCan_)
     {
+        LOG_ERROR(Logger::Nodes::J2Device, "Here");
+
         _j2CanWatchdog.reset();
         _j2SpeedGoal = msgCan_.getData().targetSpeed;
     }
