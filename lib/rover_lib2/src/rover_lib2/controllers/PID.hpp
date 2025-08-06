@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-DEFINE_LOG_NODE(PID, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(PID, Logger::eNodeState::OFF);
 
 namespace Controllers
 {

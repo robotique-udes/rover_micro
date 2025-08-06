@@ -19,7 +19,7 @@
 #include <limits>
 
 DEFINE_LOG_NODE(AMT222X, Logger::eNodeState::OFF);
-DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(AMT222XPlot, Logger::eNodeState::OFF);
 
 namespace Encoders
 {
@@ -136,7 +136,7 @@ namespace Encoders
 
         float getPosition(void) const
         {
-            return this->applyRatio(_currentPosition + _calibOffset.getValue());
+            return this->applyOutputToEncoderRatio(_currentPosition + _calibOffset.getValue());
         }
 
         float getSpeed(void) const
@@ -160,11 +160,6 @@ namespace Encoders
             calibValid = _calibOffset.writeValue(calibOffset);
             calibValid &= _turnCount.writeValue(calibTurnCount);
             _dataValidNVS = calibValid;
-        }
-
-        float applyRatio(float rawData_) const
-        {
-            return rawData_ * _ratioOutputToEnc;
         }
 
       private:
@@ -306,6 +301,11 @@ namespace Encoders
             }
 
             return quadrant;
+        }
+
+        float applyOutputToEncoderRatio(float rawData_) const
+        {
+            return rawData_ * _ratioOutputToEnc;
         }
 
         SPIDevice<TRANSACTION_MAX_LENGTH> _spiDevice;
