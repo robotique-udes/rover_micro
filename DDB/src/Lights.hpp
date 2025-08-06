@@ -28,10 +28,8 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
             RoverCan2::SubscriberMember<RoverCan2::Msgs::PwmCmd, Lights>(*this, &Lights::CB_pwmControl),
             RoverCan2::Publisher<RoverCan2::Msgs::PwmStatus, 1UL>(),
             RoverCan2::Publisher<RoverCan2::Msgs::PwmInfo, 1UL>()),
-        __mcpwmTimer(40'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0),
-        _lightSignal(PIN_BANK0_CH0, __mcpwmTimer),
-        _timerStatusMsg(PERIOD_SEND_MSG_STATUS),
-        _timerInfoMsg(PERIOD_SEND_MSG_INFO)
+        __mcpwmTimer(40'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0)
+
     {
     }
 
@@ -76,10 +74,10 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
     }
 
     PWMGenerators::MCPWMTimer __mcpwmTimer;
-    PWMGenerators::MCPWM _lightSignal;
+    PWMGenerators::MCPWM _lightSignal = {PIN_BANK0_CH0, __mcpwmTimer};
 
-    LoopTimer<uint64_t, Time::millis> _timerStatusMsg;
-    LoopTimer<uint64_t, Time::millis> _timerInfoMsg;
+    LoopTimer<uint64_t, &Time::millis> _timerStatusMsg = {PERIOD_SEND_MSG_STATUS};
+    LoopTimer<uint64_t, &Time::millis> _timerInfoMsg = {PERIOD_SEND_MSG_INFO};
 
     VALIDATE_CONCEPT(RoverObject, Lights);
 };
