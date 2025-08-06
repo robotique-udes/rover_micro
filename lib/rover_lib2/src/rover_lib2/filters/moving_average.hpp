@@ -12,9 +12,9 @@ namespace Filters
     class MovingAverage
     {
       public:
-        MovingAverage(T startingValue = 0)
+        MovingAverage(T startingValue = static_cast<T>(0))
         {
-            reset(static_cast<float>(startingValue));
+            reset(startingValue);
         }
 
         ~MovingAverage() = default;
@@ -24,7 +24,7 @@ namespace Filters
             _avg -= static_cast<float>(_avgTable[_cursor]);
             _avg += static_cast<float>(value);
             _avgTable[_cursor] = value;
-            _cursor = (_cursor + 1) % COEFF_NB;
+            _cursor = (_cursor + 1U) % COEFF_NB;
             return getFilteredValue();
         }
 
@@ -33,20 +33,20 @@ namespace Filters
             return _avg / static_cast<float>(COEFF_NB);
         }
 
-        void reset(float fillValue_)
+        void reset(T fillValue_)
         {
-            _avg = fillValue_ * COEFF_NB;
-            for (uint16_t i = 0; i < COEFF_NB; ++i)
+            for (uint16_t i = 0U; i < COEFF_NB; ++i)
             {
-                _avgTable[i] = static_cast<T>(fillValue_);
+                _avgTable[i] = fillValue_;
             }
-            _cursor = 0;
+            _avg = fillValue_ * COEFF_NB;
+            _cursor = 0U;
         }
 
       private:
         T _avgTable[COEFF_NB] = {};
-        uint16_t _cursor = 0;
-        float _avg = 0.0f;
+        uint16_t _cursor = 0U;
+        float _avg = 0.0F;
 
         VALIDATE_CONCEPT(Filter, MovingAverage);
     };
