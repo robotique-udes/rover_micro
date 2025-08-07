@@ -93,7 +93,7 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
         {
             _drive.update();
 
-            float cmd = MAP(_cmdAvg.getAverage(), -100.0F, 100.0F, -MAX_COMMAND, MAX_COMMAND);
+            float cmd = MAP(_cmdAvg.getFilteredValue(), -100.0F, 100.0F, -MAX_COMMAND, MAX_COMMAND);
             cmd = CONSTRAIN(cmd, -MAX_COMMAND, MAX_COMMAND);
             _drive.setCmd(cmd);
 
@@ -105,7 +105,7 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
             if (_timerSend.isReady())
             {
                 RoverCan2::Msgs::PropSpeedStatus statusMsg;
-                statusMsg.data().current_speed = _cmdAvg.getAverage();
+                statusMsg.data().current_speed = _cmdAvg.getFilteredValue();
                 this->sendMsg(statusMsg);
             }
         }
@@ -141,7 +141,7 @@ class PropulsionMotor : public RoverCan2::Device<RoverCan2::SubscriberMember<Rov
                                                                             false,
                                                                             MotorDrivers::eBrakeMode::COAST);
 
-    MovingAverage<float, 5> _cmdAvg;
+    Filters::MovingAverage<float, 5> _cmdAvg;
     LoopTimer<uint64_t, Time::millis> _timerSend;
     LoopTimer<uint64_t, Time::millis> _timerLoop;
     Watchdog<uint64_t, Time::millis> _watchdog;

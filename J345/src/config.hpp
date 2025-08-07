@@ -32,6 +32,10 @@ constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_48;
 constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_21;
 constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_47;
 
+// I2C
+constexpr gpio_num_t PIN_I2C_SDA = GPIO_NUM_11;
+constexpr gpio_num_t PIN_I2C_SCL = GPIO_NUM_12;
+
 // Motor
 constexpr gpio_num_t PIN_J34_L_PWM = GPIO_NUM_16;
 constexpr gpio_num_t PIN_J34_L_DIR = GPIO_NUM_15;

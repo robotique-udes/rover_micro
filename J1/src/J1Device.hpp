@@ -18,9 +18,9 @@ class J1Device
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.10F;
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.5F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
-    static constexpr float CALIB_POSITION = 0.25F;
+    static constexpr float CALIB_POSITION = 0.0F;
 
     static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
 
@@ -78,6 +78,10 @@ class J1Device
         {
             _j1.setSpeed(-PUSH_BUTTON_SPEED_RAD_S);
         }
+        else if (_j1CanWatchdog.isOk())
+        {
+            _j1.setSpeed(_j1TargetSpeed);
+        }
         else
         {
             _j1.setSpeed(FULL_STOP_SPEED);
@@ -92,15 +96,9 @@ class J1Device
   private:
     void sendCanMsgs()
     {
-        float j1Pos = 0.0F;
-        _j1.getPositions();
-
-        float j1Speed = 0.0F;
-        _j1.getSpeed();
-
         RoverCan2::Msgs::ArmJointStatus j1Status;
-        j1Status.data().currentPosition = j1Pos;
-        j1Status.data().currentSpeed = j1Speed;
+        j1Status.data().currentPosition = _j1.getPositions();
+        j1Status.data().currentSpeed = _j1.getSpeed();
 
         _j1CanDevice.sendMsg(j1Status);
     }

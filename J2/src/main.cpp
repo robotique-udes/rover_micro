@@ -19,25 +19,26 @@ void setup(void)
     delay(1000);
 #endif
 
-    LED::LedBlinkerSoft statusLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);
+    LED::LedBlinkerSoft statusLed(IO::DigitalOutput(PIN_HEARTBEAT_LED), LED::BlinkPatterns::HEARTBEAT);
     statusLed.init();
 
     Serial2.begin(UART_BAUD_RATE, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
 
-    J2Device j2(motorSerial);
+    J2Device j2(*motorSerial);
 
     j2.init();
 
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);
     RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &canLed);
-    // RoverCan2::ManagerSlave canManager(canDriver, j1.getJ1Device());
-    // canManager.init();
+    RoverCan2::ManagerSlave canManager(canDriver, j2.getJointCanDevice());
+    canManager.init();
 
     for (EVER)
     {
         statusLed.update();
+        canLed.update();
         j2.update();
-        // canManager.update();
+        canManager.update();
     }
 }
 
