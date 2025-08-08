@@ -5,6 +5,7 @@
 #include "rover_lib2/helpers/macros.hpp"
 #include <utility>
 
+#if defined(__linux__)
 CameraInterface::CameraInterface(std::shared_ptr<rclcpp::Node> node_,
                                  const std::string& ptzCommandTopic_,
                                  const std::string& ptzConfigTopic_,
@@ -235,3 +236,5 @@ void CameraInterface::CB_subscriberTopicWithPriority(rover_msgs::msg::TopicWithP
         _topicWithPriority[i] = topicLists_.topics[i];
     }
 }
+
+#endif  // defined(__linux__)
