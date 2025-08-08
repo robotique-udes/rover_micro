@@ -15,10 +15,9 @@ class Router : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
     Router():
         RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::PowerCmd, Router>,
                           RoverCan2::Publisher<RoverCan2::Msgs::PowerStatus, 1UL>>(
-            RoverCan2::Constant::eDeviceId::DDB_CONTROLLER,
+            RoverCan2::Constant::eDeviceId::ROUTER,
             RoverCan2::SubscriberMember<RoverCan2::Msgs::PowerCmd, Router>(*this, &Router::CB_powerCmdMsg),
-            RoverCan2::Publisher<RoverCan2::Msgs::PowerStatus, 1UL>()),
-        _statusSendTimer(CAN_SEND_PERIOD_MS)
+            RoverCan2::Publisher<RoverCan2::Msgs::PowerStatus, 1UL>())
     {
     }
 
@@ -57,7 +56,7 @@ class Router : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
     }
 
     IO::DigitalOutput _powerControl = IO::DigitalOutput(PIN_BANK0_CH1);
-    LoopTimer<uint64_t, Time::millis> _statusSendTimer;
+    LoopTimer<uint64_t, &Time::millis> _statusSendTimer = {CAN_SEND_PERIOD_MS};
 
     VALIDATE_CONCEPT(RoverObject, Router);
 };

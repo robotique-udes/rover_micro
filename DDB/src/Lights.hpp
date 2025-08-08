@@ -5,6 +5,7 @@
 #include "rover_can2/msgs/PWM_cmd.hpp"
 #include "rover_can2/msgs/PWM_status.hpp"
 #include "rover_can2/msgs/PWM_info.hpp"
+#include "rover_lib2/helpers/macros.hpp"
 
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
@@ -27,10 +28,8 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
             RoverCan2::SubscriberMember<RoverCan2::Msgs::PwmCmd, Lights>(*this, &Lights::CB_pwmControl),
             RoverCan2::Publisher<RoverCan2::Msgs::PwmStatus, 1UL>(),
             RoverCan2::Publisher<RoverCan2::Msgs::PwmInfo, 1UL>()),
-        __mcpwmTimer(40'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0),
-        _lightSignal(PIN_BANK0_CH0, __mcpwmTimer),
-        _timerStatusMsg(PERIOD_SEND_MSG_STATUS),
-        _timerInfoMsg(PERIOD_SEND_MSG_INFO)
+        __mcpwmTimer(40'000UL, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0)
+
     {
     }
 
@@ -66,14 +65,19 @@ class Lights : public RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::M
   private:
     void CB_pwmControl(const RoverCan2::Msgs::PwmCmd& msg_)
     {
-        _lightSignal.setDutyCycle(msg_.getData().dutyCycle);
+        float value = msg_.getData().dutyCycle;
+        if (value != 0.0F)
+        {
+            value = MAP(value, 0.0F, 100.0F, 40.0F, 100.0F);
+        }
+        _lightSignal.setDutyCycle(value);
     }
 
     PWMGenerators::MCPWMTimer __mcpwmTimer;
-    PWMGenerators::MCPWM _lightSignal;
+    PWMGenerators::MCPWM _lightSignal = {PIN_BANK0_CH0, __mcpwmTimer};
 
-    LoopTimer<uint64_t, Time::millis> _timerStatusMsg;
-    LoopTimer<uint64_t, Time::millis> _timerInfoMsg;
+    LoopTimer<uint64_t, &Time::millis> _timerStatusMsg = {PERIOD_SEND_MSG_STATUS};
+    LoopTimer<uint64_t, &Time::millis> _timerInfoMsg = {PERIOD_SEND_MSG_INFO};
 
     VALIDATE_CONCEPT(RoverObject, Lights);
 };

@@ -474,7 +474,7 @@ uint8_t TwoWire::endTransmission() {
   return endTransmission(true);
 }
 
-size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
+size_t TwoWire::requestFrom(uint8_t address, size_t size, bool /*sendStop*/) {
 #if SOC_I2C_SUPPORT_SLAVE
   if (is_slave) {
     log_e("Bus is in Slave Mode");
@@ -610,7 +610,7 @@ size_t TwoWire::slaveWrite(const uint8_t *buffer, size_t len) {
   return i2cSlaveWrite(num, buffer, len, _timeOutMillis);
 }
 
-void TwoWire::onReceiveService(uint8_t num, uint8_t *inBytes, size_t numBytes, bool stop, void *arg) {
+void TwoWire::onReceiveService(uint8_t /*num*/, uint8_t *inBytes, size_t numBytes, bool /*stop*/, void *arg) {
   TwoWire *wire = (TwoWire *)arg;
   if (!wire->user_onReceive) {
     return;
@@ -627,7 +627,7 @@ void TwoWire::onReceiveService(uint8_t num, uint8_t *inBytes, size_t numBytes, b
   wire->user_onReceive(numBytes);
 }
 
-void TwoWire::onRequestService(uint8_t num, void *arg) {
+void TwoWire::onRequestService(uint8_t /*num*/, void *arg) {
   TwoWire *wire = (TwoWire *)arg;
   if (!wire->user_onRequest) {
     return;

@@ -4,3 +4,5 @@ lib_developpement/src/main.cpp
 **/compile_commands.json
 **.orig
 .platformio/packages/framework-arduinoespressif32/idf_component.yml.orig
+.platformio/packages/framework-arduinoespressif32/tools/esp32-arduino-libs/esp32s3/pioarduino-build.py.esp32s3
+*.idx

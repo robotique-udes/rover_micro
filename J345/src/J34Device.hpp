@@ -18,7 +18,7 @@ class J34Device
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 10.0F;
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.5F;
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J34Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;

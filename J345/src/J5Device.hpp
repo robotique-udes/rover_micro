@@ -10,6 +10,7 @@
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
 
+DEFINE_LOG_NODE(J5Device, Logger::eNodeState::ON);
 class J5Device
 {
     static constexpr uint64_t LOOP_PERIOD_US = 500ULL;
@@ -49,7 +50,7 @@ class J5Device
         {
             _driver.setCmd(MotorDrivers::MIN_CMD_OPEN_LOOP);
         }
-        else if (_canWatchdog.isOk() && !IN_ERROR(targetSpeed_, 0.01F, 0.0F))
+        else if (_canWatchdog.isOk() && !IN_ERROR(targetSpeed_, 0.001F, 0.0F))
         {
             float cmd = MAP(targetSpeed_,
                             MIN_SPEED_RAD_S,
@@ -104,6 +105,8 @@ class J5Device
     float targetSpeed_ = 0.0F;
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
+
+    // INA219 _currentSensor = INA219(Wire, 0x85, 0.05F, 4.0F);
 };
 
 #endif  // J5ACTUATOR_HPP

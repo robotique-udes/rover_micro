@@ -10,18 +10,18 @@
 
 constexpr gpio_num_t PIN_USER_LED = GPIO_NUM_6;
 
-constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_47;
-constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_21;
-constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_48;
-constexpr gpio_num_t PIN_SPI_CS = GPIO_NUM_14;
+constexpr gpio_num_t PIN_SPI_SCK = GPIO_NUM_14;
+constexpr gpio_num_t PIN_SPI_MISO = GPIO_NUM_12;
+constexpr gpio_num_t PIN_SPI_MOSI = GPIO_NUM_13;
+constexpr gpio_num_t PIN_SPI_CS = GPIO_NUM_2;
 
 constexpr gpio_num_t PIN_MOTOR_PWM = GPIO_NUM_43;
 constexpr gpio_num_t PIN_MOTOR_DIR = GPIO_NUM_44;
 constexpr gpio_num_t PIN_MOTOR_DIS = GPIO_NUM_NC;
 
-constexpr gpio_num_t PIN_PB_FWD = GPIO_NUM_42;
-constexpr gpio_num_t PIN_PB_REV = GPIO_NUM_41;
-constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_40;
+constexpr gpio_num_t PIN_PB_FWD = GPIO_NUM_11;
+constexpr gpio_num_t PIN_PB_REV = GPIO_NUM_10;
+constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_1;
 
 DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
 

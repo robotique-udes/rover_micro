@@ -21,7 +21,7 @@
 #if defined(PCB_ROVER_JL_REV0)
 
 constexpr float ALIM_VOLTAGE = 25.2F;
-constexpr float MAX_MOTOR_VOLTAGE = 18.0F;
+constexpr float MAX_MOTOR_VOLTAGE = 8.0F;
 
 constexpr gpio_num_t PIN_MOTOR_A_IN = GPIO_NUM_1;
 constexpr gpio_num_t PIN_MOTOR_A_EN = GPIO_NUM_2;
@@ -35,8 +35,8 @@ constexpr gpio_num_t PIN_ENC_CLK = GPIO_NUM_6;
 constexpr gpio_num_t PIN_ENC_CS = GPIO_NUM_7;
 
 constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_21;
-constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_9;
-constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_10;
+constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_10;
+constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_9;
 
 constexpr gpio_num_t PIN_PB_CALIB = GPIO_NUM_13;
 constexpr gpio_num_t PIN_PB_FWD = GPIO_NUM_14;
