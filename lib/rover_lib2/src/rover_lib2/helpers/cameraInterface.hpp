@@ -1,5 +1,6 @@
 #ifndef ROVER_LIB2_HELPERS_CAMERAINTERFACE_HPP
 #define ROVER_LIB2_HELPERS_CAMERAINTERFACE_HPP
+
 #if defined(ROS)
 
 #include "rclcpp/rclcpp.hpp"

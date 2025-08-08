@@ -53,14 +53,6 @@ namespace Constants
             {"Arm-Side", "rtsp://192.168.144.36:554/1/h264major"},
         }};
 
-        /**
-         * @brief
-         * @param url_ URL of the camera
-         * @param rName_ Overwrite value if found
-         * @return Success on camera name found
-         */
-        bool getNameFromURL(const std::string& url_, std::string& rName_);
-
         static constexpr const size_t NUMBER_TOPIC_CAMERA_ARBITRATION = 2;
 
         static constexpr float SEND_COMMAND_PTZ_FREQUENCY = 5.F;
