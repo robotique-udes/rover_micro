@@ -41,17 +41,38 @@ constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_14;
 template<eServoType servoType_>
 constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
 {
-    if constexpr (DEVICE_ID == RoverCan2::Constant::eDeviceId::CAMERA_ROVER_ANTENNA)
+    if constexpr (DEVICE_ID == RoverCan2::Constant::eDeviceId::CAMERA_ROVER_MAIN)
     {
         if constexpr (servoType_ == eServoType::PAN)
         {
             return Actuators::ServoT::sTimingConfig{
                 .frequency = 50.0F,
-                .minMs = 2450.0F,
-                .maxMs = 545.0F,
+                .minMs = 500.0F,
+                .maxMs = 2500.0F,
+                .minPosition = 0.0F,
+                .maxPosition = std::numbers::pi_v<float> * 1.5F,
+                .maxSpeed = 2.41F,
+                .alignedPosition = (std::numbers::pi_v<float> * 1.5F - 0.0F) / 5.0F, // (maxPos - minPos) / 5.0F
+            };
+        }
+        else
+        {
+            static_assert(false, "Not supported");
+        }
+    }    
+
+    else if constexpr (DEVICE_ID == RoverCan2::Constant::eDeviceId::CAMERA_ROVER_ANTENNA)
+    {
+        if constexpr (servoType_ == eServoType::PAN)
+        {
+            return Actuators::ServoT::sTimingConfig{
+                .frequency = 50.0F,
+                .minMs = 545.0F,
+                .maxMs = 2480.0F,
                 .minPosition = 0.0F,
                 .maxPosition = std::numbers::pi_v<float> * 2.0F,
-                .maxSpeed = 0.89F,
+                .maxSpeed = 0.76F,
+                .alignedPosition = (std::numbers::pi_v<float> * 2.0F - 0.0F) / 2.0F, // (maxPos - minPos) / 2.0F
             };
         }
         else

@@ -27,6 +27,7 @@ namespace Actuators
             float minPosition;
             float maxPosition;
             float maxSpeed;  // Used to simulate encoder during movement
+            float alignedPosition;  // Used to align the servo position with the front of the rover
         };
     };
 

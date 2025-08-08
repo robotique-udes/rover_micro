@@ -37,6 +37,9 @@ class GimbalController : public RoverCan2::Device<RoverCan2::SubscriberMember<Ro
     void init(void)
     {
         _panServo.init();
+
+        constexpr Actuators::ServoT::sTimingConfig servoConfig = GET_SERVO_TIMING_CONFIG<eServoType::PAN>();
+        _panServo.setPosition(servoConfig.alignedPosition);
     }
 
     void update(void)
