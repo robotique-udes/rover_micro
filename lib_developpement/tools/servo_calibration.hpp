@@ -9,7 +9,7 @@
 
 #include "rover_can2/rover_can2.hpp"
 
-#include "rover_lib2/actuators/actuator_servo.hpp"
+#include "rover_lib2/actuators/servo.hpp"
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_lib2/helpers/macros.hpp"
