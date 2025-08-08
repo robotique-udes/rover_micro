@@ -1,5 +1,5 @@
-#ifndef CAMERA_INTERFACE_HPP
-#define CAMERA_INTERFACE_HPP
+#ifndef ROVER_LIB2_HELPERS_CAMERAINTERFACE_HPP
+#define ROVER_LIB2_HELPERS_CAMERAINTERFACE_HPP
 
 #include "rclcpp/rclcpp.hpp"
 #include "rover_msgs/msg/camera_control.hpp"
@@ -91,4 +91,4 @@ class CameraInterface
     std::shared_ptr<rclcpp::Node> _node;
 };
 
-#endif  // CAMERA_INTERFACE_HPP
+#endif  // ROVER_LIB2_HELPERS_CAMERAINTERFACE_HPP
