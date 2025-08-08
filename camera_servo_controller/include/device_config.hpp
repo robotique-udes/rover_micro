@@ -52,14 +52,14 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
                 .minPosition = 0.0F,
                 .maxPosition = std::numbers::pi_v<float> * 1.5F,
                 .maxSpeed = 2.41F,
-                .alignedPosition = (std::numbers::pi_v<float> * 1.5F - 0.0F) / 5.0F, // (maxPos - minPos) / 5.0F
+                .alignedPosition = (std::numbers::pi_v<float> * 1.5F - 0.0F) / 5.0F,  // (maxPos - minPos) / 5.0F
             };
         }
         else
         {
             static_assert(false, "Not supported");
         }
-    }    
+    }
 
     else if constexpr (DEVICE_ID == RoverCan2::Constant::eDeviceId::CAMERA_ROVER_ANTENNA)
     {
@@ -72,7 +72,7 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
                 .minPosition = 0.0F,
                 .maxPosition = std::numbers::pi_v<float> * 2.0F,
                 .maxSpeed = 0.76F,
-                .alignedPosition = (std::numbers::pi_v<float> * 2.0F - 0.0F) / 2.0F, // (maxPos - minPos) / 2.0F
+                .alignedPosition = (std::numbers::pi_v<float> * 2.0F - 0.0F) / 2.0F,  // (maxPos - minPos) / 2.0F
             };
         }
         else
