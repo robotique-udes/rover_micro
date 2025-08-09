@@ -16,7 +16,7 @@ static constexpr size_t UART_BUFFER_SIZE = 256UL;
 // WiFi Configuration
 static const char* const WIFI_SSID = "67-65-69-67-65-72";
 static const char* const WIFI_PASSWORD = "ske_bou_bou";
-static constexpr uint32_t WIFI_TIMEOUT_MS = 10000UL;
+static constexpr uint32_t WIFI_TIMEOUT_MS = 10'000UL;
 
 // UDP Configuration
 static const char* const UDP_ADDRESSES[] = {
@@ -71,8 +71,8 @@ void setupUART()
 
 void setup()
 {
-    Serial.begin(115200);
-    while (!Serial && millis() < 5000)
+    Serial.begin(115'200);
+    while (!Serial && millis() < 5'000)
         ;  // Wait up to 5s for serial
 
     LOG_INFO(Logger::Nodes::Main, "ESP32 UART to UDP Bridge Starting...");
