@@ -408,6 +408,8 @@ const char *NetworkEvents::eventName(arduino_event_id_t id) {
     case ARDUINO_EVENT_PROV_CRED_RECV:           return "PROV_CRED_RECV";
     case ARDUINO_EVENT_PROV_CRED_FAIL:           return "PROV_CRED_FAIL";
     case ARDUINO_EVENT_PROV_CRED_SUCCESS:        return "PROV_CRED_SUCCESS";
+    case ARDUINO_EVENT_NONE:                     [[fallthrough]];
+    case ARDUINO_EVENT_MAX:                      [[fallthrough]];
 #endif
     default: return "";
   }

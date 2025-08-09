@@ -796,6 +796,10 @@ const char *STAClass::disconnectReasonName(wifi_err_reason_t reason) {
     case WIFI_REASON_AP_TSF_RESET:                       return "AP_TSF_RESET";
     case WIFI_REASON_ROAMING:                            return "ROAMING";
     case WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG:       return "ASSOC_COMEBACK_TIME_TOO_LONG";
+    case WIFI_REASON_SA_QUERY_TIMEOUT:                   [[fallthrough]];
+    case WIFI_REASON_NO_AP_FOUND_W_COMPATIBLE_SECURITY:  [[fallthrough]];
+    case WIFI_REASON_NO_AP_FOUND_IN_AUTHMODE_THRESHOLD:  [[fallthrough]];
+    case WIFI_REASON_NO_AP_FOUND_IN_RSSI_THRESHOLD:      [[fallthrough]];
     default:                                             return "";
   }
 }
