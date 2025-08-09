@@ -108,6 +108,7 @@ namespace Constants
         BEST = 4U,
     };
 
+#if defined(ROS)
     namespace Keybinds
     {
         enum class eJoyInput
@@ -153,7 +154,9 @@ namespace Constants
             constexpr eJoyInput MODE_TURBO_ENABLE = eJoyInput::R2;
         }  // namespace DriveTrain
 
-    }  // namespace Keybinds
+    }   // namespace Keybinds
+#endif  // defined(ROS)
+
 }  // namespace Constants
 
 #endif  // ROVER_LIB2_HELPERS_CONSTANTS_HPP
