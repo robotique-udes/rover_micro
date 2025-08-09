@@ -3,8 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-
-#include <cstdint>
+#include <utility>
 
 #if defined(__linux__)
 #include <string>
