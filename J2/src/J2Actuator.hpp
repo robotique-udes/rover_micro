@@ -23,8 +23,8 @@ class J2Actuator
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.2F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J2_MIN_JOINT_LIMIT = -0.95F;
-    static constexpr float J2_MAX_JOINT_LIMIT = 3.95F;
+    static constexpr float J2_MIN_JOINT_LIMIT = -2.45F;
+    static constexpr float J2_MAX_JOINT_LIMIT = 2.45F;
     static_assert(J2_MIN_JOINT_LIMIT <= J2_MAX_JOINT_LIMIT);
 
     static constexpr float RATIO_OUTPUT_TO_MOTOR = 100.0F;
@@ -66,7 +66,7 @@ class J2Actuator
             speedCmd = _j2SpeedGoal;
         }
 
-        _j2.setSpeed(10.0F * speedCmd);
+        _j2.setSpeed(-10.0F * speedCmd);
         _j2.update();
 
         LOG_INFO(Logger::Nodes::J2Actuator,
@@ -109,7 +109,7 @@ class J2Actuator
     SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_ENC_MOSI, PIN_ENC_MISO, PIN_ENC_CLK, 32U);
 
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
-        = {__spi, PIN_ENC_CS, "J2", false, RATIO_OUTPUT_TO_ENCODER, _j2PositionFilter, _j2SpeedFilter};
+        = {__spi, PIN_ENC_CS, "J2", true, RATIO_OUTPUT_TO_ENCODER, _j2PositionFilter, _j2SpeedFilter};
 
     Actuators::AK10_9 _j2;
 };
