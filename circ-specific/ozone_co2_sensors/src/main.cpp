@@ -2,7 +2,7 @@
 #include <Wire.h>
 
 #include "config.hpp"
-#include "gas_sensors.hpp"
+#include "gas_sensor.hpp"
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/LED/led_blinker.hpp"
 #include "rover_can2/rover_can2.hpp"
@@ -23,7 +23,11 @@ void setup(void)
     for (EVER)
     {
         canLed.update();
-        gasSensor.update();
+        // gasSensor.update();
+        uint16_t anal =  analogRead(MQ8_AOUT);
+        LOG_INFO(Logger::Nodes::Main, "MQ8 Analog Read: %d", anal);
+
+        // 0.88 voltage at 645
     }
 
 }

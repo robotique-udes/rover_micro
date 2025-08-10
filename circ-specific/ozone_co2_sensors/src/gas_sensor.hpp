@@ -11,16 +11,16 @@
 
 DEFINE_LOG_NODE(GAS_SENSOR, Logger::eNodeState::OFF);
 
-class GAS_SENSOR
+class GAS_SENSORS
 {
     static constexpr uint8_t I2C_ADDR = 0x30;
     static constexpr uint8_t REG_VALUE0 = 0x00;  // 2-byte little-endian measurement
     static constexpr uint32_t I2C_HZ = 100'000UL;
 
-    // using MQ137 = RoverCan2::Device
+    // using GasSensorCanDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::SensorBox>>;
 
   public:
-    GAS_SENSOR(TwoWire& wire):
+    GAS_SENSORS(TwoWire& wire):
         _wire(wire)
     {
     }
@@ -34,6 +34,8 @@ class GAS_SENSOR
     {
         this->readMQ137();
         analogRead(MQ8_AOUT);
+
+        
 
         
     }
