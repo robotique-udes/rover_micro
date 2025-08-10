@@ -23,8 +23,6 @@ void setup(void)
     for (EVER)
     {
         canLed.update();
-        // gasSensor.update();
-        uint16_t anal =  analogRead(MQ8_AOUT);
         LOG_INFO(Logger::Nodes::Main, "MQ8 Analog Read: %d", anal);
 
         // 0.88 voltage at 645

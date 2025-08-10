@@ -17,7 +17,8 @@ class GAS_SENSORS
     static constexpr uint8_t REG_VALUE0 = 0x00;  // 2-byte little-endian measurement
     static constexpr uint32_t I2C_HZ = 100'000UL;
 
-    // using GasSensorCanDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::SensorBox>>;
+    static constexpr uint16_t MAX_BITS = 2048;
+
 
   public:
     GAS_SENSORS(TwoWire& wire):
@@ -32,12 +33,13 @@ class GAS_SENSORS
 
     void update() 
     {
-        this->readMQ137();
-        analogRead(MQ8_AOUT);
+        float amonia = this->readMQ137();
+        float hydrogen = this->toPercent(analogRead(MQ8_AOUT));
+    }
 
-        
-
-        
+    float toPercent(float value)
+    {
+        return value / MAX_BITS * 100.0F;
     }
 
     float readMQ137()
