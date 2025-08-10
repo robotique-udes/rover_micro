@@ -52,6 +52,7 @@ namespace RoverCan2::Constant
         CAMERA_ARM_TOP = 0x405,
         CAMERA_ARM_SIDE = 0x406,
         SPEAKERS = 0x407,
+        GAS_SENSORS = 0x408,
 
     _RESERVED_INTERNAL = 0x7F0,
         INVALID,
@@ -99,6 +100,8 @@ namespace RoverCan2::Constant
 
         DDB_CMD,
         DDB_STATUS,
+
+        SENSOR_BOX,
         // clang-format on
     };
 

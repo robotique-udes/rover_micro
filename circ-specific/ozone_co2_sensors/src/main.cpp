@@ -16,14 +16,13 @@ void setup(void)
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(LED_BLTN), LED::BlinkPatterns::HEARTBEAT);
     canLed.init();
     
-    GAS_SENSORS gasSensor(Wire1);
+    GasSensor gasSensor(Wire1);
     gasSensor.init();
 
     LOG_INFO(Logger::Nodes::Main, "gasSensor Init done, starting main loop!");
     for (EVER)
     {
         canLed.update();
-        LOG_INFO(Logger::Nodes::Main, "MQ8 Analog Read: %d", anal);
 
         // 0.88 voltage at 645
     }
