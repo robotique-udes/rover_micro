@@ -2,7 +2,7 @@
 #include <Wire.h>
 
 #include "config.hpp"
-#include "MQ137.hpp"
+#include "gas_sensors.hpp"
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/LED/led_blinker.hpp"
 #include "rover_can2/rover_can2.hpp"
@@ -16,14 +16,14 @@ void setup(void)
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(LED_BLTN), LED::BlinkPatterns::HEARTBEAT);
     canLed.init();
     
-    MQ137 mq137(Wire1);
-    mq137.init();
+    GAS_SENSORS gasSensor(Wire1);
+    gasSensor.init();
 
-    LOG_INFO(Logger::Nodes::Main, "MQ137 Init done, starting main loop!");
+    LOG_INFO(Logger::Nodes::Main, "gasSensor Init done, starting main loop!");
     for (EVER)
     {
         canLed.update();
-        mq137.update();
+        gasSensor.update();
     }
 
 }
