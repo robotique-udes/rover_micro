@@ -4,7 +4,6 @@
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
 
-
 DEFINE_LOG_NODE(SensorBox_msg, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
@@ -25,8 +24,12 @@ namespace RoverCan2::Msgs
             float amonia;
             float hydrogen;
 
-            static_assert(sizeof(amonia) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(hydrogen) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(amonia) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(hydrogen) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                  - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
