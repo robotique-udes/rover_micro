@@ -505,7 +505,7 @@ size_t NetworkClient::readBytes(char *buffer, size_t length) {
       to = millis() + getTimeout();
     } else {
       // We got no data
-      if (millis() >= to) {
+      if ((int)millis() >= to) {
         // We have waited for data enough
         log_w("Timeout waiting for data on fd %d", fd());
         break;

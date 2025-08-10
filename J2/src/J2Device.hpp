@@ -49,7 +49,7 @@ class J2Device
 
         if (_timerCanSend.isReady())
         {
-            sendCanMsgs();
+            this->sendCanMsgs();
         }
 
         _j2.update();
