@@ -28,13 +28,13 @@ namespace RoverCanLib::Msgs
         struct sMsgData
         {
             float ozone
-            uint16_t hydrogene
+            float hydrogene
         };
 
         SensorBox() 
         {
             data.ozone = 0.0f;
-            data.hydrogene = 0u;
+            data.hydrogene = 0.0f;
         }
         ~SensorBox() {}
 
@@ -54,7 +54,7 @@ namespace RoverCanLib::Msgs
                 break;
 
             case eMsgID::HYDROGENE:
-                RoverCanLib::Helpers::canMsgToStruct<uint16_t, UnionDefinition::Uint16_tUnion>(msg_, &this->data.hydrogene);
+                RoverCanLib::Helpers::canMsgToStruct<float, UnionDefinition::FloatUnion>(msg_, &this->data.hydrogene);
                 break;
 
             default:
@@ -77,7 +77,7 @@ namespace RoverCanLib::Msgs
                 break;
 
             case eMsgID::HYDROGENE:
-                Helpers::structToCanMsg<uint16_t, UnionDefinition::Uint16_tUnion>(&data.hydrogene, msg_);
+                Helpers::structToCanMsg<float, UnionDefinition::FloatUnion>(&data.hydrogene, msg_);
                 break;
 
             default:
@@ -104,7 +104,7 @@ namespace RoverCanLib::Msgs
                 break;
 
             case eMsgID::HYDROGENE:
-                RoverCanLib::Helpers::canMsgToStruct<uint16_t, UnionDefinition::Uint16_tUnion>(msg_, &this->data.hydrogene, logger_);
+                RoverCanLib::Helpers::canMsgToStruct<float, UnionDefinition::FloatUnion>(msg_, &this->data.hydrogene, logger_);
                 break;
 
             default:
@@ -127,7 +127,7 @@ namespace RoverCanLib::Msgs
                 break;
 
             case eMsgID::HYDROGENE:
-                Helpers::structToCanMsg<uint16_t, UnionDefinition::Uint16_tUnion>(&data.hydrogene, msg_);
+                Helpers::structToCanMsg<float, UnionDefinition::FloatUnion>(&data.hydrogene, msg_);
                 break;
 
             default:
