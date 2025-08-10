@@ -5,11 +5,11 @@
 #include "rover_can2/helpers.hpp"
 
 
-DEFINE_LOG_NODE(SensorBox _msg, Logger::eNodeState::OFF)
+DEFINE_LOG_NODE(SensorBox_msg, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
 {
-    class SensorBox  : public Msg<SensorBox >
+    class SensorBox : public Msg<SensorBox>
     {
       public:
         enum class eMsgContentID : uint8_t
@@ -33,7 +33,7 @@ namespace RoverCan2::Msgs
             = {eMsgContentID::AMONIA, eMsgContentID::HYDROGEN};
 
       public:
-        SensorBox ():
+        SensorBox():
             Msg(Constant::eMsgId::SENSOR_BOX)
         {
             _data.amonia = static_cast<decltype(_data.amonia)>(0);
@@ -55,7 +55,7 @@ namespace RoverCan2::Msgs
             eMsgContentID msgContentId = static_cast<eMsgContentID>(msg_.getMsgContentID());
             if (!VALID_MSG_IDS.contains(msgContentId))
             {
-                LOG_DEBUG(Logger::Nodes::SensorBox _msg,
+                LOG_DEBUG(Logger::Nodes::SensorBox_msg,
                           "Mismatch between received message and local message definition. Received msgContentId: (%u), "
                           "expected lower than (%u) and none zero",
                           TO_UNDERLYING(msgContentId),
@@ -68,14 +68,14 @@ namespace RoverCan2::Msgs
             {
                 case eMsgContentID::AMONIA:
                     success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.amonia);
-                    LOG_DEBUG(Logger::Nodes::SensorBox _msg,
+                    LOG_DEBUG(Logger::Nodes::SensorBox_msg,
                               "switch (msgContentId) case eMsgContentID::AMONIA: %s",
                               success ? "success" : "failed");
                     break;
 
                 case eMsgContentID::HYDROGEN:
                     success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.hydrogen);
-                    LOG_DEBUG(Logger::Nodes::SensorBox _msg,
+                    LOG_DEBUG(Logger::Nodes::SensorBox_msg,
                               "switch (msgContentId) case eMsgContentID::HYDROGEN: %s",
                               success ? "success" : "failed");
                     break;
@@ -149,4 +149,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // SENSOR_BOX _HPP
+#endif  // SENSOR_BOX_HPP

@@ -5,7 +5,7 @@
 #include "rover_lib2/helpers/log.hpp"
 #include "rover_lib2/helpers/log_plot.hpp"
 #include "rover_can2/rover_can2.hpp"
-#include "rover_can2/msgs/sensor_box .hpp"
+#include "rover_can2/msgs/sensor_box.hpp"
 
 #include <math.h>
 #include <Wire.h>
@@ -14,14 +14,15 @@ DEFINE_LOG_NODE(GAS_SENSOR, Logger::eNodeState::OFF);
 
 class GasSensor
 {
+    static constexpr uint64_t UPDATE_PERIOD = 500ULL;
+
     static constexpr uint8_t I2C_ADDR = 0x30;
     static constexpr uint8_t REG_VALUE0 = 0x00;  // 2-byte little-endian measurement
     static constexpr uint32_t I2C_HZ = 100'000UL;
 
     static constexpr uint16_t MAX_BITS = 2048;
 
-    using GasSensorJointDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::SensorBox>>;
-
+    using GasSensorDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::SensorBox>>;
 
   public:
     GasSensor(TwoWire& wire):
@@ -34,15 +35,17 @@ class GasSensor
         _wire.begin(MQ131_SDA, MQ131_SCL, I2C_HZ);
     }
 
-    void update() 
+    void update()
     {
-        _amonia = this->readMQ137();
-        _hydrogen = this->toPercent(analogRead(MQ8_AOUT));
-    }
+        if (_timerUpdate.isReady())
+        {
+            return;
+        }
 
-    float toPercent(float value)
-    {
-        return value / MAX_BITS * 100.0F;
+        _amonia = this->readMQ137();
+        _hydrogen = MAP(this->readMQ8(), 0.0F, static_cast<float>((1 << 11) - 1), 0.0F, 100.0F);
+
+        this->sendCamMsgs();
     }
 
     float readMQ137()
@@ -66,9 +69,14 @@ class GasSensor
         return static_cast<float>(rawValue);  // ppb
     }
 
-    GasSensorJointDeviceT& getGasSensorJointDevice()
+    float readMQ8()
     {
-        return _gasSensorJointDevice;
+        return static_cast<float>(analogRead(MQ8_AOUT));
+    }
+
+    GasSensorDeviceT& getCanDevice()
+    {
+        return _canDevice;
     }
 
   private:
@@ -77,16 +85,19 @@ class GasSensor
         RoverCan2::Msgs::SensorBox sensorStatus;
         sensorStatus.data().amonia = _amonia;
         sensorStatus.data().hydrogen = _hydrogen;
+
+        _canDevice.sendMsg(sensorStatus);
     }
+
+    LoopTimer<uint64_t, &Time::millis> _timerUpdate = {UPDATE_PERIOD};
 
     float _amonia = 0.0F;
     float _hydrogen = 0.0F;
 
     TwoWire& _wire;
 
-    GasSensorJointDeviceT _gasSensorJointDevice = 
-        GasSensorJointDeviceT(RoverCan2::Constant::eDeviceId::GAS_SENSORS,
-                              RoverCan2::Publisher<RoverCan2::Msgs::SensorBox>());
+    GasSensorDeviceT _canDevice
+        = GasSensorDeviceT(RoverCan2::Constant::eDeviceId::GAS_SENSORS, RoverCan2::Publisher<RoverCan2::Msgs::SensorBox>());
 };
 
 #endif
