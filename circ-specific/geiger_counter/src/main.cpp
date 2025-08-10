@@ -19,6 +19,7 @@ static const char* const WIFI_PASSWORD = "ske_bou_bou";
 static constexpr uint32_t WIFI_TIMEOUT_MS = 10'000UL;
 
 // UDP Configuration
+// To read data on those devices, type "nc -u -l 5005" in a terminal
 static const char* const UDP_ADDRESSES[] = {
     "192.168.144.20",   // Rover MCU
     "192.168.144.101",  // Phil Michaud
@@ -123,6 +124,8 @@ void processUARTData()
 
             if (lineBuffer.length() > 0)
             {
+                lineBuffer += "\n";
+                lineBuffer += "\0";
                 sendUDPPacket(lineBuffer);
                 lineBuffer.clear();
             }
