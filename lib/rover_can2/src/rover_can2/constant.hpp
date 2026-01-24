@@ -35,6 +35,7 @@ namespace RoverCan2::Constant
         GRIPPER_CLOSE_CONTROLLER = 0x207,
         GRIPPER_LASER = 0x208,
         GRIPPER_DISTANCE = 0x209,
+        JR_ACTUATOR = 0x252,
 
     _RESERVED_GREEN_AUXILIARY = 0x300,
         GPS = 0x301,
