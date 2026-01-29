@@ -16,6 +16,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Clean PlatformIO framework cache
+        run: |
+          rm -rf ~/.platformio/packages/framework-arduinoespressif32
+          rm -rf ~/.platformio/.cache
+
       - name: 
         run: |
             set -e
