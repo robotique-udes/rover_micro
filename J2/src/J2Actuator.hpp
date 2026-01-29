@@ -2,7 +2,7 @@
 #define J2_ACTUATOR
 
 #include "config.hpp"
-#include "rover_lib2/actuators/AK10_9/AK10_9.hpp"
+#include "rover_lib2/actuators/AK60_6/AK60_6.hpp"
 #include "rover_lib2/sensors/encoder/AMT222X.hpp"
 #include "rover_lib2/filters/low_pass_EMA.hpp"
 #include "rover_lib2/controllers/PID.hpp"
@@ -32,7 +32,7 @@ class J2Actuator
 
   public:
     explicit J2Actuator(std::reference_wrapper<Stream> motorSerial_):
-        _j2(Actuators::AK10_9::eControlType::SPEED, motorSerial_)
+        _j2(Actuators::AK60_6::eControlType::SPEED, motorSerial_)
     {
     }
 
@@ -111,7 +111,7 @@ class J2Actuator
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
         = {__spi, PIN_ENC_CS, "J2", true, RATIO_OUTPUT_TO_ENCODER, _j2PositionFilter, _j2SpeedFilter};
 
-    Actuators::AK10_9 _j2;
+    Actuators::AK60_6 _j2;
 };
 
 #endif
