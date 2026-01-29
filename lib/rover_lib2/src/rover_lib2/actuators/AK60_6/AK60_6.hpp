@@ -24,7 +24,7 @@ DEFINE_LOG_NODE(AK106Plot, Logger::eNodeState::OFF);
 
 namespace Actuators
 {
-    class AK60_9
+    class AK60_6
     {
         static constexpr float RAD_S_TO_RPM = 9.549296596425384F;
         static constexpr float N_POLE_PAIRS = 17.0F;
