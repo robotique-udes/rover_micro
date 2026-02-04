@@ -86,6 +86,8 @@ namespace Actuators
                     ASSERT_MSG_ARGS("Control mode \"%u\" not supported, falling in safe mode", _controlType);
                     _errorMode = true;
             }
+
+            
         }
 
         void speedModeUpdate(void)
@@ -181,6 +183,19 @@ namespace Actuators
             _sendCmdBuffer[TO_UNDERLYING(eSendCmd::FRAME_TAIL)] = Actuators::AK60_6_Constants::FRAME_TAIL;
 
             _motorSerial.get().write(_sendCmdBuffer.data(), sizeof(_sendCmdBuffer));
+        }
+
+        void pollRx(void)
+        {
+            auto& s = motorSerial.get();
+            while(s.available() > 0)
+            {
+                const int b = s.read();
+                if (b < 0)
+                {
+                    break;
+                }
+            }
         }
 
         uint16_t calcCheckSum(unsigned char* buf_, unsigned int len_) const
