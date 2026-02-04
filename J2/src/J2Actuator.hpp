@@ -103,13 +103,13 @@ class J2Actuator
     float _j2SpeedGoal = 0.0F;
     OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
 
-    Filters::LowPassEMA _j2SpeedFilter = {0.15F, 0.0F};
-    Filters::LowPassEMA _j2PositionFilter = {0.9F, 0.0F};
+    Filters::LowPassEMA _jRSpeedFilter = {0.15F, 0.0F};
+    Filters::LowPassEMA _jRPositionFilter = {0.9F, 0.0F};
 
     SPIBus __spi = SPIBus(spi_host_device_t::SPI2_HOST, PIN_ENC_MOSI, PIN_ENC_MISO, PIN_ENC_CLK, 32U);
 
     Encoders::AMT222X<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
-        = {__spi, PIN_ENC_CS, "J2", true, RATIO_OUTPUT_TO_ENCODER, _j2PositionFilter, _j2SpeedFilter};
+        = {__spi, PIN_ENC_CS, "J2", true, RATIO_OUTPUT_TO_ENCODER, _jRPositionFilter, _jRSpeedFilter};
 
     Actuators::AK60_6 _j2;
 };

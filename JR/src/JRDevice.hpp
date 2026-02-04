@@ -12,13 +12,13 @@
 
 class JRDevice
 {
-    static constexpr uint64_t LOOP_PERIOD_US = 250ULL;
+    static constexpr uint64_t LOOP_PERIOD_US = 1'000ULL;
     static constexpr float CAN_SEND_FREQ = 20.0F;
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQ);
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.5F;
+    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.10F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.0F;
 
