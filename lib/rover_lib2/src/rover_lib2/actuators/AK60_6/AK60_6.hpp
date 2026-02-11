@@ -71,7 +71,7 @@ namespace Actuators
             WAIT_TAIL,
         };
 
-        static constexpr size_t RX_MAX_PAYLOAD = 128;        // cmd + data bytes (per length field)
+        static constexpr size_t RX_MAX_PAYLOAD = 128;         // cmd + data bytes (per length field)
         static constexpr size_t RX_MAX_BYTES_PER_POLL = 128;  // cap work per update()
 
         static constexpr uint8_t CMD_GET_VALUES = 0x45;
@@ -169,6 +169,16 @@ namespace Actuators
         void setSpeed(float goalSpeedRad_)
         {
             _goalSpeed = goalSpeedRad_;
+        }
+
+        float getPosition(void) const
+        {
+            return _telemetryPos;
+        }
+
+        float getSpeed(void) const
+        {
+            return _telemetrySpeedRadS;
         }
 
         void setMaxSpeed(float maxSpeed_)
@@ -397,8 +407,11 @@ namespace Actuators
                         (void)vq;
                     }
 
-                    _telemetryPos = extLoopPos;
+                    _telemetryPos = extLoopPos; 
                     _telemetryValid = true;
+
+                    LOG_INFO(Logger::Nodes::AK106, "this->getPosition(): %f, this->getSpeed(): %f", _telemetryPos, _telemetrySpeedRadS);
+
                     break;
                 }
 
@@ -418,16 +431,6 @@ namespace Actuators
                 default:
                     break;
             }
-        }
-
-        float getPosition(void) const
-        {
-            return _telemetryPos;
-        }
-
-        float getSpeed(void) const
-        {
-            return _telemetrySpeedRadS;
         }
 
         uint16_t calcCheckSum(unsigned char* buf_, unsigned int len_) const

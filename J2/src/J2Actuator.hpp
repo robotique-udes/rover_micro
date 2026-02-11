@@ -13,13 +13,14 @@
 
 #include <algorithm>
 
-DEFINE_LOG_NODE(J2Actuator, Logger::eNodeState::OFF);
-DEFINE_LOG_NODE(J2ActuatorPlot, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(J2Actuator, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(J2ActuatorPlot, Logger::eNodeState::ON);
 
 class J2Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 250.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
+    static constexpr uint64_t AK_GET_VALUES_PERIOD_MS = 1000;
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.2F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
@@ -41,6 +42,7 @@ class J2Actuator
         _encoder.init();
         _j2.setSpeed(0.0F);
         _j2.init();
+        _j2.requestGetValuesOnce();
     }
 
     void update()
@@ -51,6 +53,11 @@ class J2Actuator
         }
 
         _encoder.update();
+
+        if (_akGetValuesTimer.isReady())
+        {
+            _j2.requestGetValuesOnce();
+        }
 
         float speedCmd = 0.0F;
         if (this->getPosition() <= J2_MIN_JOINT_LIMIT)
@@ -69,10 +76,10 @@ class J2Actuator
         _j2.setSpeed(-10.0F * speedCmd);
         _j2.update();
 
-        LOG_INFO(Logger::Nodes::J2Actuator,
+        /*LOG_INFO(Logger::Nodes::J2Actuator,
                  "this->getPosition(): %f, this->getSpeed(): %f",
                  this->getPosition(),
-                 this->getSpeed());
+                 this->getSpeed());*/
 
         LOG_PLOT(Logger::Nodes::J2ActuatorPlot, this->getPosition(), this->getSpeed(), speedCmd);
     }
@@ -84,12 +91,12 @@ class J2Actuator
 
     float getSpeed() const
     {
-        return _encoder.getSpeed();
+        return _j2.getSpeed();//_encoder.getSpeed();
     }
 
     float getPosition() const
     {
-        return _encoder.getPosition();
+        return _j2.getPosition(); //_encoder.getPosition();
     }
 
     void calib(float offset_)
@@ -99,6 +106,7 @@ class J2Actuator
 
   private:
     LoopTimer<uint64_t, &Time::micros> _controlLoopTimer = {CONTROL_LOOP_PERIOD_US};
+        LoopTimer<uint64_t, &Time::millis> _akGetValuesTimer = {AK_GET_VALUES_PERIOD_MS};
 
     float _j2SpeedGoal = 0.0F;
     OneShotTimer<uint64_t, &Time::millis> _timerWaitAfterCalib = {0};
