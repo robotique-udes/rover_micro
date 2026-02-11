@@ -4,6 +4,12 @@
 #include <concepts>
 #include <Stream.h>
 
+#include <array>
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+#include <optional>
+
 #include "AK60_6_internals.hpp"
 
 #include "rover_lib2/helpers/log.hpp"
@@ -55,6 +61,23 @@ namespace Actuators
             eLAST
         };
 
+        enum class eRxState : uint8_t
+        {
+            WAIT_HEAD = 0,
+            READ_LEN,
+            READ_PAYLOAD,
+            READ_CRC_MSB,
+            READ_CRC_LSB,
+            WAIT_TAIL,
+        };
+
+        static constexpr size_t RX_MAX_PAYLOAD = 128;        // cmd + data bytes (per length field)
+        static constexpr size_t RX_MAX_BYTES_PER_POLL = 128;  // cap work per update()
+
+        static constexpr uint8_t CMD_GET_VALUES = 0x45;
+        static constexpr uint8_t CMD_POS_FEEDBACK_ENABLE = 0x4C;
+        static constexpr uint8_t CMD_POS_FEEDBACK_FRAME = 0x57;
+
       public:
         AK60_6(eControlType controlType_, std::reference_wrapper<Stream> motorSerial_):
             _controlType(controlType_),
@@ -66,6 +89,8 @@ namespace Actuators
 
         void update(void)
         {
+            this->pollRx();
+
             if (_errorMode)
             {
                 LOG_WARN(Logger::Nodes::AK106, "Fallen in error mode, motor stopped");
@@ -86,8 +111,6 @@ namespace Actuators
                     ASSERT_MSG_ARGS("Control mode \"%u\" not supported, falling in safe mode", _controlType);
                     _errorMode = true;
             }
-
-            
         }
 
         void speedModeUpdate(void)
@@ -109,26 +132,43 @@ namespace Actuators
             this->sendRadSCmd(cmd);
         }
 
+        void requestGetValuesOnce()
+        {
+            // Frame: HEAD, LEN(=1), PAYLOAD(=0x45), CRC16(payload), TAIL
+            std::array<uint8_t, 6> frame = {0};
+            frame[0] = Actuators::AK60_6_Constants::FRAME_HEAD;
+            frame[1] = 0x01;
+            frame[2] = CMD_GET_VALUES;
+            const uint16_t crc = this->calcCheckSum(&frame[2], 1);
+            frame[3] = static_cast<uint8_t>((crc >> 8) & 0xFF);
+            frame[4] = static_cast<uint8_t>(crc & 0xFF);
+            frame[5] = Actuators::AK60_6_Constants::FRAME_TAIL;
+            _motorSerial.get().write(frame.data(), frame.size());
+        }
+
+        void enablePositionFeedback(uint8_t mode_ = 0x04)
+        {
+            // Frame: HEAD, LEN(=2), PAYLOAD(=0x4C mode), CRC16(payload), TAIL
+            std::array<uint8_t, 7> frame = {0};
+            frame[0] = Actuators::AK60_6_Constants::FRAME_HEAD;
+            frame[1] = 0x02;
+            frame[2] = CMD_POS_FEEDBACK_ENABLE;
+            frame[3] = mode_;
+            const uint16_t crc = this->calcCheckSum(&frame[2], 2);
+            frame[4] = static_cast<uint8_t>((crc >> 8) & 0xFF);
+            frame[5] = static_cast<uint8_t>(crc & 0xFF);
+            frame[6] = Actuators::AK60_6_Constants::FRAME_TAIL;
+            _motorSerial.get().write(frame.data(), frame.size());
+        }
+
         void setPosition(float /*goalPosition_*/)
         {
             ASSERT_MSG("Not implemented");
         }
 
-        float getPosition(void) const
-        {
-            ASSERT_MSG("Not implemented");
-            return 0.0F;
-        }
-
         void setSpeed(float goalSpeedRad_)
         {
             _goalSpeed = goalSpeedRad_;
-        }
-
-        float getSpeed(void) const
-        {
-            ASSERT_MSG("Not implemented");
-            return 0.0F;
         }
 
         void setMaxSpeed(float maxSpeed_)
@@ -187,15 +227,207 @@ namespace Actuators
 
         void pollRx(void)
         {
-            auto& s = motorSerial.get();
-            while(s.available() > 0)
+            auto& s = _motorSerial.get();
+
+            size_t consumed = 0;
+
+            while (s.available() > 0 && consumed < RX_MAX_BYTES_PER_POLL)
             {
-                const int b = s.read();
-                if (b < 0)
+                const int bi = s.read();
+                if (bi < 0)
                 {
                     break;
                 }
+
+                ++consumed;
+                const uint8_t b = static_cast<uint8_t>(bi);
+
+                switch (_rxState)
+                {
+                    case eRxState::WAIT_HEAD:
+                        if (b == Actuators::AK60_6_Constants::FRAME_HEAD)
+                        {
+                            _rxLen = 0;
+                            _rxIndex = 0;
+                            _rxCrc = 0;
+                            _rxState = eRxState::READ_LEN;
+                        }
+                        break;
+
+                    case eRxState::READ_LEN:
+                        _rxLen = b;
+                        if ((_rxLen == 0) || (_rxLen > RX_MAX_PAYLOAD))
+                        {
+                            // invalid length -> resync
+                            _rxState = eRxState::WAIT_HEAD;
+                        }
+                        else
+                        {
+                            _rxIndex = 0;
+                            _rxState = eRxState::READ_PAYLOAD;
+                        }
+                        break;
+
+                    case eRxState::READ_PAYLOAD:
+                        _rxPayload[_rxIndex++] = b;
+                        if (_rxIndex >= _rxLen)
+                        {
+                            _rxState = eRxState::READ_CRC_MSB;
+                        }
+                        break;
+
+                    case eRxState::READ_CRC_MSB:
+                        _rxCrc = static_cast<uint16_t>(b) << 8;
+                        _rxState = eRxState::READ_CRC_LSB;
+                        break;
+
+                    case eRxState::READ_CRC_LSB:
+                        _rxCrc |= static_cast<uint16_t>(b);
+                        _rxState = eRxState::WAIT_TAIL;
+                        break;
+
+                    case eRxState::WAIT_TAIL:
+                        if (b == Actuators::AK60_6_Constants::FRAME_TAIL)
+                        {
+                            const uint16_t computed = this->calcCheckSum(_rxPayload.data(), _rxLen);
+                            if (computed == _rxCrc)
+                            {
+                                this->handleRxFrame(_rxPayload.data(), _rxLen);
+                            }
+                            // else: CRC mismatch, drop frame
+                        }
+                        // tail mismatch -> resync regardless
+                        _rxState = eRxState::WAIT_HEAD;
+                        break;
+
+                    default:
+                        _rxState = eRxState::WAIT_HEAD;
+                        break;
+                }
             }
+        }
+
+        void handleRxFrame(const uint8_t* payload_, size_t len_)
+        {
+            if (len_ < 1)
+            {
+                return;
+            }
+
+            _lastRxCmd = payload_[0];
+            _lastRxLen = len_;
+            _lastRxValid = true;
+
+            const size_t copyLen = std::min(len_, _lastRxPayload.size());
+            std::copy(payload_, payload_ + copyLen, _lastRxPayload.begin());
+
+            // Decode known replies
+            switch (_lastRxCmd)
+            {
+                case CMD_GET_VALUES:
+                {
+                    // Layout per Cubemars doc:
+                    // 0:cmd(0x45)
+                    // 1.. : mos_temp(i16)/10, motor_temp(i16)/10, out_current(i32)/100, in_current(i32)/100,
+                    //       Id(i32)/100, Iq(i32)/100, throttle(i16)/1000, motor_speed(i32),
+                    //       input_voltage(i16)/10, reserved(24),
+                    //       status(u8), ext_loop_pos(i32)/1000, control_id(u8),
+                    //       temp_reserved(6), vd(i32)/1000, vq(i32)/1000
+                    size_t i = 1;
+
+                    if (len_ < 1 + 2 + 2 + 4 + 4 + 4 + 4 + 2 + 4 + 2)
+                    {
+                        break;  // too short to even contain the early fields
+                    }
+
+                    const float mosTempC = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
+                    const float motTempC = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
+                    (void)mosTempC;
+                    (void)motTempC;
+
+                    const float outCurrentA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
+                    const float inCurrentA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
+                    (void)outCurrentA;
+                    (void)inCurrentA;
+
+                    const float idA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
+                    const float iqA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
+                    (void)idA;
+                    (void)iqA;
+
+                    const float throttle = static_cast<float>(readI16BE(payload_, i)) / 1000.0F;
+                    (void)throttle;
+
+                    const int32_t motorSpeedRaw = readI32BE(payload_, i);
+                    _telemetrySpeedRadS = this->erpmToRadS(motorSpeedRaw);
+
+                    const float vinV = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
+                    (void)vinV;
+
+                    // Skip reserved(24)
+                    if (i + 24 > len_)
+                        break;
+                    i += 24;
+
+                    // status
+                    if (i + 1 > len_)
+                        break;
+                    _telemetryFault = payload_[i++];
+                    // ext loop position
+                    if (i + 4 > len_)
+                        break;
+                    const float extLoopPos = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
+
+                    // control id
+                    if (i + 1 > len_)
+                        break;
+                    _telemetryId = payload_[i++];
+
+                    // temp reserved(6)
+                    if (i + 6 > len_)
+                        break;
+                    i += 6;
+
+                    // vd/vq (optional; ignore if missing)
+                    if (i + 8 <= len_)
+                    {
+                        const float vd = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
+                        const float vq = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
+                        (void)vd;
+                        (void)vq;
+                    }
+
+                    _telemetryPos = extLoopPos;
+                    _telemetryValid = true;
+                    break;
+                }
+
+                case CMD_POS_FEEDBACK_FRAME:
+                {
+                    // Example: AA 05 57 <pos_i32> <crc> BB, pos = int32/1000
+                    if (len_ >= 1 + 4)
+                    {
+                        size_t i = 1;
+                        const float pos = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
+                        _telemetryPos = pos;
+                        _telemetryValid = true;
+                    }
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+
+        float getPosition(void) const
+        {
+            return _telemetryPos;
+        }
+
+        float getSpeed(void) const
+        {
+            return _telemetrySpeedRadS;
         }
 
         uint16_t calcCheckSum(unsigned char* buf_, unsigned int len_) const
@@ -208,6 +440,23 @@ namespace Actuators
             return cksum;
         }
 
+        // CubeMars command
+        static int16_t readI16BE(const uint8_t* p_, size_t& i_)
+        {
+            const int16_t v = static_cast<int16_t>((static_cast<uint16_t>(p_[i_]) << 8) | (static_cast<uint16_t>(p_[i_ + 1])));
+            i_ += 2;
+            return v;
+        }
+
+        // CubeMars command
+        static int32_t readI32BE(const uint8_t* p_, size_t& i_)
+        {
+            const int32_t v = (static_cast<int32_t>(p_[i_]) << 24) | (static_cast<int32_t>(p_[i_ + 1]) << 16)
+                              | (static_cast<int32_t>(p_[i_ + 2]) << 8) | (static_cast<int32_t>(p_[i_ + 3]));
+            i_ += 4;
+            return v;
+        }
+
         float radSToRPM(float radPerSec_) const
         {
             return radPerSec_ * RAD_S_TO_RPM;
@@ -217,6 +466,28 @@ namespace Actuators
         {
             return radPerSec_ * RAD_S_TO_RPM * N_POLE_PAIRS * MOTOR_REDUCTION;
         }
+
+        float erpmToRadS(int32_t erpm_) const
+        {
+            return static_cast<float>(erpm_) / (RAD_S_TO_RPM * N_POLE_PAIRS * MOTOR_REDUCTION);
+        }
+
+        eRxState _rxState = eRxState::WAIT_HEAD;
+        uint8_t _rxLen = 0;
+        uint8_t _rxIndex = 0;
+        uint16_t _rxCrc = 0;
+        std::array<uint8_t, RX_MAX_PAYLOAD> _rxPayload = {0};
+
+        bool _lastRxValid = false;
+        uint8_t _lastRxCmd = 0;
+        size_t _lastRxLen = 0;
+        std::array<uint8_t, RX_MAX_PAYLOAD> _lastRxPayload = {0};
+
+        bool _telemetryValid = false;
+        float _telemetrySpeedRadS = 0.0F;  // derived from "motor speed" field (assumed ERPM)
+        float _telemetryPos = 0.0F;        // external loop pos or periodic pos feedback (int32/1000)
+        uint8_t _telemetryFault = 0;
+        uint8_t _telemetryId = 0;
 
         const eControlType _controlType;
         bool _errorMode = false;
