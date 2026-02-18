@@ -1,6 +1,8 @@
 #ifndef J5_ACTUATOR_HPP
 #define J5_ACTUATOR_HPP
 
+#include <Wire.h>
+
 #include "rover_lib2/motor_drivers/IFX9201SG.hpp"
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
@@ -20,6 +22,8 @@ class J5Device
     static constexpr float CAN_SEND_FREQUENCY = 20.0F;
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(ROUND(1'000.0F / CAN_SEND_FREQUENCY));
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQUENCY * 2.0F);
+    static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x45);
+    static constexpr float SHUNT_RESISTANCE = 0.05F; // Ohms
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
@@ -31,6 +35,7 @@ class J5Device
     {
         _driver.init();
         _driver.setEnabled(true);
+        Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
     }
 
     void update()
@@ -65,6 +70,9 @@ class J5Device
             _driver.setCmd(0.0F);
         }
 
+        float shuntCurrent = readShunt();
+        Serial.print("Shunt value: "); Serial.println(shuntCurrent);
+
         if (_timerCanSend.isReady())
         {
             RoverCan2::Msgs::ArmJointStatus armStatusMsg;
@@ -85,6 +93,20 @@ class J5Device
     {
         _canWatchdog.reset();
         targetSpeed_ = cmd_.getData().targetSpeed;
+    }
+
+    float readShunt() 
+    {
+        Wire.beginTransmission(I2C_SLAVE_ADDRESS);
+        Wire.write(0x01);  // Shunt voltage register
+        Wire.endTransmission(false);  // repeated start
+        Wire.requestFrom(I2C_SLAVE_ADDRESS, (uint8_t)2);
+        int16_t raw = static_cast<int16_t>((Wire.read() << 8) | Wire.read());
+
+        float shuntVoltage = raw * 10e-6;
+        float shuntCurrent = shuntVoltage / SHUNT_RESISTANCE;
+
+        return shuntCurrent;
     }
 
     JointCanDeviceT _canDevice
