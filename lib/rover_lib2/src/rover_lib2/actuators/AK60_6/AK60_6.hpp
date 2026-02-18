@@ -36,6 +36,7 @@ namespace Actuators
         static constexpr float N_POLE_PAIRS = 17.0F;
         static constexpr float MOTOR_REDUCTION = 6.0F;
         static constexpr float FULL_STOP_CMD = 0.0F;
+        static constexpr float KT = 0.11937f;
 
       public:
         enum class eControlType
@@ -179,6 +180,16 @@ namespace Actuators
         float getSpeed(void) const
         {
             return _telemetrySpeedRadS;
+        }
+
+        float getMotTemp(void) const
+        {
+            return _motTemp;
+        }
+
+        float getTorque(void) const
+        {
+            return _currentQ * KT;
         }
 
         void setMaxSpeed(float maxSpeed_)
@@ -350,29 +361,21 @@ namespace Actuators
                         break;  // too short to even contain the early fields
                     }
 
-                    const float mosTempC = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
-                    const float motTempC = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
-                    (void)mosTempC;
-                    (void)motTempC;
+                    _mosTemp = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
+                    _motTemp = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
 
-                    const float outCurrentA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
-                    const float inCurrentA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
-                    (void)outCurrentA;
-                    (void)inCurrentA;
+                    _currentOut = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
+                    _currentIn = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
 
-                    const float idA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
-                    const float iqA = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
-                    (void)idA;
-                    (void)iqA;
+                    _currentD = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
+                    _currentQ = static_cast<float>(readI32BE(payload_, i)) / 100.0F;
 
-                    const float throttle = static_cast<float>(readI16BE(payload_, i)) / 1000.0F;
-                    (void)throttle;
+                    _throttle = static_cast<float>(readI16BE(payload_, i)) / 1000.0F;
 
                     const int32_t motorSpeedRaw = readI32BE(payload_, i);
                     _telemetrySpeedRadS = this->erpmToRadS(motorSpeedRaw);
 
-                    const float vinV = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
-                    (void)vinV;
+                    _voltageIn = static_cast<float>(readI16BE(payload_, i)) / 10.0F;
 
                     // Skip reserved(24)
                     if (i + 24 > len_)
@@ -401,16 +404,12 @@ namespace Actuators
                     // vd/vq (optional; ignore if missing)
                     if (i + 8 <= len_)
                     {
-                        const float vd = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
-                        const float vq = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
-                        (void)vd;
-                        (void)vq;
+                        _voltageD = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
+                        _voltageQ = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
                     }
 
-                    _telemetryPos = extLoopPos; 
+                    _telemetryPos = extLoopPos;
                     _telemetryValid = true;
-
-                    LOG_INFO(Logger::Nodes::AK106, "this->getPosition(): %f, this->getSpeed(): %f", _telemetryPos, _telemetrySpeedRadS);
 
                     break;
                 }
@@ -491,6 +490,17 @@ namespace Actuators
         float _telemetryPos = 0.0F;        // external loop pos or periodic pos feedback (int32/1000)
         uint8_t _telemetryFault = 0;
         uint8_t _telemetryId = 0;
+
+        float _mosTemp = 0.0f;
+        float _motTemp = 0.0f;
+        float _currentOut = 0.0f;
+        float _currentIn = 0.0f;
+        float _throttle = 0.0f;
+        float _voltageIn = 0.0f;
+        float _currentD = 0.0f;
+        float _currentQ = 0.0f;
+        float _voltageD = 0.0f;
+        float _voltageQ = 0.0f;
 
         const eControlType _controlType;
         bool _errorMode = false;
