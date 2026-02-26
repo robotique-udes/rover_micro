@@ -7,6 +7,7 @@
 
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
 #include "rover_can2/msgs/arm_joint_status.hpp"
+#include "rover_can2/msgs/arm_joint_advanced_status.hpp"
 #include "rover_can2/rover_can2.hpp"
 
 DEFINE_LOG_NODE(J2Device, Logger::eNodeState::ON);
@@ -26,7 +27,8 @@ class J2Device
     static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m/s
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J2Device>,
-                                              RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
+                                              RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
+                                              RoverCan2::Publisher<RoverCan2::Msgs::ArmJointAdvancedStatus>>;
 
   public:
     explicit J2Device(std::reference_wrapper<Stream> motorSerial_):
@@ -106,6 +108,13 @@ class J2Device
         j2Status.data().currentSpeed = _j2.getSpeed();
 
         _j2CanDevice.sendMsg(j2Status);
+
+        RoverCan2::Msgs::ArmJointAdvancedStatus j2Advanced;
+        j2Advanced.data().currentTorque = _j2.getTorque();
+        j2Advanced.data().currentAmperage = _j2.getCurrent();
+        j2Advanced.data().currentMotorTemp = _j2.getMotTemp();
+
+        _j2CanDevice.sendMsg(j2Advanced);
     }
 
     void CB_J2Cmd(const RoverCan2::Msgs::ArmJointCmd& msgCan_)
@@ -129,7 +138,8 @@ class J2Device
     JointCanDeviceT _j2CanDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::J2_CONTROLLER,
                           RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J2Device>(*this, &J2Device::CB_J2Cmd),
-                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
+                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>(),
+                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointAdvancedStatus>());
 
     VALIDATE_CONCEPT(RoverObject, J2Device);
 };

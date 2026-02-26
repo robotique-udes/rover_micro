@@ -20,7 +20,7 @@ class J2Actuator
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 250.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
-    static constexpr uint64_t AK_GET_VALUES_PERIOD_MS = 5000;
+    static constexpr uint64_t AK_GET_VALUES_PERIOD_MS = 500;
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.2F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
@@ -83,10 +83,14 @@ class J2Actuator
         _j2.setSpeed(-10.0F * speedCmd);
         _j2.update();
 
-        /*LOG_INFO(Logger::Nodes::J2Actuator,
-                 "this->getPosition(): %f, this->getSpeed(): %f",
-                 this->getPosition(),
-                 this->getSpeed());*/
+        LOG_INFO(
+            Logger::Nodes::J2Actuator,
+            "this->getPosition(): %f, this->getSpeed(): %f, this->getTorque(): %f, this->getCurrent(): %f, this->getTemp(): %f",
+            this->getPosition(),
+            this->getSpeed(),
+            this->getTorque(),
+            this->getCurrent(),
+            this->getMotTemp());
 
         LOG_PLOT(Logger::Nodes::J2ActuatorPlot, this->getPosition(), this->getSpeed(), speedCmd);
     }
@@ -114,6 +118,11 @@ class J2Actuator
     float getMotTemp() const
     {
         return _j2.getMotTemp();
+    }
+
+    float getCurrent() const
+    {
+        return _j2.getCurrent();
     }
 
     void calib(float offset_)

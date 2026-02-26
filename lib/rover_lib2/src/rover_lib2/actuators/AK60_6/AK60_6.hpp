@@ -192,6 +192,11 @@ namespace Actuators
             return _currentQ * KT;
         }
 
+        float getCurrent(void) const
+        {
+            return _currentOut;
+        }
+
         void setMaxSpeed(float maxSpeed_)
         {
             _maxSpeed = maxSpeed_;
