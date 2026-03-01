@@ -37,12 +37,12 @@ constexpr gpio_num_t PIN_I2C_SDA = GPIO_NUM_11;
 constexpr gpio_num_t PIN_I2C_SCL = GPIO_NUM_12;
 
 // Motor
-constexpr gpio_num_t PIN_J34_L_PWM = GPIO_NUM_16;
-constexpr gpio_num_t PIN_J34_L_DIR = GPIO_NUM_15;
+constexpr gpio_num_t PIN_J34_L_PWM = GPIO_NUM_15;
+constexpr gpio_num_t PIN_J34_L_DIR = GPIO_NUM_16;
 constexpr gpio_num_t PIN_J34_L_CS = GPIO_NUM_7;
 
-constexpr gpio_num_t PIN_J34_R_PWM = GPIO_NUM_43;
-constexpr gpio_num_t PIN_J34_R_DIR = GPIO_NUM_44;
+constexpr gpio_num_t PIN_J34_R_PWM = GPIO_NUM_44;
+constexpr gpio_num_t PIN_J34_R_DIR = GPIO_NUM_43;
 constexpr gpio_num_t PIN_J34_R_CS = GPIO_NUM_14;
 
 constexpr gpio_num_t PIN_J5_PWM = GPIO_NUM_17;
