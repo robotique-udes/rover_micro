@@ -23,6 +23,7 @@ class J5Device
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(ROUND(1'000.0F / CAN_SEND_FREQUENCY));
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQUENCY * 2.0F);
     static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x45);
+    // static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x85);
     static constexpr float SHUNT_RESISTANCE = 0.05F; // Ohms
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
