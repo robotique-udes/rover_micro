@@ -28,15 +28,17 @@ namespace RoverCanLib::Helpers
     }
 
     template<typename COPY_TYPE, typename UNION_TYPE>
-        void canMsgToStruct(IN const twai_message_t* msg_, OUT COPY_TYPE* dest_) requires(
-            std::is_same_v<COPY_TYPE, float>&& std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
-        || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
-        || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
+    void canMsgToStruct(IN const twai_message_t* msg_, OUT COPY_TYPE* dest_)
+        requires(std::is_same_v<COPY_TYPE, float> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
+                || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
+                || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint16_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint32_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
     {
         if (msg_->data_length_code < ((uint8_t)Constant::eDataIndex::START_OF_DATA + sizeof(COPY_TYPE)))
         {
@@ -55,15 +57,17 @@ namespace RoverCanLib::Helpers
     }
 
     template<typename COPY_TYPE, typename UNION_TYPE>
-        void structToCanMsg(IN const COPY_TYPE* structMember_, OUT twai_message_t* msg_) requires(
-            std::is_same_v<COPY_TYPE, float>&& std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
-        || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
-        || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
+    void structToCanMsg(IN const COPY_TYPE* structMember_, OUT twai_message_t* msg_)
+        requires(std::is_same_v<COPY_TYPE, float> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
+                || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
+                || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint16_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint32_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
     {
         msg_->data_length_code = ((uint8_t)Constant::eDataIndex::START_OF_DATA + sizeof(COPY_TYPE));
 
@@ -92,15 +96,17 @@ namespace RoverCanLib::Helpers
     }
 
     template<typename COPY_TYPE, typename UNION_TYPE>
-        void canMsgToStruct(IN const can_frame* msg_, OUT COPY_TYPE* dest_, IN rclcpp::Logger logger_) requires(
-            std::is_same_v<COPY_TYPE, float>&& std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
-        || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
-        || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
+    void canMsgToStruct(IN const can_frame* msg_, OUT COPY_TYPE* dest_, IN rclcpp::Logger logger_)
+        requires(std::is_same_v<COPY_TYPE, float> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
+                || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
+                || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint16_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint32_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
     {
         if ((uint8_t)msg_->len < (uint8_t)Constant::eDataIndex::START_OF_DATA + sizeof(COPY_TYPE))
         {
@@ -119,15 +125,17 @@ namespace RoverCanLib::Helpers
     }
 
     template<typename COPY_TYPE, typename UNION_TYPE>
-        void structToCanMsg(IN const COPY_TYPE* structMember_, OUT can_frame* msg_) requires(
-            std::is_same_v<COPY_TYPE, float>&& std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
-        || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
-        || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, uint32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
-        || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
+    void structToCanMsg(IN const COPY_TYPE* structMember_, OUT can_frame* msg_)
+        requires(std::is_same_v<COPY_TYPE, float> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::FloatUnion>)
+                || (std::is_same_v<COPY_TYPE, bool> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::BoolUnion>)
+                || (std::is_same_v<COPY_TYPE, uint8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint16_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, uint32_t>
+                    && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Uint32_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int8_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int8_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int16_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int16_tUnion>)
+                || (std::is_same_v<COPY_TYPE, int32_t> && std::is_same_v<UNION_TYPE, RoverCanLib::UnionDefinition::Int32_tUnion>)
     {
         msg_->len = ((uint8_t)Constant::eDataIndex::START_OF_DATA + sizeof(COPY_TYPE));
 
