@@ -6,6 +6,7 @@
 
 #include <array>
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -19,6 +20,11 @@
 #include "rover_lib2/helpers/macros.hpp"
 #include "rover_lib2/rover_object.hpp"
 #include "rover_lib2/actuators/actuator.hpp"
+
+#include "rover_lib2/storage/NVS_data_handle.hpp"
+#include "rover_lib2/helpers/loop_timer.hpp"
+#include "rover_lib2/helpers/watchdog.hpp"
+#include "rover_lib2/filters/none.hpp"
 
 #include "rover_lib2/sensors/encoder/encoder.hpp"
 #include "rover_lib2/controllers/controller.h"
@@ -37,6 +43,12 @@ namespace Actuators
         static constexpr float MOTOR_REDUCTION = 6.0F;
         static constexpr float FULL_STOP_CMD = 0.0F;
         static constexpr float KT = 0.11937f;
+        static constexpr uint64_t WATCHDOG_DATA_VALID_PERIOD_US = 500'000ULL;
+        static constexpr uint64_t MIN_TIME_BETWEEN_SPEED_CALC_US = 25'000ULL;
+        static constexpr const char* NVS_KEY_TURN_COUNT = "TURN_CTN";
+        static constexpr const char* NVS_KEY_CALIB_OFFSET = "CALIB";
+        static constexpr const char* NVS_KEY_LAST_QUADRANT = "QUADRANT";
+        static constexpr const char* NVS_KEY_SHUTDOWN_ANGLE = "SHUT_ANG";
 
       public:
         enum class eControlType
@@ -86,7 +98,27 @@ namespace Actuators
         {
         }
 
-        void init() {}
+        void init()
+        {
+            _dataValidNVS = _turnCount.dataInSync() && _calibOffset.dataInSync() && _lastQuadrant.dataInSync();
+            _hasSavedShutdownAngle = _shutdownAngle.dataInSync();
+            if (_hasSavedShutdownAngle)
+            {
+                _savedShutdownAngle = _shutdownAngle.getValue();
+            }
+
+            if (!_dataValidNVS)
+            {
+                LOG_WARN(Logger::Nodes::AK106, "NVS position data out of sync, calibration required");
+            }
+            else if (_hasSavedShutdownAngle)
+            {
+                LOG_INFO(Logger::Nodes::AK106, "Restoring saved shutdown angle: %f rad", _savedShutdownAngle);
+            }
+
+            _dtSpeedCalc.restart();
+            _isFirstRead = true;
+        }
 
         void update(void)
         {
@@ -174,12 +206,12 @@ namespace Actuators
 
         float getPosition(void) const
         {
-            return _telemetryPos;
+            return _currentPosition + _calibOffset.getValue();
         }
 
         float getSpeed(void) const
         {
-            return _telemetrySpeedRadS;
+            return _currentSpeed;
         }
 
         float getMotTemp(void) const
@@ -202,9 +234,82 @@ namespace Actuators
             _maxSpeed = maxSpeed_;
         }
 
-        void calib(float /*offset_*/)
+        bool dataIsValid(void) const
         {
-            ASSERT_MSG("Not implemented");
+            return _dataValidNVS && _dataValidWatchdog.isOk();
+        }
+
+        void saveShutdownPosition(void)
+        {
+            const float currentAbs = getPosition();
+            _shutdownAngle.writeValue(currentAbs);
+            _savedShutdownAngle = currentAbs;
+            _hasSavedShutdownAngle = true;
+        }
+
+        void calib(float offsetRad_)
+        {
+            // Determine base turn count from desired absolute offset.
+            const float fullRevolution = 2.0F * static_cast<float>(M_PI);
+            const float turnCountFloat = std::round(offsetRad_ / fullRevolution);
+            const int16_t calibTurnCount = static_cast<int16_t>(turnCountFloat);
+
+            float wrappedOffset = offsetRad_ - (turnCountFloat * fullRevolution);
+            // Wrap to [-2pi,2pi] automatically; normalize to a continuous position offset
+            if (wrappedOffset < -fullRevolution)
+            {
+                wrappedOffset += fullRevolution;
+            }
+            else if (wrappedOffset >= fullRevolution)
+            {
+                wrappedOffset -= fullRevolution;
+            }
+
+            const float calibOffset = wrappedOffset - _singleTurnPos;
+
+            _lastQuadrant.writeValue(getQuadrant(_singleTurnPos));
+
+            bool writeOk = _turnCount.writeValue(calibTurnCount);
+            writeOk &= _calibOffset.writeValue(calibOffset);
+            _dataValidNVS = writeOk;
+        }
+
+        void restoreFromSavedShutdownAngle(float rawMultiTurn)
+        {
+            if (!_hasSavedShutdownAngle || !_isFirstRead)
+            {
+                return;
+            }
+
+            const float desiredAbsolute = _savedShutdownAngle;
+            const float offset = desiredAbsolute - rawMultiTurn;
+
+            if (_calibOffset.writeValue(offset))
+            {
+                _dataValidNVS = true;
+            }
+
+            _lastPosition = desiredAbsolute;
+            _currentPosition = rawMultiTurn;
+        }
+
+      private:
+        static uint8_t getQuadrant(float rad)
+        {
+            const float fullRevolution = 2.0F * static_cast<float>(M_PI);
+            float position = std::fmod(rad, fullRevolution);
+            if (position < 0.0F)
+            {
+                position += fullRevolution;
+            }
+
+            if (position < 0.5F * static_cast<float>(M_PI))
+                return 1U;
+            if (position < 1.0F * static_cast<float>(M_PI))
+                return 2U;
+            if (position < 1.5F * static_cast<float>(M_PI))
+                return 3U;
+            return 4U;
         }
 
         void setJointLimit(std::optional<float> min_, std::optional<float> max_)
@@ -394,7 +499,7 @@ namespace Actuators
                     // ext loop position
                     if (i + 4 > len_)
                         break;
-                    const float extLoopPos = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
+                    const float extLoopPos = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;  // DEGREES
 
                     // control id
                     if (i + 1 > len_)
@@ -413,6 +518,64 @@ namespace Actuators
                         _voltageQ = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
                     }
 
+                    // extLoopPos in degrees (per AK60_6 document), convert to radians.
+                    const float extLoopRad = extLoopPos * (static_cast<float>(M_PI) / 180.0F);
+
+                    // Normalize single-turn reading to [0, 2pi).
+                    const float fullRevolution = 2.0F * static_cast<float>(M_PI);
+                    float normalizedRad = std::fmod(extLoopRad, fullRevolution);
+                    if (normalizedRad < 0.0F)
+                    {
+                        normalizedRad += fullRevolution;
+                    }
+
+                    _singleTurnPos = normalizedRad;
+
+                    // Handle full-turn counting at quadrant transitions.
+                    const uint8_t currentQuadrant = getQuadrant(_singleTurnPos);
+                    const uint8_t previousQuadrant = _lastQuadrant.getValue();
+
+                    if ((previousQuadrant == 4U) && (currentQuadrant == 1U))
+                    {
+                        _turnCount.writeValue(_turnCount.getValue() + 1);
+                    }
+                    else if ((previousQuadrant == 1U) && (currentQuadrant == 4U))
+                    {
+                        _turnCount.writeValue(_turnCount.getValue() - 1);
+                    }
+                    _lastQuadrant.writeValue(currentQuadrant);
+
+                    // Write multiturn position state.
+                    const float rawMultiTurn = _singleTurnPos + (fullRevolution * static_cast<float>(_turnCount.getValue()));
+
+                    if (_isFirstRead)
+                    {
+                        if (_hasSavedShutdownAngle)
+                        {
+                            restoreFromSavedShutdownAngle(rawMultiTurn);
+                        }
+                        else
+                        {
+                            _currentPosition = rawMultiTurn;
+                            _lastPosition = _currentPosition + _calibOffset.getValue();
+                        }
+                        _isFirstRead = false;
+                    }
+                    else
+                    {
+                        _currentPosition = rawMultiTurn;
+                    }
+
+                    const float calibratedPosition = _currentPosition + _calibOffset.getValue();
+                    const float dtUs = static_cast<float>(_dtSpeedCalc.getTime());
+                    if (dtUs > 0.0F)
+                    {
+                        _currentSpeed = (calibratedPosition - _lastPosition) * (1'000'000.0F / dtUs);
+                        _lastPosition = calibratedPosition;
+                        _dtSpeedCalc.restart();
+                    }
+
+                    _dataValidWatchdog.reset();
                     _telemetryPos = extLoopPos;
                     _telemetryValid = true;
 
@@ -425,8 +588,60 @@ namespace Actuators
                     if (len_ >= 1 + 4)
                     {
                         size_t i = 1;
-                        const float pos = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;
+                        const float pos = static_cast<float>(readI32BE(payload_, i)) / 1000.0F;  // degrees
                         _telemetryPos = pos;
+
+                        const float fullRevolution = 2.0F * static_cast<float>(M_PI);
+                        float extLoopRad = pos * (static_cast<float>(M_PI) / 180.0F);
+                        float normalizedRad = std::fmod(extLoopRad, fullRevolution);
+                        if (normalizedRad < 0.0F)
+                        {
+                            normalizedRad += fullRevolution;
+                        }
+
+                        _singleTurnPos = normalizedRad;
+                        const uint8_t currentQuadrant = getQuadrant(_singleTurnPos);
+                        const uint8_t previousQuadrant = _lastQuadrant.getValue();
+
+                        if ((previousQuadrant == 4U) && (currentQuadrant == 1U))
+                        {
+                            _turnCount.writeValue(_turnCount.getValue() + 1);
+                        }
+                        else if ((previousQuadrant == 1U) && (currentQuadrant == 4U))
+                        {
+                            _turnCount.writeValue(_turnCount.getValue() - 1);
+                        }
+                        _lastQuadrant.writeValue(currentQuadrant);
+
+                        const float rawMultiTurn = _singleTurnPos + (fullRevolution * static_cast<float>(_turnCount.getValue()));
+                        if (_isFirstRead)
+                        {
+                            if (_hasSavedShutdownAngle)
+                            {
+                                restoreFromSavedShutdownAngle(rawMultiTurn);
+                            }
+                            else
+                            {
+                                _currentPosition = rawMultiTurn;
+                                _lastPosition = _currentPosition + _calibOffset.getValue();
+                            }
+                            _isFirstRead = false;
+                        }
+                        else
+                        {
+                            _currentPosition = rawMultiTurn;
+                        }
+
+                        const float calibratedPosition = _currentPosition + _calibOffset.getValue();
+                        const float dtUs = static_cast<float>(_dtSpeedCalc.getTime());
+                        if (dtUs > 0.0F)
+                        {
+                            _currentSpeed = (calibratedPosition - _lastPosition) * (1'000'000.0F / dtUs);
+                            _lastPosition = calibratedPosition;
+                            _dtSpeedCalc.restart();
+                        }
+
+                        _dataValidWatchdog.reset();
                         _telemetryValid = true;
                     }
                     break;
@@ -520,6 +735,24 @@ namespace Actuators
 
         float _goalSpeed = 0.0F;
         float _maxSpeed = std::numeric_limits<float>::max();
+
+        NVSDataHandle<int16_t> _turnCount{"AK60_6", NVS_KEY_TURN_COUNT, 0};
+        NVSDataHandle<float> _calibOffset{"AK60_6", NVS_KEY_CALIB_OFFSET, 0.0f};
+        NVSDataHandle<uint8_t> _lastQuadrant{"AK60_6", NVS_KEY_LAST_QUADRANT, 1};
+        NVSDataHandle<float> _shutdownAngle{"AK60_6", NVS_KEY_SHUTDOWN_ANGLE, 0.0f};
+
+        bool _dataValidNVS = false;
+        bool _hasSavedShutdownAngle = false;
+        float _savedShutdownAngle = 0.0f;
+        Watchdog<uint64_t, &Time::micros> _dataValidWatchdog{WATCHDOG_DATA_VALID_PERIOD_US};
+        Chrono<uint64_t, &Time::micros> _dtSpeedCalc;
+        LoopTimer<uint64_t, &Time::micros> _speedLoop = {1'000};  // 1ms or whichever
+        bool _isFirstRead = true;
+
+        float _singleTurnPos = 0.0f;  // [0, 2pi)
+        float _currentPosition = 0.0f;
+        float _lastPosition = 0.0f;
+        float _currentSpeed = 0.0f;
 
         VALIDATE_CONCEPT(Actuator, AK60_6);
     };
