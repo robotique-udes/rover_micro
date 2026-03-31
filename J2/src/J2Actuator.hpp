@@ -24,8 +24,8 @@ class J2Actuator
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.2F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J2_MIN_JOINT_LIMIT = -2.45F;
-    static constexpr float J2_MAX_JOINT_LIMIT = 2.45F;
+    static constexpr float J2_MIN_JOINT_LIMIT = -20000.45F;
+    static constexpr float J2_MAX_JOINT_LIMIT = 20000.45F;
     static_assert(J2_MIN_JOINT_LIMIT <= J2_MAX_JOINT_LIMIT);
 
     static constexpr float RATIO_OUTPUT_TO_MOTOR = 100.0F;
