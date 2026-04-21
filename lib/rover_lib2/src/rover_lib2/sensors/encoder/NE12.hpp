@@ -18,7 +18,11 @@ namespace Encoders
         static constexpr uint64_t MIN_TIME_BETWEEN_SPEED_CALC_US = 20'000ULL;  // 20 ms
 
       public:
-        NE12(gpio_num_t channelA_, gpio_num_t channelB_, float countPerRev_):
+        NE12(gpio_num_t channelA_,
+             gpio_num_t channelB_,
+             float countPerRev_,
+             FilterPosT posFilter_ = Filters::None(),
+             FilterSpeedT speedFilter_ = Filters::None()):
             _ioA(channelA_),
             _ioB(channelB_),
             _countPerRev(countPerRev_)
