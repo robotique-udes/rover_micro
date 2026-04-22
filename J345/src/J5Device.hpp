@@ -55,10 +55,12 @@ class J5Device
         if (_pbOpen.isClicked())
         {
             _driver.setCmd(MotorDrivers::MAX_CMD_OPEN_LOOP);
+            _encoder.setDirection(true);
         }
         else if (_pbClose.isClicked())
         {
             _driver.setCmd(MotorDrivers::MIN_CMD_OPEN_LOOP);
+            _encoder.setDirection(false);
         }
         else if (_canWatchdog.isOk() && !IN_ERROR(targetSpeed_, 0.001F, 0.0F))
         {
@@ -74,10 +76,6 @@ class J5Device
         {
             _driver.setCmd(0.0F);
         }
-
-        // float shuntCurrent = _currentSensor.getShuntVoltage() / SHUNT_RESISTANCE;
-        // Serial.print("Shunt current: ");
-        // Serial.println(shuntCurrent);
 
         float position = _encoder.getPosition();
         Serial.print("Position: ");
@@ -102,6 +100,11 @@ class J5Device
         return _canDevice;
     }
 
+    void setEncoderDirection(bool value_)
+    {
+        _encoder.setDirection(value_);
+    }
+
   private:
     void CB_canCmd(const RoverCan2::Msgs::ArmJointCmd& cmd_)
     {
@@ -109,19 +112,13 @@ class J5Device
         targetSpeed_ = cmd_.getData().targetSpeed;
     }
 
-    // float readShunt()
-    // {
-    //     Wire.beginTransmission(I2C_SLAVE_ADDRESS);
-    //     Wire.write(0x01);  // Shunt voltage register
-    //     Wire.endTransmission(false);  // repeated start
-    //     Wire.requestFrom(I2C_SLAVE_ADDRESS, (uint8_t)2);
-    //     int16_t raw = static_cast<int16_t>((Wire.read() << 8) | Wire.read());
+    float readShuntCurrent()
+    {
+        float shuntVoltage = _currentSensor.getShuntVoltage() / SHUNT_RESISTANCE;
+        float shuntCurrent = shuntVoltage / SHUNT_RESISTANCE;
 
-    //     float shuntVoltage = raw * 10e-6;
-    //     float shuntCurrent = shuntVoltage / SHUNT_RESISTANCE;
-
-    //     return shuntCurrent;
-    // }
+        return shuntCurrent;
+    }
 
     JointCanDeviceT _canDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
@@ -146,7 +143,7 @@ class J5Device
     Filters::LowPassEMA __filterJ5Position = {1.0F, 0.0F};  // Copied from J1Actuator.hpp, might not be ideal
 
     Encoders::NE12<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
-        = Encoders::NE12(PIN_J5_ENC_A, PIN_J5_ENC_B, 45, __filterJ5Position, __filterJ5Speed);
+        = Encoders::NE12(PIN_J5_ENC_A, PIN_J5_ENC_B, 12, __filterJ5Position, __filterJ5Speed);
     INA219 _currentSensor = INA219(Wire, I2C_SLAVE_ADDRESS, SHUNT_RESISTANCE, 4.0F);
 };
 

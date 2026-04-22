@@ -10,6 +10,8 @@
 #include "rover_lib2/helpers/chrono.hpp"
 #include "rover_lib2/filters/none.hpp"
 
+DEFINE_LOG_NODE(NE12, Logger::eNodeState::ON);
+
 namespace Encoders
 {
     template<Filters::Filter FilterPosT = Filters::None, Filters::Filter FilterSpeedT = Filters::None>
@@ -25,7 +27,9 @@ namespace Encoders
              FilterSpeedT speedFilter_ = Filters::None()):
             _ioA(channelA_),
             _ioB(channelB_),
-            _countPerRev(countPerRev_)
+            _countPerRev(countPerRev_),
+            _posFilter(posFilter_),
+            _speedFilter(speedFilter_)
         {
         }
 
@@ -39,16 +43,39 @@ namespace Encoders
             _dtSpeedCalc.restart();
         }
 
+        void setDirection(bool isGoingLeft_)
+        {
+            _isGoingLeft = isGoingLeft_;
+        }
+
         void update()
         {
             // ----------- Quadrature decoding -----------
             uint8_t A = (_ioA.read() == IO::eIOState::HIGH_);
-            uint8_t B = (_ioB.read() == IO::eIOState::HIGH_);
+            // LOG_INFO(Logger::Nodes::NE12, "A: %d", A);
+            // uint8_t B = (_ioB.read() == IO::eIOState::HIGH_);
+            // LOG_INFO(Logger::Nodes::NE12, "B: %d", B);
 
+            // Remove once encoder is working
+            if (A == !_lastAState)
+            {
+                if (_isGoingLeft)
+                {
+                    _stepCounter++;
+                }
+                else
+                {
+                    _stepCounter--;
+                }
+                _lastAState = !_lastAState;
+            }
+
+            // Uncomment when encoder is woring
+            /*
             uint8_t state = (A << 1) | B;
-
             _stepCounter += table[_lastState][state];
             _lastState = state;
+            */
 
             // ----------- Raw position -----------
             float currentPosTemp = (static_cast<float>(_stepCounter) / _countPerRev) * 2.0f * std::numbers::pi_v<float>;
@@ -84,18 +111,18 @@ namespace Encoders
 
                 if (_isFirstRead)
                 {
-                    _posSpeed.reset(currentSpeedTemp);
+                    _speedFilter.reset(currentSpeedTemp);
                     _speed = currentSpeedTemp;
                 }
                 else
                 {
-                    _speed = _posSpeed.addValue(currentSpeedTemp);
+                    _speed = _speedFilter.addValue(currentSpeedTemp);
                 }
 
                 _lastPosition = _currentPosition;
                 _dtSpeedCalc.restart();
-                _isFirstRead = false;
             }
+            _isFirstRead = false;
         }
 
         bool dataIsValid() const
@@ -125,6 +152,8 @@ namespace Encoders
 
         int64_t _stepCounter = 0;
         uint8_t _lastState = 0;
+        bool _lastAState = false;
+        bool _isGoingLeft = false;
 
         float _countPerRev = 1.0f;
 
@@ -139,7 +168,7 @@ namespace Encoders
 
         Chrono<uint64_t, &Time::micros> _dtSpeedCalc;
         FilterPosT _posFilter;
-        FilterSpeedT _posSpeed;
+        FilterSpeedT _speedFilter;
 
         // Quadrature lookup table
         static constexpr int8_t table[4][4] = {{0, +1, -1, 0}, {-1, 0, 0, +1}, {+1, 0, 0, -1}, {0, -1, +1, 0}};
