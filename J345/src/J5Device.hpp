@@ -50,17 +50,16 @@ class J5Device
         }
 
         _driver.update();
-        _encoder.update();
 
         if (_pbOpen.isClicked())
         {
             _driver.setCmd(MotorDrivers::MAX_CMD_OPEN_LOOP);
-            _encoder.setDirection(true);
+            _encoder.setDirection(false);
         }
         else if (_pbClose.isClicked())
         {
             _driver.setCmd(MotorDrivers::MIN_CMD_OPEN_LOOP);
-            _encoder.setDirection(false);
+            _encoder.setDirection(true);
         }
         else if (_canWatchdog.isOk() && !IN_ERROR(targetSpeed_, 0.001F, 0.0F))
         {
@@ -71,12 +70,14 @@ class J5Device
                             MotorDrivers::MAX_CMD_OPEN_LOOP);
             cmd = std::clamp(cmd, MotorDrivers::MIN_CMD_OPEN_LOOP, MotorDrivers::MAX_CMD_OPEN_LOOP);
             _driver.setCmd(cmd);
+            _encoder.setDirection(cmd < 0 ? true : false);
         }
         else
         {
             _driver.setCmd(0.0F);
         }
 
+        _encoder.update();
         float position = _encoder.getPosition();
         Serial.print("Position: ");
         Serial.println(position);
@@ -98,11 +99,6 @@ class J5Device
     JointCanDeviceT& getUnderlyingCanDevice()
     {
         return _canDevice;
-    }
-
-    void setEncoderDirection(bool value_)
-    {
-        _encoder.setDirection(value_);
     }
 
   private:
