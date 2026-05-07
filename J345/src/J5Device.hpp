@@ -16,6 +16,9 @@ class J5Device
     static constexpr uint64_t LOOP_PERIOD_US = 500ULL;
     static constexpr float MAX_SPEED_RAD_S = 1.0F;
     static constexpr float MIN_SPEED_RAD_S = -1.0F;
+    // This limits current spikes to the drive
+    static constexpr float MIN_CMD_OPEN_LOOP = MotorDrivers::MIN_CMD_OPEN_LOOP * 0.1F;
+    static constexpr float MAX_CMD_OPEN_LOOP = MotorDrivers::MAX_CMD_OPEN_LOOP * 0.1F;
 
     static constexpr float CAN_SEND_FREQUENCY = 20.0F;
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(ROUND(1'000.0F / CAN_SEND_FREQUENCY));
@@ -44,20 +47,20 @@ class J5Device
 
         if (_pbOpen.isClicked())
         {
-            _driver.setCmd(MotorDrivers::MAX_CMD_OPEN_LOOP);
+            _driver.setCmd(MAX_CMD_OPEN_LOOP);
         }
         else if (_pbClose.isClicked())
         {
-            _driver.setCmd(MotorDrivers::MIN_CMD_OPEN_LOOP);
+            _driver.setCmd(MIN_CMD_OPEN_LOOP);
         }
         else if (_canWatchdog.isOk() && !IN_ERROR(targetSpeed_, 0.001F, 0.0F))
         {
             float cmd = MAP(targetSpeed_,
                             MIN_SPEED_RAD_S,
                             MAX_SPEED_RAD_S,
-                            MotorDrivers::MIN_CMD_OPEN_LOOP,
-                            MotorDrivers::MAX_CMD_OPEN_LOOP);
-            cmd = std::clamp(cmd, MotorDrivers::MIN_CMD_OPEN_LOOP, MotorDrivers::MAX_CMD_OPEN_LOOP);
+                            MIN_CMD_OPEN_LOOP,
+                            MAX_CMD_OPEN_LOOP);
+            cmd = std::clamp(cmd, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
             _driver.setCmd(cmd);
         }
         else
