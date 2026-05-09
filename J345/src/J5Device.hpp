@@ -12,6 +12,7 @@
 
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
+#include "rover_can2/msgs/arm_joint_advanced_status.hpp"
 
 DEFINE_LOG_NODE(J5Device, Logger::eNodeState::ON);
 class J5Device
@@ -28,11 +29,14 @@ class J5Device
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQUENCY * 2.0F);
     static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x45);
     // static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x85);
-    static constexpr float SHUNT_RESISTANCE = 0.05F;  // Ohms
-    static constexpr float ENCODER_COUNT_PER_REVOLUTION = 572.0F;
+    static constexpr float SHUNT_RESISTANCE = 0.05F;    // Ohms
+    static constexpr float MAX_STALL_CURRENT = 20.0F;   // A
+    static constexpr float NO_LOAD_CURRENT = 0.53F;     // A
+    static constexpr float MIN_STALL_TORQUE = 6.7689F;  // N*m
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
-                                              RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
+                                              RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
+                                              RoverCan2::Publisher<RoverCan2::Msgs::ArmJointAdvancedStatus>>;
 
   public:
     J5Device() = default;
@@ -53,10 +57,20 @@ class J5Device
         }
 
         _driver.update();
+        float currentAmps = readShuntCurrent();
+        float torque = getMotorTorque(currentAmps);
 
         if (_pbOpen.isClicked())
         {
-            _driver.setCmd(MAX_CMD_OPEN_LOOP);
+            // _pbOpen is currently the one closing the pince
+            if (torque < 0.30F)
+            {
+                _driver.setCmd(MAX_CMD_OPEN_LOOP);
+            }
+            else
+            {
+                _driver.setCmd(0);
+            }
         }
         else if (_pbClose.isClicked())
         {
@@ -64,11 +78,7 @@ class J5Device
         }
         else if (_canWatchdog.isOk() && !IN_ERROR(targetSpeed_, 0.001F, 0.0F))
         {
-            float cmd = MAP(targetSpeed_,
-                            MIN_SPEED_RAD_S,
-                            MAX_SPEED_RAD_S,
-                            MIN_CMD_OPEN_LOOP,
-                            MAX_CMD_OPEN_LOOP);
+            float cmd = MAP(targetSpeed_, MIN_SPEED_RAD_S, MAX_SPEED_RAD_S, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
             cmd = std::clamp(cmd, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
             _driver.setCmd(cmd);
         }
@@ -83,7 +93,13 @@ class J5Device
             armStatusMsg.data().currentPosition = 0.0F;  // No position feedback on joint yet
             armStatusMsg.data().currentSpeed = _driver.getCmd();
 
+            // RoverCan2::Msgs::ArmJointAdvancedStatus armStatusAdvancedMsg;
+            // armStatusAdvancedMsg.data().currentMotorTemp = 0.0F; // No motor temp yet
+            // armStatusAdvancedMsg.data().currentTorque = getMotorTorque(currentAmps);
+            // armStatusAdvancedMsg.data().currentAmperage = currentAmps;
+
             _canDevice.sendMsg(armStatusMsg);
+            // _canDevice.sendMsg(armStatusAdvancedMsg);
         }
     }
 
@@ -101,16 +117,22 @@ class J5Device
 
     float readShuntCurrent()
     {
-        float shuntVoltage = _currentSensor.getShuntVoltage() / SHUNT_RESISTANCE;
+        float shuntVoltage = _currentSensor.getShuntVoltage();
         float shuntCurrent = shuntVoltage / SHUNT_RESISTANCE;
 
         return shuntCurrent;
     }
 
+    float getMotorTorque(float current)
+    {
+        return (MIN_STALL_TORQUE / MAX_STALL_CURRENT) * (current - NO_LOAD_CURRENT);
+    }
+
     JointCanDeviceT _canDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
                           RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>(*this, &J5Device::CB_canCmd),
-                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
+                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>(),
+                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointAdvancedStatus>());
 
     PWMGenerators::MCPWMTimer __pwmTimer = PWMGenerators::MCPWMTimer(1'000, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_1);
     PWMGenerators::MCPWM __pwmGen = PWMGenerators::MCPWM(PIN_J5_PWM, __pwmTimer);
