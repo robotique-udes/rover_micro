@@ -17,7 +17,7 @@ class LinearAct
 {
     static constexpr float CONTROL_LOOP_FREQUENCY_HZ = 1000.0F;
     static constexpr uint64_t CONTROL_LOOP_PERIOD_US = static_cast<uint64_t>(ROUND(1'000'000.0F / CONTROL_LOOP_FREQUENCY_HZ));
-    static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.80F;
+    static constexpr float MAX_MOTOR_SPEED_RAD_S = 100.0F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
   public:

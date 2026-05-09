@@ -26,7 +26,7 @@ constexpr float MAX_MOTOR_VOLTAGE = 18.0F;
 constexpr gpio_num_t PIN_LIN_ACT_1 = GPIO_NUM_18;
 constexpr gpio_num_t PIN_LIN_ACT_2 = GPIO_NUM_8;
 
-constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_8;
+constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_5;
 constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_47;
 constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_48;
 

@@ -17,7 +17,7 @@ class ScienceDevice
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED = -0.5F;
+    static constexpr float PUSH_BUTTON_SPEED = -1000.0F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.0F;
 
@@ -36,16 +36,20 @@ class ScienceDevice
 
     void update()
     {
+        _linAct.update();
+        
         if (!_loopTimer.isReady())
         {
             return;
         }
 
-        _linAct.update();
-
         if (_pbLinAct.isClicked())
         {
             _linAct.setSpeed(PUSH_BUTTON_SPEED);
+        }
+        else
+        {
+            _linAct.setSpeed(FULL_STOP_SPEED);
         }
 
     }
