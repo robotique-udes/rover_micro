@@ -27,6 +27,7 @@ class J5Device
     static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x45);
     // static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x85);
     static constexpr float SHUNT_RESISTANCE = 0.05F;  // Ohms
+    static constexpr float ENCODER_COUNT_PER_REVOLUTION = 572.0F;
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
@@ -40,6 +41,7 @@ class J5Device
         _driver.setEnabled(true);
         Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
         _currentSensor.init();
+        _encoder.init();
     }
 
     void update()
@@ -77,10 +79,10 @@ class J5Device
             _driver.setCmd(0.0F);
         }
 
-        _encoder.update();
-        float position = _encoder.getPosition();
-        Serial.print("Position: ");
-        Serial.println(position);
+        // _encoder.update();
+        // float position = _encoder.getPosition();
+        // Serial.print("Position: ");
+        // Serial.println(position);
 
         // float speed = _encoder.getSpeed();
         // Serial.print("Speed: ");
@@ -99,6 +101,11 @@ class J5Device
     JointCanDeviceT& getUnderlyingCanDevice()
     {
         return _canDevice;
+    }
+
+    void setEncoderDirection(bool direction_)
+    {
+        _encoder.setDirection(direction_);
     }
 
   private:
@@ -139,7 +146,7 @@ class J5Device
     Filters::LowPassEMA __filterJ5Position = {1.0F, 0.0F};  // Copied from J1Actuator.hpp, might not be ideal
 
     Encoders::NE12<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
-        = Encoders::NE12(PIN_J5_ENC_A, PIN_J5_ENC_B, 12, __filterJ5Position, __filterJ5Speed);
+        = Encoders::NE12(PIN_J5_ENC_A, PIN_J5_ENC_B, ENCODER_COUNT_PER_REVOLUTION, __filterJ5Position, __filterJ5Speed);
     INA219 _currentSensor = INA219(Wire, I2C_SLAVE_ADDRESS, SHUNT_RESISTANCE, 4.0F);
 };
 
