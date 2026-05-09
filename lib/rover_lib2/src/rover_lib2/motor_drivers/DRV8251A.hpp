@@ -15,17 +15,29 @@ DEFINE_LOG_NODE(DRV8251A, Logger::eNodeState::OFF);
 
 namespace MotorDrivers
 {
+    // DRV8251A truth table (INx pins, before PWM inversion):
+    //
+    //   IN1  IN2  | Function
+    //   ----------+---------
+    //    0    0   | Brake (both outputs pulled low)
+    //    1    0   | Forward (OUT1 high, OUT2 low)
+    //    0    1   | Reverse (OUT1 low, OUT2 high)
+    //    1    1   | Coast  (Hi-Z, both outputs floating)
+    //
+    // setDutyCycle(0%)   → pin held LOW
+    // setDutyCycle(100%) → pin held HIGH
+
     template<PWMGenerators::PWMGenerator PwmGenerator1T, PWMGenerators::PWMGenerator PwmGenerator2T>
     class DRV8251A
     {
-        static constexpr float FULL_STOP_CMD = 0.0F;
+        static constexpr float FULL_STOP_CMD              = 0.0F;
         static constexpr float COAST_STOPPED_ERROR_TOLERANCE = 0.001F;
 
       public:
-        DRV8251A(PwmGeneratorAT& pwmA_, PwmGeneratorBT& pwmB_, bool reversed_, eBrakeMode brakeMode_ = eBrakeMode::BRAKE):
+        DRV8251A(PwmGenerator1T& pwmA_, PwmGenerator2T& pwmB_, bool reversed_, eBrakeMode brakeMode_ = eBrakeMode::BRAKE):
             _pwmA(pwmA_),
             _pwmB(pwmB_),
-            _goalCmd(0.0F),
+            _goalCmd(FULL_STOP_CMD),
             _reversed(reversed_),
             _brakeMode(brakeMode_)
         {
@@ -47,53 +59,75 @@ namespace MotorDrivers
             {
                 case eBrakeMode::BRAKE:
                 {
-                    // Stopped: both at 0% → active brake (both INx pulled low)
-                    // Moving:  one channel gets cmd, other stays 0%
-                    float cmd = std::abs(_goalCmd);
-                    bool forward = (_goalCmd >= FULL_STOP_CMD);
+                    // DRV8251A truth table — BRAKE mode:
+                    //   Stop    → IN1=0, IN2=0 → active brake
+                    //   Forward → IN1=cmd, IN2=0
+                    //   Reverse → IN1=0, IN2=cmd
 
-                    if (forward)
+                    // FIX: explicit stop check before direction branch.
+                    // Previously `forward = (_goalCmd >= 0)` was true at exactly 0,
+                    // so stop accidentally fell into the forward path. While the
+                    // result (both at 0%) was numerically correct, it was semantically
+                    // wrong and fragile (e.g. if FULL_STOP_CMD ever changes).
+                    if (_goalCmd == FULL_STOP_CMD)
                     {
-                        LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE FWD | A: %f, B: %f", cmd, FULL_STOP_CMD);
-                        _pwmA.setDutyCycle(cmd);
-                        _pwmB.setDutyCycle(FULL_STOP_CMD);
+                        LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE STOP | A: 0, B: 0");
+                        _pwmA.setDutyCycle(FULL_STOP_CMD);   // IN1 = 0 |
+                        _pwmB.setDutyCycle(FULL_STOP_CMD);   // IN2 = 0 | → Brake
                     }
-                    else
+                    else if (_goalCmd > FULL_STOP_CMD)
                     {
-                        LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE REV | A: %f, B: %f", FULL_STOP_CMD, cmd);
-                        _pwmA.setDutyCycle(FULL_STOP_CMD);
-                        _pwmB.setDutyCycle(cmd);
+                        float cmd = std::abs(_goalCmd);
+                        LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE FWD | A: %f, B: 0", cmd);
+                        _pwmA.setDutyCycle(cmd);             // IN1 = PWM |
+                        _pwmB.setDutyCycle(FULL_STOP_CMD);   // IN2 = 0   | → Forward
+                    }
+                    else  // _goalCmd < FULL_STOP_CMD
+                    {
+                        float cmd = std::abs(_goalCmd);
+                        LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE REV | A: 0, B: %f", cmd);
+                        _pwmA.setDutyCycle(FULL_STOP_CMD);   // IN1 = 0   |
+                        _pwmB.setDutyCycle(cmd);             // IN2 = PWM | → Reverse
                     }
                     break;
                 }
+
                 case eBrakeMode::COAST:
                 {
+                    // DRV8251A truth table — COAST mode:
+                    //   Stop    → IN1=1, IN2=1 → Hi-Z (coast)
+                    //   Forward → IN1=cmd, IN2=0
+                    //   Reverse → IN1=0, IN2=cmd
+                    //
+                    // FIX: same `>= 0` ambiguity as BRAKE mode existed here for the
+                    // non-stopped forward/reverse branch. Now uses strict `> 0` / `< 0`.
+
                     bool stopped = IN_ERROR(_goalCmd, COAST_STOPPED_ERROR_TOLERANCE, FULL_STOP_CMD);
 
                     if (stopped)
                     {
-                        // Both INx at 100% → coast (both pulled high = Hi-Z output)
-                        _pwmA.setDutyCycle(MAX_CMD_OPEN_LOOP);
-                        _pwmB.setDutyCycle(MAX_CMD_OPEN_LOOP);
+                        // Both INx HIGH → Hi-Z output (coast)
+                        LOG_DEBUG(Logger::Nodes::DRV8251A, "COAST STOP | A: 100, B: 100");
+                        _pwmA.setDutyCycle(MAX_CMD_OPEN_LOOP);   // IN1 = 1 |
+                        _pwmB.setDutyCycle(MAX_CMD_OPEN_LOOP);   // IN2 = 1 | → Coast
                     }
-                    else
+                    else if (_goalCmd > FULL_STOP_CMD)
                     {
                         float cmd = std::abs(_goalCmd);
-                        bool forward = (_goalCmd >= FULL_STOP_CMD);
-
-                        if (forward)
-                        {
-                            _pwmA.setDutyCycle(cmd);
-                            _pwmB.setDutyCycle(FULL_STOP_CMD);
-                        }
-                        else
-                        {
-                            _pwmA.setDutyCycle(FULL_STOP_CMD);
-                            _pwmB.setDutyCycle(cmd);
-                        }
+                        LOG_DEBUG(Logger::Nodes::DRV8251A, "COAST FWD | A: %f, B: 0", cmd);
+                        _pwmA.setDutyCycle(cmd);                 // IN1 = PWM |
+                        _pwmB.setDutyCycle(FULL_STOP_CMD);       // IN2 = 0   | → Forward
+                    }
+                    else  // _goalCmd < -COAST_STOPPED_ERROR_TOLERANCE
+                    {
+                        float cmd = std::abs(_goalCmd);
+                        LOG_DEBUG(Logger::Nodes::DRV8251A, "COAST REV | A: 0, B: %f", cmd);
+                        _pwmA.setDutyCycle(FULL_STOP_CMD);       // IN1 = 0   |
+                        _pwmB.setDutyCycle(cmd);                 // IN2 = PWM | → Reverse
                     }
                     break;
                 }
+
                 default:
                     _pwmA.setDutyCycle(FULL_STOP_CMD);
                     _pwmB.setDutyCycle(FULL_STOP_CMD);
@@ -105,6 +139,7 @@ namespace MotorDrivers
             _pwmA.update();
             _pwmB.update();
         }
+
         // Range [-100; 100]
         void setCmd(float cmd_)
         {
@@ -113,6 +148,20 @@ namespace MotorDrivers
             {
                 _goalCmd = -_goalCmd;
             }
+        }
+
+        void setEnabled(bool on_)
+        {
+            // TODO: wire up nSLEEP / nEN pin when hardware supports it.
+            // if (_enabled == on_) { return; }
+            // _enabled = on_;
+            // _ioNotEn.write(on_ ? IO::eIOState::LOW_ : IO::eIOState::HIGH_);
+            (void)on_;
+        }
+
+        bool isEnabled(void) const
+        {
+            return true;
         }
 
         float getCmd(void) const
@@ -135,6 +184,7 @@ namespace MotorDrivers
         {
             _brakeMode = mode_;
         }
+
         eBrakeMode getBrakeMode(void) const
         {
             return _brakeMode;
@@ -150,18 +200,18 @@ namespace MotorDrivers
 
         void setMaxVoltage(float alim_, float maxVoltage_)
         {
-            float absAlim = std::abs(alim_);
+            float absAlim       = std::abs(alim_);
             float absMaxVoltage = std::clamp(std::abs(maxVoltage_), 0.0F, absAlim);
             this->setMaxCmd((absMaxVoltage / absAlim) * MotorDrivers::MAX_CMD_OPEN_LOOP);
         }
 
       private:
-        PwmGeneratorAT& _pwmA;
-        PwmGeneratorBT& _pwmB;
+        PwmGenerator1T& _pwmA;
+        PwmGenerator2T& _pwmB;
 
-        float _maxCommand = MotorDrivers::MAX_CMD_OPEN_LOOP;
-        float _goalCmd;
-        bool _reversed;
+        float      _maxCommand = MotorDrivers::MAX_CMD_OPEN_LOOP;
+        float      _goalCmd;
+        bool       _reversed;
         eBrakeMode _brakeMode;
 
         VALIDATE_CONCEPT(MotorDriver, DRV8251A);

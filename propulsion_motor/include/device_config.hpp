@@ -7,7 +7,7 @@
 #include <cstdint>
 #include "rover_can2/constant.hpp"
 
-constexpr RoverCan2::Constant::eDeviceId DEVICE_ID = RoverCan2::Constant::eDeviceId::REARLEFT_MOTOR;
+constexpr RoverCan2::Constant::eDeviceId DEVICE_ID = RoverCan2::Constant::eDeviceId::REARRIGHT_MOTOR;
 
 constexpr float ALIM_VOLTAGE = 24.0F;
 constexpr float MAX_VOLTAGE = 12.0F;

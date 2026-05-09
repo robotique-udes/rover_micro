@@ -17,7 +17,7 @@ class ScienceDevice
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED_RAD_S = 0.5F;
+    static constexpr float PUSH_BUTTON_SPEED = -0.5F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.0F;
 
@@ -42,6 +42,12 @@ class ScienceDevice
         }
 
         _linAct.update();
+
+        if (_pbLinAct.isClicked())
+        {
+            _linAct.setSpeed(PUSH_BUTTON_SPEED);
+        }
+
     }
 
     DeviceT& getScienceDevice()
@@ -53,11 +59,13 @@ class ScienceDevice
     void CB_ScienceCmd(const RoverCan2::Msgs::Science& msg_)
     {
         _scienceCanWatchdog.reset();
-        // _j1TargetSpeed = msg_.getData().targetSpeed;
+        _linActTargetSpeed = msg_.getData().lin_act_speed;
     }
 
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};
     LinearAct _linAct;
+
+    PushButton _pbLinAct = {PIN_LIN_ACT_LS};
 
     float _linActTargetSpeed = 0.0F;
     Watchdog<uint64_t, &Time::millis> _scienceCanWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};

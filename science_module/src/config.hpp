@@ -30,6 +30,8 @@ constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_8;
 constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_47;
 constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_48;
 
+constexpr gpio_num_t PIN_LIN_ACT_LS = GPIO_NUM_21;
+
 #endif  // PCB_ROVER_J1_REV0
 
 #endif  // CONFIG_HPP
