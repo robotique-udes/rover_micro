@@ -5,7 +5,6 @@
 
 #include "rover_lib2/motor_drivers/IFX9201SG.hpp"
 #include "rover_lib2/actuators/PWM_generators/MCPWM.hpp"
-#include "rover_lib2/sensors/encoder/NE12.hpp"
 #include "rover_lib2/sensors/INA219.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
@@ -44,7 +43,6 @@ class J5Device
         _driver.setEnabled(true);
         Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
         _currentSensor.init();
-        _encoder.init();
     }
 
     void update()
@@ -73,21 +71,11 @@ class J5Device
                             MAX_CMD_OPEN_LOOP);
             cmd = std::clamp(cmd, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
             _driver.setCmd(cmd);
-            _encoder.setDirection(cmd < 0 ? true : false);
         }
         else
         {
             _driver.setCmd(0.0F);
         }
-
-        // _encoder.update();
-        // float position = _encoder.getPosition();
-        // Serial.print("Position: ");
-        // Serial.println(position);
-
-        // float speed = _encoder.getSpeed();
-        // Serial.print("Speed: ");
-        // Serial.println(speed);
 
         if (_timerCanSend.isReady())
         {
@@ -102,11 +90,6 @@ class J5Device
     JointCanDeviceT& getUnderlyingCanDevice()
     {
         return _canDevice;
-    }
-
-    void setEncoderDirection(bool direction_)
-    {
-        _encoder.setDirection(direction_);
     }
 
   private:
@@ -146,8 +129,6 @@ class J5Device
     Filters::LowPassEMA __filterJ5Speed = {0.02F, 0.0F};    // Copied from J1Actuator.hpp, might not be ideal
     Filters::LowPassEMA __filterJ5Position = {1.0F, 0.0F};  // Copied from J1Actuator.hpp, might not be ideal
 
-    Encoders::NE12<Filters::LowPassEMA, Filters::LowPassEMA> _encoder
-        = Encoders::NE12(PIN_J5_ENC_A, PIN_J5_ENC_B, ENCODER_COUNT_PER_REVOLUTION, __filterJ5Position, __filterJ5Speed);
     INA219 _currentSensor = INA219(Wire, I2C_SLAVE_ADDRESS, SHUNT_RESISTANCE, 4.0F);
 };
 
