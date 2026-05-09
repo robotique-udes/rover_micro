@@ -1,5 +1,5 @@
 #include <Arduino.h>
-// #include <rover_lib2/LED/led_blinker.hpp>
+#include <rover_lib2/LED/led_blinker.hpp>
 
 #include "config.hpp"
 #include "ScienceDevice.hpp"
