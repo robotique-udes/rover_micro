@@ -23,13 +23,9 @@ class J34Actuator
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 2.0F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J3_MIN_JOINT_LIMIT = degToRad(-90.0F);
-    static constexpr float J3_MAX_JOINT_LIMIT = degToRad(100.0F);
+    static constexpr float J3_MIN_JOINT_LIMIT = degToRad(-60.0F);
+    static constexpr float J3_MAX_JOINT_LIMIT = degToRad(70.0F);
     static_assert(J3_MIN_JOINT_LIMIT <= J3_MAX_JOINT_LIMIT);
-
-    static constexpr float J4_MIN_JOINT_LIMIT = degToRad(-4.0F * 360.0F);
-    static constexpr float J4_MAX_JOINT_LIMIT = degToRad(4.0F * 360.0F);
-    static_assert(J4_MIN_JOINT_LIMIT <= J4_MAX_JOINT_LIMIT);
 
     static constexpr float ZERO_ERROR_EPSILON = 0.001F;
     static constexpr uint64_t WAIT_TIME_AFTER_CALIB_MS = 500ULL;
@@ -128,15 +124,6 @@ class J34Actuator
         else if (_j3CurrentPosition >= J3_MAX_JOINT_LIMIT)
         {
             speedCmdJ3 = std::clamp(speedCmdJ3, -MAX_MOTOR_SPEED_RAD_S, 0.0F);
-        }
-
-        if (_j4CurrentPosition <= J4_MIN_JOINT_LIMIT)
-        {
-            speedCmdJ4 = std::clamp(speedCmdJ4, 0.0F, 2.0F * MAX_MOTOR_SPEED_RAD_S);
-        }
-        else if (_j4CurrentPosition >= J4_MAX_JOINT_LIMIT)
-        {
-            speedCmdJ4 = std::clamp(speedCmdJ4, -2.0F * MAX_MOTOR_SPEED_RAD_S, 0.0F);
         }
 
         float j34LSpeed = speedCmdJ3 + speedCmdJ4 / 2.0F;
