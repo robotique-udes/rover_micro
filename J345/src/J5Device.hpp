@@ -69,7 +69,7 @@ class J5Device
             }
             else
             {
-                _driver.setCmd(0);
+                _driver.setCmd(0.0F);
             }
         }
         else if (_pbClose.isClicked())
@@ -80,7 +80,15 @@ class J5Device
         {
             float cmd = MAP(targetSpeed_, MIN_SPEED_RAD_S, MAX_SPEED_RAD_S, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
             cmd = std::clamp(cmd, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
-            _driver.setCmd(cmd);
+
+            if (torque < 0.30F)
+            {
+                _driver.setCmd(cmd);
+            }
+            else
+            {
+                _driver.setCmd(0.0F);
+            }
         }
         else
         {
@@ -93,13 +101,13 @@ class J5Device
             armStatusMsg.data().currentPosition = 0.0F;  // No position feedback on joint yet
             armStatusMsg.data().currentSpeed = _driver.getCmd();
 
-            // RoverCan2::Msgs::ArmJointAdvancedStatus armStatusAdvancedMsg;
-            // armStatusAdvancedMsg.data().currentMotorTemp = 0.0F; // No motor temp yet
-            // armStatusAdvancedMsg.data().currentTorque = getMotorTorque(currentAmps);
-            // armStatusAdvancedMsg.data().currentAmperage = currentAmps;
+            RoverCan2::Msgs::ArmJointAdvancedStatus armStatusAdvancedMsg;
+            armStatusAdvancedMsg.data().currentMotorTemp = 0.0F; // No motor temp yet
+            armStatusAdvancedMsg.data().currentTorque = getMotorTorque(currentAmps);
+            armStatusAdvancedMsg.data().currentAmperage = currentAmps;
 
             _canDevice.sendMsg(armStatusMsg);
-            // _canDevice.sendMsg(armStatusAdvancedMsg);
+            _canDevice.sendMsg(armStatusAdvancedMsg);
         }
     }
 

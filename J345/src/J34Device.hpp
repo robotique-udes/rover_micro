@@ -69,7 +69,6 @@ class J34Device
         else if (_j3CanWatchdog.isOk() && _j4CanWatchdog.isOk())
         {
             _j34.setSpeeds(_j3TargetSpeed, _j4TargetSpeed);
-            _direction = (_j3TargetSpeed < 0) ? true : false;
         }
         else
         {
@@ -85,11 +84,6 @@ class J34Device
     JointCanDeviceT& getJ4Device()
     {
         return _j4CanDevice;
-    }
-
-    bool getDirection() const
-    {
-        return _direction;
     }
 
   private:
@@ -152,9 +146,6 @@ class J34Device
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_ROT_CONTROLLER,
                           RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J34Device>(*this, &J34Device::CB_J4Cmd),
                           RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
-
-    // Remove once working J5 encoder
-    bool _direction;
 
     VALIDATE_CONCEPT(RoverObject, J34Device);
 };
