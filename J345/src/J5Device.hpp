@@ -102,7 +102,7 @@ class J5Device
             armStatusMsg.data().currentSpeed = _driver.getCmd();
 
             RoverCan2::Msgs::ArmJointAdvancedStatus armStatusAdvancedMsg;
-            armStatusAdvancedMsg.data().currentMotorTemp = 0.0F; // No motor temp yet
+            armStatusAdvancedMsg.data().currentMotorTemp = 0.0F;  // No motor temp yet
             armStatusAdvancedMsg.data().currentTorque = getMotorTorque(currentAmps);
             armStatusAdvancedMsg.data().currentAmperage = currentAmps;
 
@@ -155,9 +155,6 @@ class J5Device
     float targetSpeed_ = 0.0F;
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
-
-    Filters::LowPassEMA __filterJ5Speed = {0.02F, 0.0F};    // Copied from J1Actuator.hpp, might not be ideal
-    Filters::LowPassEMA __filterJ5Position = {1.0F, 0.0F};  // Copied from J1Actuator.hpp, might not be ideal
 
     INA219 _currentSensor = INA219(Wire, I2C_SLAVE_ADDRESS, SHUNT_RESISTANCE, 4.0F);
 };
