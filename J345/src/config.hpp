@@ -47,8 +47,6 @@ constexpr gpio_num_t PIN_J34_R_CS = GPIO_NUM_14;
 
 constexpr gpio_num_t PIN_J5_PWM = GPIO_NUM_17;
 constexpr gpio_num_t PIN_J5_DIR = GPIO_NUM_13;
-constexpr gpio_num_t PIN_J5_ENC_A = GPIO_NUM_18;
-constexpr gpio_num_t PIN_J5_ENC_B = GPIO_NUM_8;
 
 // Buttons
 constexpr gpio_num_t PIN_PB_J34_CALIB = GPIO_NUM_40;
