@@ -28,11 +28,11 @@ class J5Device
     static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(ROUND(1'000.0F / CAN_SEND_FREQUENCY));
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQUENCY * 2.0F);
     static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x45);
-    // static constexpr uint8_t I2C_SLAVE_ADDRESS = static_cast<uint8_t>(0x85);
     static constexpr float SHUNT_RESISTANCE = 0.05F;    // Ohms
     static constexpr float MAX_STALL_CURRENT = 20.0F;   // A
     static constexpr float NO_LOAD_CURRENT = 0.53F;     // A
     static constexpr float MIN_STALL_TORQUE = 6.7689F;  // N*m
+    static constexpr float MAX_TORQUE_ON_GRIPPER = 0.30F;
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
@@ -63,7 +63,7 @@ class J5Device
         if (_pbOpen.isClicked())
         {
             // _pbOpen is currently the one closing the pince
-            if (torque < 0.30F)
+            if (torque < MAX_TORQUE_ON_GRIPPER)
             {
                 _driver.setCmd(MAX_CMD_OPEN_LOOP);
             }
@@ -81,7 +81,7 @@ class J5Device
             float cmd = MAP(targetSpeed_, MIN_SPEED_RAD_S, MAX_SPEED_RAD_S, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
             cmd = std::clamp(cmd, MIN_CMD_OPEN_LOOP, MAX_CMD_OPEN_LOOP);
 
-            if (torque < 0.30F)
+            if (torque < MAX_TORQUE_ON_GRIPPER)
             {
                 _driver.setCmd(cmd);
             }
