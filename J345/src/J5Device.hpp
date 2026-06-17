@@ -9,6 +9,7 @@
 
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
+#include "rover_can2/msgs/morse_input.hpp"
 
 DEFINE_LOG_NODE(J5Device, Logger::eNodeState::ON);
 class J5Device
@@ -25,6 +26,7 @@ class J5Device
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_SEND_FREQUENCY * 2.0F);
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
+                                              RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseInput, J5Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
 
   public:
@@ -90,9 +92,16 @@ class J5Device
         targetSpeed_ = cmd_.getData().targetSpeed;
     }
 
+    void CB_morseCodeStream(const RoverCan2::Msgs::MorseInput& msg_)
+    {
+        Serial.println(msg_.getData().speed_wpm);
+        Serial.println(msg_.getData().symbol);
+    }
+
     JointCanDeviceT _canDevice
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
                           RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>(*this, &J5Device::CB_canCmd),
+                          RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseInput, J5Device>(*this, &J5Device::CB_morseCodeStream),
                           RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
 
     PWMGenerators::MCPWMTimer __pwmTimer = PWMGenerators::MCPWMTimer(1'000, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_1);
