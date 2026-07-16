@@ -14,30 +14,42 @@ namespace RoverCan2::Msgs
       public:
         enum class eMsgContentID : uint8_t
         {
-            SPEED_WPM,
-            SYMBOL,
+            START,
+            INDEX,
+            CHARACTER,
+            MSG_LENGTH,
+            CHECKSUM,
             eLAST,
         };
 
       private:
         struct sMsgData
         {
-            uint8_t speed_wpm;
-            uint8_t symbol;
+            bool start;
+            uint8_t index;
+            uint8_t character;
+            uint8_t msg_length;
+            uint8_t checksum;
 
-            static_assert(sizeof(speed_wpm) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(symbol) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(start) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(index) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(character) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(msg_length) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(checksum) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
-            = {eMsgContentID::SPEED_WPM, eMsgContentID::SYMBOL};
+            = {eMsgContentID::START, eMsgContentID::INDEX, eMsgContentID::CHARACTER, eMsgContentID::MSG_LENGTH, eMsgContentID::CHECKSUM};
 
       public:
         MorseInput():
             Msg(Constant::eMsgId::MORSE_INPUT)
         {
-            _data.speed_wpm = static_cast<decltype(_data.speed_wpm)>(0);
-            _data.symbol = static_cast<decltype(_data.symbol)>(0);
+            _data.start = static_cast<decltype(_data.start)>(0);
+            _data.index = static_cast<decltype(_data.index)>(0);
+            _data.character = static_cast<decltype(_data.character)>(0);
+            _data.msg_length = static_cast<decltype(_data.msg_length)>(0);
+            _data.checksum = static_cast<decltype(_data.checksum)>(0);
         }
 
         eLoadMsgCode _loadMsg(const CanMsg& msg_)
@@ -66,17 +78,38 @@ namespace RoverCan2::Msgs
             bool success = false;
             switch (msgContentId)
             {
-                case eMsgContentID::SPEED_WPM:
-                    success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.speed_wpm);
+                case eMsgContentID::START:
+                    success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.start);
                     LOG_DEBUG(Logger::Nodes::MorseInput_msg,
-                              "switch (msgContentId) case eMsgContentID::SPEED_WPM: %s",
+                              "switch (msgContentId) case eMsgContentID::START: %s",
                               success ? "success" : "failed");
                     break;
 
-                case eMsgContentID::SYMBOL:
-                    success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.symbol);
+                case eMsgContentID::INDEX:
+                    success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.index);
                     LOG_DEBUG(Logger::Nodes::MorseInput_msg,
-                              "switch (msgContentId) case eMsgContentID::SYMBOL: %s",
+                              "switch (msgContentId) case eMsgContentID::INDEX: %s",
+                              success ? "success" : "failed");
+                    break;
+
+                case eMsgContentID::CHARACTER:
+                    success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.character);
+                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                              "switch (msgContentId) case eMsgContentID::CHARACTER: %s",
+                              success ? "success" : "failed");
+                    break;
+
+                case eMsgContentID::MSG_LENGTH:
+                    success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.msg_length);
+                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                              "switch (msgContentId) case eMsgContentID::MSG_LENGTH: %s",
+                              success ? "success" : "failed");
+                    break;
+
+                case eMsgContentID::CHECKSUM:
+                    success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.checksum);
+                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                              "switch (msgContentId) case eMsgContentID::CHECKSUM: %s",
                               success ? "success" : "failed");
                     break;
                 case eMsgContentID::eLAST:
@@ -112,12 +145,24 @@ namespace RoverCan2::Msgs
             CanMsg msg_;
             switch (static_cast<eMsgContentID>(msgContentId_))
             {
-                case eMsgContentID::SPEED_WPM:
-                    Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.speed_wpm, msg_);
+                case eMsgContentID::START:
+                    Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.start, msg_);
                     break;
 
-                case eMsgContentID::SYMBOL:
-                    Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.symbol, msg_);
+                case eMsgContentID::INDEX:
+                    Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.index, msg_);
+                    break;
+
+                case eMsgContentID::CHARACTER:
+                    Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.character, msg_);
+                    break;
+
+                case eMsgContentID::MSG_LENGTH:
+                    Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.msg_length, msg_);
+                    break;
+
+                case eMsgContentID::CHECKSUM:
+                    Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.checksum, msg_);
                     break;
                 case eMsgContentID::eLAST:
                     [[fallthrough]];
