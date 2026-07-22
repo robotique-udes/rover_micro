@@ -27,8 +27,8 @@ void setup(void)
     delay(1000);
 #endif
 
-    LED::LedBlinkerSoft statusLed(IO::DigitalOutput(PIN_USER_LED), LED::BlinkPatterns::HEARTBEAT);
-    statusLed.init();
+    // LED::LedBlinkerSoft statusLed(IO::DigitalOutput(PIN_USER_LED), LED::BlinkPatterns::HEARTBEAT);
+    // statusLed.init();
 
     J34Device j34;
     j34.init();
@@ -44,7 +44,7 @@ void setup(void)
     LOG_INFO(Logger::Nodes::Main, "J345 Init done, starting main loop!");
     for (EVER)
     {
-        statusLed.update();
+        // statusLed.update();
         j34.update();
         j5.update();
         canManager.update();

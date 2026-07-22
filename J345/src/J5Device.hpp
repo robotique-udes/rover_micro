@@ -6,6 +6,7 @@
 #include "rover_lib2/sensors/push_button.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "config.hpp"
+#include "MorsePlayer.hpp"
 
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
@@ -58,6 +59,7 @@ class J5Device
         }
 
         _driver.update();
+        _morsePlayer.update();
 
         if (_pbOpen.isClicked())
         {
@@ -77,6 +79,9 @@ class J5Device
         {
             _driver.setCmd(0.0F);
         }
+
+        //_solenoid.write(_morsePlayer.isActuatorOn() ? IO::eIOState::HIGH_ : IO::eIOState::LOW_);
+        _solenoid.write(IO::eIOState::LOW_);
 
         if (_timerCanSend.isReady())
         {
@@ -166,7 +171,7 @@ class J5Device
         text[length_] = '\0';
         Serial.printf("Morse message received (%u chars): %s\n", static_cast<unsigned>(length_), text);
 
-        // TODO: hand off `text` / buffer_ to whatever consumes the decoded morse string
+        _morsePlayer.start(buffer_, length_);
     }
 
     void resetMorseState()
@@ -204,6 +209,9 @@ class J5Device
     uint8_t _morseRunningChecksum = 0;
     bool _morseInProgress = false;
     uint64_t _morseLastFrameTime = 0;
+
+    MorsePlayer _morsePlayer;
+    IO::DigitalOutput _solenoid = IO::DigitalOutput(PIN_USER_LED);
 
     // INA219 _currentSensor = INA219(Wire, 0x85, 0.05F, 4.0F);
 };
