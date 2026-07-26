@@ -10,7 +10,7 @@
 
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
-#include "rover_can2/msgs/morse_input.hpp"
+#include "rover_can2/msgs/morse_code.hpp"
 
 #include <cstring>
 
@@ -32,8 +32,8 @@ class J5Device
     static constexpr uint64_t MORSE_FRAME_TIMEOUT_MS = 500ULL;
 
     using JointCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>,
-                                              RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseInput, J5Device>,
                                               RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>>;
+    using MorseCodeCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseCode, J5Device>>;
 
   public:
     J5Device() = default;
@@ -80,8 +80,7 @@ class J5Device
             _driver.setCmd(0.0F);
         }
 
-        //_solenoid.write(_morsePlayer.isActuatorOn() ? IO::eIOState::HIGH_ : IO::eIOState::LOW_);
-        _solenoid.write(IO::eIOState::LOW_);
+        _solenoid.write(_morsePlayer.isActuatorOn() ? IO::eIOState::HIGH_ : IO::eIOState::LOW_);
 
         if (_timerCanSend.isReady())
         {
@@ -89,13 +88,13 @@ class J5Device
             armStatusMsg.data().currentPosition = 0.0F;  // No position feedback on joint yet
             armStatusMsg.data().currentSpeed = _driver.getCmd();
 
-            _canDevice.sendMsg(armStatusMsg);
+            _jointCanDevice.sendMsg(armStatusMsg);
         }
     }
 
     JointCanDeviceT& getUnderlyingCanDevice()
     {
-        return _canDevice;
+        return _jointCanDevice;
     }
 
   private:
@@ -105,9 +104,10 @@ class J5Device
         targetSpeed_ = cmd_.getData().targetSpeed;
     }
 
-    void CB_morseCodeStream(const RoverCan2::Msgs::MorseInput& msg_)
+    void CB_morseCodeStream(const RoverCan2::Msgs::MorseCode& msg_)
     {
         const auto& data = msg_.getData();
+        Serial.println("Here");
 
         if (data.start)
         {
@@ -135,10 +135,10 @@ class J5Device
 
         if (data.index != _morseExpectedIndex)
         {
-            LOG_ERROR(Logger::Nodes::J5Device,
-                      "Morse frame loss: expected index %u, got %u",
-                      static_cast<unsigned>(_morseExpectedIndex),
-                      static_cast<unsigned>(data.index));
+            LOG_WARN(Logger::Nodes::J5Device,
+                     "Morse frame loss: expected index %u, got %u",
+                     static_cast<unsigned>(_morseExpectedIndex),
+                     static_cast<unsigned>(data.index));
             resetMorseState();
             return;
         }
@@ -149,7 +149,9 @@ class J5Device
 
         if (_morseRunningChecksum != data.checksum)
         {
-            LOG_ERROR(Logger::Nodes::J5Device, "Morse checksum mismatch at index %u, discarding message", static_cast<unsigned>(data.index));
+            LOG_WARN(Logger::Nodes::J5Device,
+                     "Morse checksum mismatch at index %u, discarding message",
+                     static_cast<unsigned>(data.index));
             resetMorseState();
             return;
         }
@@ -182,11 +184,14 @@ class J5Device
         _morseRunningChecksum = 0;
     }
 
-    JointCanDeviceT _canDevice = JointCanDeviceT(
-        RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
-        RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>(*this, &J5Device::CB_canCmd),
-        RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseInput, J5Device>(*this, &J5Device::CB_morseCodeStream),
-        RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
+    JointCanDeviceT _jointCanDevice
+        = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
+                          RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>(*this, &J5Device::CB_canCmd),
+                          RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
+
+    MorseCodeCanDeviceT _morseCanDevice = MorseCodeCanDeviceT(
+        RoverCan2::Constant::eDeviceId::MORSE_CODE,
+        RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseCode, J5Device>(*this, &J5Device::CB_morseCodeStream));
 
     PWMGenerators::MCPWMTimer __pwmTimer = PWMGenerators::MCPWMTimer(1'000, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_1);
     PWMGenerators::MCPWM __pwmGen = PWMGenerators::MCPWM(PIN_J5_PWM, __pwmTimer);

@@ -1,15 +1,14 @@
-#ifndef MORSE_INPUT_HPP
-#define MORSE_INPUT_HPP
+#ifndef MORSE_CODE_HPP
+#define MORSE_CODE_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
 
-
-DEFINE_LOG_NODE(MorseInput_msg, Logger::eNodeState::OFF)
+DEFINE_LOG_NODE(MorseCode_msg, Logger::eNodeState::OFF)
 
 namespace RoverCan2::Msgs
 {
-    class MorseInput : public Msg<MorseInput>
+    class MorseCode : public Msg<MorseCode>
     {
       public:
         enum class eMsgContentID : uint8_t
@@ -31,19 +30,33 @@ namespace RoverCan2::Msgs
             uint8_t msg_length;
             uint8_t checksum;
 
-            static_assert(sizeof(start) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(index) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(character) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(msg_length) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(checksum) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(start) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                               - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(index) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                               - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(character) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                   - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(msg_length) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                    - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(checksum) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                  - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
-            = {eMsgContentID::START, eMsgContentID::INDEX, eMsgContentID::CHARACTER, eMsgContentID::MSG_LENGTH, eMsgContentID::CHECKSUM};
+            = {eMsgContentID::START,
+               eMsgContentID::INDEX,
+               eMsgContentID::CHARACTER,
+               eMsgContentID::MSG_LENGTH,
+               eMsgContentID::CHECKSUM};
 
       public:
-        MorseInput():
-            Msg(Constant::eMsgId::MORSE_INPUT)
+        MorseCode():
+            Msg(Constant::eMsgId::MORSE_CODE)
         {
             _data.start = static_cast<decltype(_data.start)>(0);
             _data.index = static_cast<decltype(_data.index)>(0);
@@ -67,7 +80,7 @@ namespace RoverCan2::Msgs
             eMsgContentID msgContentId = static_cast<eMsgContentID>(msg_.getMsgContentID());
             if (!VALID_MSG_IDS.contains(msgContentId))
             {
-                LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                LOG_DEBUG(Logger::Nodes::MorseCode_msg,
                           "Mismatch between received message and local message definition. Received msgContentId: (%u), "
                           "expected lower than (%u) and none zero",
                           TO_UNDERLYING(msgContentId),
@@ -80,35 +93,35 @@ namespace RoverCan2::Msgs
             {
                 case eMsgContentID::START:
                     success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.start);
-                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                    LOG_DEBUG(Logger::Nodes::MorseCode_msg,
                               "switch (msgContentId) case eMsgContentID::START: %s",
                               success ? "success" : "failed");
                     break;
 
                 case eMsgContentID::INDEX:
                     success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.index);
-                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                    LOG_DEBUG(Logger::Nodes::MorseCode_msg,
                               "switch (msgContentId) case eMsgContentID::INDEX: %s",
                               success ? "success" : "failed");
                     break;
 
                 case eMsgContentID::CHARACTER:
                     success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.character);
-                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                    LOG_DEBUG(Logger::Nodes::MorseCode_msg,
                               "switch (msgContentId) case eMsgContentID::CHARACTER: %s",
                               success ? "success" : "failed");
                     break;
 
                 case eMsgContentID::MSG_LENGTH:
                     success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.msg_length);
-                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                    LOG_DEBUG(Logger::Nodes::MorseCode_msg,
                               "switch (msgContentId) case eMsgContentID::MSG_LENGTH: %s",
                               success ? "success" : "failed");
                     break;
 
                 case eMsgContentID::CHECKSUM:
                     success = Helpers::CAN_MSG_TO_ROVER_MSG_CONTENT(msg_, _data.checksum);
-                    LOG_DEBUG(Logger::Nodes::MorseInput_msg,
+                    LOG_DEBUG(Logger::Nodes::MorseCode_msg,
                               "switch (msgContentId) case eMsgContentID::CHECKSUM: %s",
                               success ? "success" : "failed");
                     break;
@@ -194,4 +207,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // MORSE_INPUT_HPP
+#endif  // MORSE_CODE_HPP
