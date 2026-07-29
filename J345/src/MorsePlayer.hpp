@@ -94,65 +94,84 @@ class MorsePlayer
                 break;
 
             case eState::SYMBOL_ON:
-                enterState(eState::SYMBOL_GAP, static_cast<uint64_t>(SYMBOL_GAP_MS));
                 _actuatorOn = false;
+                if (_currentSymbols[_symbolIndex + 1] == '\0')
+                {
+                    finishCharacter();
+                }
+                else
+                {
+                    enterState(eState::SYMBOL_GAP, static_cast<uint64_t>(SYMBOL_GAP_MS));
+                }
                 break;
 
             case eState::SYMBOL_GAP:
                 ++_symbolIndex;
-                playNextSymbolOrEndChar();
+                playSymbol();
                 break;
 
             case eState::DONE:
-                [[fallthrough]];
+                enterState(eState::IDLE, 10);
+                _actuatorOn = false;
+                LOG_DEBUG(MorseDevice, "Morse code transmission DONE.");
+                break;
+
             case eState::IDLE:
                 [[fallthrough]];
             default:
+                _actuatorOn = false;
                 break;
+        }
+    }
+    void finishCharacter()
+    {
+        if (_charIndex >= _length)
+        {
+            enterState(eState::DONE, 0);
+            return;
+        }
+
+        if (_buffer[_charIndex] == static_cast<uint8_t>(' '))
+        {
+            ++_charIndex;
+            enterState(eState::WORD_GAP, static_cast<uint64_t>(WORD_GAP_MS));
+        }
+        else
+        {
+            enterState(eState::CHAR_GAP, static_cast<uint64_t>(CHAR_GAP_MS));
         }
     }
 
     void beginNextCharacter()
     {
-        if (_charIndex >= _length)
+        while (true)
         {
-            _state = eState::DONE;
-            _actuatorOn = false;
-            return;
+            if (_charIndex >= _length)
+            {
+                enterState(eState::DONE, 0);
+                _actuatorOn = false;
+                return;
+            }
+
+            const uint8_t character = _buffer[_charIndex];
+            ++_charIndex;
+
+            if (character == static_cast<uint8_t>(' '))
+            {
+                enterState(eState::WORD_GAP, static_cast<uint64_t>(WORD_GAP_MS));
+                _actuatorOn = false;
+                return;
+            }
+
+            _currentSymbols = symbolsFor(character);
+
+            if (_currentSymbols != nullptr)
+            {
+                _symbolIndex = 0;
+                playSymbol();
+                return;
+            }
         }
-
-        const uint8_t character = _buffer[_charIndex];
-        ++_charIndex;
-
-        if (character == static_cast<uint8_t>(' '))
-        {
-            enterState(eState::WORD_GAP, static_cast<uint64_t>(WORD_GAP_MS));
-            _actuatorOn = false;
-            return;
-        }
-
-        _currentSymbols = symbolsFor(character);
-        _symbolIndex = 0;
-
-        if (_currentSymbols == nullptr)
-        {
-            enterState(eState::CHAR_GAP, static_cast<uint64_t>(CHAR_GAP_MS));
-            _actuatorOn = false;
-            return;
-        }
-
-        playSymbol();
-    }
-
-    void playNextSymbolOrEndChar()
-    {
-        if (_currentSymbols[_symbolIndex] == '\0')
-        {
-            enterState(eState::CHAR_GAP, static_cast<uint64_t>(CHAR_GAP_MS));
-            _actuatorOn = false;
-            return;
-        }
-        playSymbol();
     }
 
     void playSymbol()
