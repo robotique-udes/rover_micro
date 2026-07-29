@@ -4,6 +4,7 @@
 #include "config.hpp"
 #include "J34Device.hpp"
 #include "J5Device.hpp"
+#include "MorseDevice.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_can2/rover_can2.hpp"
@@ -36,9 +37,12 @@ void setup(void)
     J5Device j5;
     j5.init();
 
+    MorseDevice morse;
+    morse.init();
+
     LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);
     RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &canLed);
-    RoverCan2::ManagerSlave canManager(canDriver, j34.getJ3Device(), j34.getJ4Device(), j5.getUnderlyingCanDevice());
+    RoverCan2::ManagerSlave canManager(canDriver, j34.getJ3Device(), j34.getJ4Device(), j5.getUnderlyingCanDevice(), morse.getUnderlyingCanDevice());
     canManager.init();
 
     LOG_INFO(Logger::Nodes::Main, "J345 Init done, starting main loop!");
@@ -47,6 +51,7 @@ void setup(void)
         // statusLed.update();
         j34.update();
         j5.update();
+        morse.update();
         canManager.update();
     }
 }
