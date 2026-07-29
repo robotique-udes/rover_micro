@@ -68,11 +68,19 @@ class MorsePlayer
         {
             return LETTER_TABLE[c - 'A'];
         }
-        if (c >= '0' && c <= '9')
+        else if (c >= '0' && c <= '9')
         {
             return DIGIT_TABLE[c - '0'];
         }
-        return nullptr;  // unsupported char (not space) -> skipped with a char gap
+        else if (c == '-')
+        {
+            return "-";
+        }
+        else if (c == '.')
+        {
+            return ".";
+        }
+        return nullptr;
     }
 
     void advance()
