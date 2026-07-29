@@ -65,7 +65,6 @@ class J5Device
             _driver.setCmd(0.0F);
         }
 
-
         if (_timerCanSend.isReady())
         {
             RoverCan2::Msgs::ArmJointStatus armStatusMsg;
@@ -92,7 +91,6 @@ class J5Device
         = JointCanDeviceT(RoverCan2::Constant::eDeviceId::GRIPPER_CLOSE_CONTROLLER,
                           RoverCan2::SubscriberMember<RoverCan2::Msgs::ArmJointCmd, J5Device>(*this, &J5Device::CB_canCmd),
                           RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>());
-
 
     PWMGenerators::MCPWMTimer __pwmTimer = PWMGenerators::MCPWMTimer(1'000, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_1);
     PWMGenerators::MCPWM __pwmGen = PWMGenerators::MCPWM(PIN_J5_PWM, __pwmTimer);

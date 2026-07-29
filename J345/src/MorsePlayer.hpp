@@ -11,9 +11,9 @@ class MorsePlayer
     // PARIS standard: dit_ms = 1200 / WPM. At 18 WPM -> 66.7ms
     static constexpr float DIT_MS = 66.7F;
     static constexpr float DAH_MS = DIT_MS * 3.0F;
-    static constexpr float SYMBOL_GAP_MS = DIT_MS;       // gap between dits/dahs inside a char
-    static constexpr float CHAR_GAP_MS = DIT_MS * 3.0F;  // gap between characters
-    static constexpr float WORD_GAP_MS = DIT_MS * 7.0F;  // gap for a literal space char
+    static constexpr float SYMBOL_GAP_MS = DIT_MS;
+    static constexpr float CHAR_GAP_MS = DIT_MS * 3.0F;
+    static constexpr float WORD_GAP_MS = DIT_MS * 7.0F;
 
     enum class eState : uint8_t
     {
@@ -36,21 +36,12 @@ class MorsePlayer
         enterState(eState::CHAR_GAP, static_cast<uint64_t>(CHAR_GAP_MS));  // small lead-in
     }
 
-    // Call once per loop. Advances the state machine when the current
-    // symbol/gap duration has elapsed.
     void update()
     {
-        if (_state == eState::IDLE || _state == eState::DONE)
-        {
-            _actuatorOn = false;
-            return;
-        }
-
         if ((Time::millis() - _stateStart) < _stateDuration)
         {
-            return;  // still mid-symbol or mid-gap
+            return;
         }
-
         advance();
     }
 
@@ -67,10 +58,12 @@ class MorsePlayer
     static const char* symbolsFor(uint8_t character_)
     {
         char c = static_cast<char>(character_);
+
         if (c >= 'a' && c <= 'z')
         {
             c = static_cast<char>(c - 'a' + 'A');
         }
+
         if (c >= 'A' && c <= 'Z')
         {
             return LETTER_TABLE[c - 'A'];

@@ -13,7 +13,6 @@
 DEFINE_LOG_NODE(MorseDevice, Logger::eNodeState::ON);
 class MorseDevice
 {
-    // --- Morse code message reassembly ---
     static constexpr size_t MORSE_MAX_LEN = 64;
     static constexpr uint64_t MORSE_FRAME_TIMEOUT_MS = 500ULL;
 
@@ -32,12 +31,11 @@ class MorseDevice
     {
         _morsePlayer.update();
 
-        if (_morseInProgress && (Time::millis() - _morseLastFrameTime > MORSE_FRAME_TIMEOUT_MS) )
+        if (_morseInProgress && (Time::millis() - _morseLastFrameTime > MORSE_FRAME_TIMEOUT_MS))
         {
             LOG_WARN(Logger::Nodes::MorseDevice, "Morse message timed out, discarding partial buffer");
             resetMorseState();
         }
-
 
         _solenoid.write(_morsePlayer.isActuatorOn() ? IO::eIOState::HIGH_ : IO::eIOState::LOW_);
     }
@@ -48,28 +46,30 @@ class MorseDevice
     }
 
   private:
-
     void CB_morseCodeStream(const RoverCan2::Msgs::MorseCode& msg_)
     {
-        // Serial.println("Here");
-        const auto& data = msg_.getData();
+        // TODO: Don't allow new morse while the first one is being sent
+        const bool start = msg_.getData().start;
+        const uint8_t length = msg_.getData().msg_length;
+        const uint8_t index = msg_.getData().index;
+        const uint8_t character = msg_.getData().character;
+        const uint8_t checksum = msg_.getData().checksum;
 
-        if (data.start)
+        if (start)
         {
-            // New message begins — reset regardless of any prior partial state
             resetMorseState();
 
-            if (data.msg_length > MORSE_MAX_LEN)
+            if (length > MORSE_MAX_LEN)
             {
                 LOG_ERROR(Logger::Nodes::MorseDevice,
                           "Morse message length %u exceeds buffer of %u, dropping",
-                          static_cast<unsigned>(data.msg_length),
+                          static_cast<unsigned>(length),
                           static_cast<unsigned>(MORSE_MAX_LEN));
                 return;
             }
 
             _morseInProgress = true;
-            _morseExpectedLength = data.msg_length;
+            _morseExpectedLength = length;
         }
 
         if (!_morseInProgress)
@@ -78,25 +78,20 @@ class MorseDevice
             return;
         }
 
-        if (data.index != _morseExpectedIndex)
+        if (index != _morseExpectedIndex)
         {
-            LOG_WARN(Logger::Nodes::MorseDevice,
-                     "Morse frame loss: expected index %u, got %u",
-                     static_cast<unsigned>(_morseExpectedIndex),
-                     static_cast<unsigned>(data.index));
+            LOG_WARN(Logger::Nodes::MorseDevice, "Morse frame loss: expected index %d, got %d", _morseExpectedIndex, index);
             resetMorseState();
             return;
         }
 
-        _morseBuffer[data.index] = data.character;
-        _morseRunningChecksum = static_cast<uint8_t>(_morseRunningChecksum + data.character);
+        _morseBuffer[index] = character;
+        _morseRunningChecksum = static_cast<uint8_t>(_morseRunningChecksum + character);
         _morseLastFrameTime = Time::millis();
 
-        if (_morseRunningChecksum != data.checksum)
+        if (_morseRunningChecksum != checksum)
         {
-            LOG_WARN(Logger::Nodes::MorseDevice,
-                     "Morse checksum mismatch at index %u, discarding message",
-                     static_cast<unsigned>(data.index));
+            LOG_WARN(Logger::Nodes::MorseDevice, "Morse checksum mismatch at index %d, discarding message", index);
             resetMorseState();
             return;
         }
@@ -105,20 +100,9 @@ class MorseDevice
 
         if (_morseExpectedIndex == _morseExpectedLength)
         {
-            handleMorseComplete(_morseBuffer, _morseExpectedLength);
+            _morsePlayer.start(_morseBuffer, _morseExpectedLength);
             resetMorseState();
         }
-    }
-
-    void handleMorseComplete(const uint8_t* buffer_, uint8_t length_)
-    {
-        // buffer_ is NOT null-terminated by itself; build a local terminated copy for logging/use
-        char text[MORSE_MAX_LEN + 1];
-        std::memcpy(text, buffer_, length_);
-        text[length_] = '\0';
-        Serial.printf("Morse message received (%u chars): %s\n", static_cast<unsigned>(length_), text);
-
-        _morsePlayer.start(buffer_, length_);
     }
 
     void resetMorseState()
@@ -133,7 +117,6 @@ class MorseDevice
         RoverCan2::Constant::eDeviceId::MORSE_CODE,
         RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseCode, MorseDevice>(*this, &MorseDevice::CB_morseCodeStream));
 
-    // Morse code reassembly state
     uint8_t _morseBuffer[MORSE_MAX_LEN] = {};
     uint8_t _morseExpectedIndex = 0;
     uint8_t _morseExpectedLength = 0;
