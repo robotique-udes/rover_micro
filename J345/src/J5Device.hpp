@@ -14,14 +14,13 @@
 #include "rover_can2/msgs/arm_joint_cmd.hpp"
 #include "rover_can2/msgs/arm_joint_advanced_status.hpp"
 
-#include <cstring>
-
 DEFINE_LOG_NODE(J5Device, Logger::eNodeState::ON);
 class J5Device
 {
     static constexpr uint64_t LOOP_PERIOD_US = 500ULL;
     static constexpr float MAX_SPEED_RAD_S = 1.0F;
     static constexpr float MIN_SPEED_RAD_S = -1.0F;
+    // This limits current spikes to the drive
     static constexpr float MIN_CMD_OPEN_LOOP = MotorDrivers::MIN_CMD_OPEN_LOOP * 0.1F;
     static constexpr float MAX_CMD_OPEN_LOOP = MotorDrivers::MAX_CMD_OPEN_LOOP * 0.1F;
 
