@@ -7,16 +7,22 @@
 
 #include "rover_can2/rover_can2.hpp"
 #include "rover_can2/msgs/morse_code.hpp"
+#include "rover_can2/msgs/morse_status.hpp"
 
 #include <cstring>
 
-DEFINE_LOG_NODE(MorseDevice, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(MorseDevice, Logger::eNodeState::OFF);
 class MorseDevice
 {
+    static constexpr uint64_t LOOP_PERIOD_US = 500ULL;
+
     static constexpr size_t MORSE_MAX_LEN = 64;
     static constexpr uint64_t MORSE_FRAME_TIMEOUT_MS = 500ULL;
+    static constexpr float CAN_SEND_FREQUENCY = 20.0F;
+    static constexpr uint64_t CAN_SEND_PERIOD_MS = static_cast<uint64_t>(ROUND(1'000.0F / CAN_SEND_FREQUENCY));
 
-    using MorseCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseCode, MorseDevice>>;
+    using MorseCanDeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseCode, MorseDevice>,
+                                              RoverCan2::Publisher<RoverCan2::Msgs::MorseStatus>>;
 
   public:
     MorseDevice() = default;
@@ -29,6 +35,11 @@ class MorseDevice
 
     void update()
     {
+        if (!_loopTimer.isReady())
+        {
+            return;
+        }
+        
         _morsePlayer.update();
 
         if (_morseInProgress && (Time::millis() - _morseLastFrameTime > MORSE_FRAME_TIMEOUT_MS))
@@ -38,17 +49,29 @@ class MorseDevice
         }
 
         _solenoid.write(_morsePlayer.isActuatorOn() ? IO::eIOState::HIGH_ : IO::eIOState::LOW_);
+
+        if (_timerCanSend.isReady())
+        {
+            RoverCan2::Msgs::MorseStatus morseStatusMsg;
+            morseStatusMsg.data().is_busy = _morsePlayer.isBusy();
+
+            _canDevice.sendMsg(morseStatusMsg);
+        }
     }
 
     MorseCanDeviceT& getUnderlyingCanDevice()
     {
-        return _morseCanDevice;
+        return _canDevice;
     }
 
   private:
     void CB_morseCodeStream(const RoverCan2::Msgs::MorseCode& msg_)
     {
-        // TODO: Don't allow new morse while the first one is being sent
+        if (_morsePlayer.isBusy())
+        {
+            return;
+        }
+
         const bool start = msg_.getData().start;
         const uint8_t length = msg_.getData().msg_length;
         const uint8_t index = msg_.getData().index;
@@ -61,10 +84,10 @@ class MorseDevice
 
             if (length > MORSE_MAX_LEN)
             {
-                LOG_ERROR(Logger::Nodes::MorseDevice,
-                          "Morse message length %u exceeds buffer of %u, dropping",
-                          static_cast<unsigned>(length),
-                          static_cast<unsigned>(MORSE_MAX_LEN));
+                LOG_WARN(Logger::Nodes::MorseDevice,
+                         "Morse message length %u exceeds buffer of %u, dropping",
+                         length,
+                         MORSE_MAX_LEN);
                 return;
             }
 
@@ -113,9 +136,14 @@ class MorseDevice
         _morseRunningChecksum = 0;
     }
 
-    MorseCanDeviceT _morseCanDevice = MorseCanDeviceT(
+    LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};
+
+    MorseCanDeviceT _canDevice = MorseCanDeviceT(
         RoverCan2::Constant::eDeviceId::MORSE_CODE,
-        RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseCode, MorseDevice>(*this, &MorseDevice::CB_morseCodeStream));
+        RoverCan2::SubscriberMember<RoverCan2::Msgs::MorseCode, MorseDevice>(*this, &MorseDevice::CB_morseCodeStream),
+        RoverCan2::Publisher<RoverCan2::Msgs::MorseStatus>());
+
+    LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
 
     uint8_t _morseBuffer[MORSE_MAX_LEN] = {};
     uint8_t _morseExpectedIndex = 0;

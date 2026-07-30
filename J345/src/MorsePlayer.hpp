@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <cstddef>
 #include "rover_lib2/helpers/time.hpp"
+#include "rover_lib2/helpers/log.hpp"
 
+DEFINE_LOG_NODE(MorsePlayer, Logger::eNodeState::OFF)
 class MorsePlayer
 {
   public:
@@ -113,7 +115,7 @@ class MorsePlayer
             case eState::DONE:
                 enterState(eState::IDLE, 10);
                 _actuatorOn = false;
-                LOG_DEBUG(MorseDevice, "Morse code transmission DONE.");
+                LOG_DEBUG(Logger::Nodes::MorsePlayer, "Morse code transmission DONE.");
                 break;
 
             case eState::IDLE:
