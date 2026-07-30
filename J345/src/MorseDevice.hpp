@@ -39,7 +39,7 @@ class MorseDevice
         {
             return;
         }
-        
+
         _morsePlayer.update();
 
         if (_morseInProgress && (Time::millis() - _morseLastFrameTime > MORSE_FRAME_TIMEOUT_MS))
@@ -104,6 +104,16 @@ class MorseDevice
         if (index != _morseExpectedIndex)
         {
             LOG_WARN(Logger::Nodes::MorseDevice, "Morse frame loss: expected index %d, got %d", _morseExpectedIndex, index);
+            resetMorseState();
+            return;
+        }
+
+        if (index >= _morseExpectedLength || index >= MORSE_MAX_LEN)
+        {
+            LOG_WARN(Logger::Nodes::MorseDevice,
+                     "Morse index %u out of range (len=%u), discarding message",
+                     index,
+                     _morseExpectedLength);
             resetMorseState();
             return;
         }
