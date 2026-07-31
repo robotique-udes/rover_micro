@@ -17,7 +17,7 @@ class ScienceDevice
     static constexpr float CAN_RECV_FREQ = 20.0F;
     static constexpr uint64_t CAN_WATCHDOG_VALIDITY_PERIOD = static_cast<uint64_t>(1'000.0F / CAN_RECV_FREQ * 2.0F);
 
-    static constexpr float PUSH_BUTTON_SPEED = -1000.0F;
+    static constexpr float JOG_SPEED = -1000.0F;
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.0F;
 
@@ -36,25 +36,46 @@ class ScienceDevice
 
     void update()
     {
-        _linAct.update();
-        
         if (!_loopTimer.isReady())
         {
             return;
         }
+        
+        _linAct.update();
 
-        if (_pbLinAct.isClicked())
+        if (_pbUp.isClicked())
         {
-            _linAct.setSpeed(PUSH_BUTTON_SPEED);
+            _linAct.setSpeed(JOG_SPEED);
+        }
+        else if (_pbDown.isClicked())
+        {
+            _linAct.setSpeed(-JOG_SPEED);
         }
         else
         {
             _linAct.setSpeed(FULL_STOP_SPEED);
         }
 
+        if (_pbGrinder.isClicked())
+        {
+            _grinder.write(IO::eIOState::HIGH_);
+        }
+        else
+        {
+            _grinder.write(IO::eIOState::LOW_);
+        }
+
+        if (_pbCarroussel.isClicked())
+        {
+            // MOVE CARROUSSEL
+        }
+        else
+        {
+            // STOP CARROUSSEL
+        }
     }
 
-    DeviceT& getScienceDevice()
+    DeviceT& getUnderlyingCanDevice()
     {
         return _scienceCanDevice;
     }
@@ -69,9 +90,16 @@ class ScienceDevice
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};
     LinearAct _linAct;
 
-    PushButton _pbLinAct = {PIN_LIN_ACT_LS};
+    PushButton _pbUp = {PIN_PB_UP};
+    PushButton _pbDown = {PIN_PB_DOWN};
+    PushButton _pbVacuum = {PIN_PB_VACUUM};
+    PushButton _pbGrinder = {PIN_PB_GRINDER};
+    PushButton _pbCarroussel = {PIN_PB_CARROUSSEL};
 
-    float _linActTargetSpeed = 0.0F;
+    IO::DigitalOutput _grinder = {PIN_GRINDER_PWM}
+
+    float _linActTargetSpeed
+        = 0.0F;
     Watchdog<uint64_t, &Time::millis> _scienceCanWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
 
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};

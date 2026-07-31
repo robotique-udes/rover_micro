@@ -22,9 +22,8 @@ void setup(void)
     ScienceDevice scienceDevice;
     scienceDevice.init();
 
-    LED::LedBlinkerSoft canLed(IO::DigitalOutput(PIN_CAN_LED), LED::BlinkPatterns::HEARTBEAT);
-    RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &canLed);
-    RoverCan2::ManagerSlave canManager(canDriver, scienceDevice.getScienceDevice());
+    RoverCan2::Drivers::DriverESP32<LED::LedBlinkerSoft> canDriver(PIN_CAN_RX, PIN_CAN_TX, &statusLed);
+    RoverCan2::ManagerSlave canManager(canDriver, scienceDevice.getUnderlyingCanDevice());
     canManager.init();
 
     LOG_INFO(Logger::Nodes::Main, "J1 Init done, starting main loop!");
