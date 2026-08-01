@@ -92,7 +92,6 @@ class ScienceDevice
 
     PushButton _pbUp = {PIN_PB_UP};
     PushButton _pbDown = {PIN_PB_DOWN};
-    PushButton _pbVacuum = {PIN_PB_VACUUM};
     PushButton _pbGrinder = {PIN_PB_GRINDER};
     PushButton _pbCarroussel = {PIN_PB_CARROUSSEL};
 
@@ -107,6 +106,7 @@ class ScienceDevice
     DeviceT _scienceCanDevice
         = DeviceT(RoverCan2::Constant::eDeviceId::SCIENCE,
                   RoverCan2::SubscriberMember<RoverCan2::Msgs::Science, ScienceDevice>(*this, &ScienceDevice::CB_ScienceCmd));
+
     VALIDATE_CONCEPT(RoverObject, ScienceDevice);
 };
 
