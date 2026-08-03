@@ -2,6 +2,7 @@
 #define SCIENCE_DEVICE_HPP
 
 #include "LinActuator.hpp"
+#include "ServoController.hpp"
 #include "config.hpp"
 #include "rover_can2/device.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
@@ -21,7 +22,7 @@ class ScienceDevice
     static constexpr float FULL_STOP_SPEED = 0.0F;
     static constexpr float CALIB_POSITION = 0.0F;
 
-    static constexpr float FULL_STOP_SPEED_ERROR_TELORANCE = 0.01F;  // m
+    static constexpr float FULL_STOP_SPEED_ERROR_TOLERANCE = 0.01F;  // m
 
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::Science, ScienceDevice>>;
 
@@ -32,6 +33,7 @@ class ScienceDevice
     {
         _linAct.init();
         _linAct.setSpeed(FULL_STOP_SPEED);
+        _servoCtrl.init();
     }
 
     void update()
@@ -40,8 +42,9 @@ class ScienceDevice
         {
             return;
         }
-        
+
         _linAct.update();
+        _servoCtrl.update();
 
         if (_pbUp.isClicked())
         {
@@ -67,11 +70,30 @@ class ScienceDevice
 
         if (_pbCarroussel.isClicked())
         {
-            // MOVE CARROUSSEL
+            if (this->_currentCarrouselPosition >= 180.0F)
+            {
+                this->_currentCarrouselPosition = 0.0F;
+            }
+            else
+            {
+                this->_currentCarrouselPosition += 45.0F;
+            }
+
+            this->_servoCtrl.setPosition(this->_currentCarrouselPosition, eServoType::CARROUSEL);
         }
-        else
+
+        if (_pbVacuum.isClicked())
         {
-            // STOP CARROUSSEL
+            if (this->_currentBeakPosition >= 300.0F)
+            {
+                this->_currentBeakPosition = 0.0F;
+            }
+            else
+            {
+                this->_currentBeakPosition += 5.0F;
+            }
+
+            this->_servoCtrl.setPosition(this->_currentBeakPosition, eServoType::BEAK);
         }
     }
 
@@ -90,15 +112,19 @@ class ScienceDevice
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};
     LinearAct _linAct;
 
+    ServoController _servoCtrl;
+    float _currentBeakPosition = 0.0F;
+    float _currentCarrouselPosition = 0.0F;
+
     PushButton _pbUp = {PIN_PB_UP};
     PushButton _pbDown = {PIN_PB_DOWN};
     PushButton _pbGrinder = {PIN_PB_GRINDER};
     PushButton _pbCarroussel = {PIN_PB_CARROUSSEL};
+    PushButton _pbVacuum = {PIN_PB_VACUUM};
 
-    IO::DigitalOutput _grinder = {PIN_GRINDER_PWM}
+    IO::DigitalOutput _grinder = IO::DigitalOutput(PIN_GRINDER_PWM);
 
-    float _linActTargetSpeed
-        = 0.0F;
+    float _linActTargetSpeed = 0.0F;
     Watchdog<uint64_t, &Time::millis> _scienceCanWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
 
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};

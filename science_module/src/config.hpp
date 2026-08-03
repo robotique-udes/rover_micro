@@ -8,6 +8,7 @@
 #define CONFIG_HPP
 
 #include <cstdint>
+#include <numbers>
 #include <driver/gpio.h>
 
 #include "rover_lib2/actuators/servo.hpp"
@@ -32,14 +33,14 @@ constexpr gpio_num_t PIN_PB_CARROUSSEL = GPIO_NUM_12;
 constexpr gpio_num_t PIN_PB_SPARE = GPIO_NUM_13;
 
 // Residues from old PCB - REV
-constexpr gpio_num_t PIN_PB_VACUUM = GPIO_NUM_38;
+constexpr gpio_num_t PIN_PB_VACUUM = GPIO_NUM_38; // Used for beak servo testing
 constexpr gpio_num_t PIN_FAN_A = GPIO_NUM_9;
 constexpr gpio_num_t PIN_FAN_B = GPIO_NUM_3;
 
 constexpr gpio_num_t PIN_LIN_ACT_1 = GPIO_NUM_18;
 constexpr gpio_num_t PIN_LIN_ACT_2 = GPIO_NUM_8;
-constexpr gpio_num_t PIN_LIN_ACT_LS = GPIO_NUM_1;
-constexpr gpio_num_t PIN_LIN_ACT_LS = GPIO_NUM_2;
+constexpr gpio_num_t PIN_LIN_ACT_LS_EXT = GPIO_NUM_1;
+constexpr gpio_num_t PIN_LIN_ACT_LS_RET = GPIO_NUM_2;
 
 constexpr gpio_num_t PIN_SERVO_0 = GPIO_NUM_7;
 constexpr gpio_num_t PIN_SERVO_1 = GPIO_NUM_15;
@@ -79,9 +80,9 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
             .minMs = 500.0F,
             .maxMs = 2500.0F,
             .minPosition = 0.0F,
-            .maxPosition = std::numbers::pi_v<float> * 2.0F,
+            .maxPosition = std::numbers::pi_v<float> * 1.6666F,
             .maxSpeed = 2.41F,
-            .alignedPosition = (std::numbers::pi_v<float> * 2.0F - 0.0F) / 5.0F,  // (maxPos - minPos) / 5.0F
+            .alignedPosition = (std::numbers::pi_v<float> * 1.6666F - 0.0F) / 5.0F,  // (maxPos - minPos) / 5.0F
         };
     }
     else
