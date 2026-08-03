@@ -16,6 +16,7 @@ class MorsePlayer
     static constexpr float SYMBOL_GAP_MS = DIT_MS;
     static constexpr float CHAR_GAP_MS = DIT_MS * 3.0F;
     static constexpr float WORD_GAP_MS = DIT_MS * 7.0F;
+    static constexpr uint64_t DONE_STATE_DURATION_MS = 10U;
 
     enum class eState : uint8_t
     {
@@ -113,7 +114,7 @@ class MorsePlayer
                 break;
 
             case eState::DONE:
-                enterState(eState::IDLE, 10);
+                enterState(eState::IDLE, DONE_STATE_DURATION_MS);
                 _actuatorOn = false;
                 LOG_DEBUG(Logger::Nodes::MorsePlayer, "Morse code transmission DONE.");
                 break;
