@@ -40,6 +40,7 @@ class ScienceDevice
         this->_linAct.init();
         this->_linAct.setSpeed(FULL_STOP_SPEED);
         this->_servoCtrl.init();
+        this->_sense1.init();
     }
 
     void update()
@@ -51,6 +52,8 @@ class ScienceDevice
 
         Serial.print("CO2: ");
         Serial.println(this->_sense1.getCO2());
+        // Serial.print("Error: ");
+        // Serial.println(this->_sense1.getErrorStatus());
 
         this->_linAct.update();
         this->_servoCtrl.update();
