@@ -3,6 +3,7 @@
 
 #include "LinActuator.hpp"
 #include "ServoController.hpp"
+#include "rover_lib2/sensors/K30.hpp"
 #include "config.hpp"
 #include "rover_can2/device.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
@@ -25,7 +26,9 @@ class ScienceDevice
     static constexpr float CALIB_POSITION = 0.0F;
 
     static constexpr float FULL_STOP_SPEED_ERROR_TOLERANCE = 0.01F;  // m
-
+    
+    static constexpr uint8_t DEFAULT_SENSOR_ADDRESS = 0x68;
+    
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>>;
 
   public:
@@ -33,6 +36,7 @@ class ScienceDevice
 
     void init()
     {
+        Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
         this->_linAct.init();
         this->_linAct.setSpeed(FULL_STOP_SPEED);
         this->_servoCtrl.init();
@@ -44,6 +48,9 @@ class ScienceDevice
         {
             return;
         }
+
+        Serial.print("CO2: ");
+        Serial.println(this->_sense1.getCO2());
 
         this->_linAct.update();
         this->_servoCtrl.update();
@@ -109,6 +116,11 @@ class ScienceDevice
         {
             this->_servoCtrl.setPosition(0.0F, eServoType::BEAK);
         }
+
+        // if (_pbSpare.isClicked())
+        // {
+        //     this->_sense1.changeAddress(0x69);
+        // }
     }
 
     DeviceT& getUnderlyingCanDevice()
@@ -146,6 +158,8 @@ class ScienceDevice
     bool _grinderOn = false;
     float _beakPos = false;
     bool _carrouselOn = false;
+
+    K30 _sense1 = K30(Wire, DEFAULT_SENSOR_ADDRESS);
 
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
 

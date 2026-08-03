@@ -53,6 +53,9 @@ constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_5;
 constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_47;
 constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_48;
 
+constexpr gpio_num_t PIN_I2C_SDA = GPIO_NUM_39;
+constexpr gpio_num_t PIN_I2C_SCL = GPIO_NUM_40;
+
 enum class eServoType
 {
     BEAK,
