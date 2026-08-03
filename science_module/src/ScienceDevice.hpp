@@ -7,7 +7,7 @@
 #include "rover_can2/device.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
 
-#include "rover_can2/msgs/science.hpp"
+#include "rover_can2/msgs/science_cmd.hpp"
 #include "rover_can2/rover_can2.hpp"
 
 class ScienceDevice
@@ -24,16 +24,16 @@ class ScienceDevice
 
     static constexpr float FULL_STOP_SPEED_ERROR_TOLERANCE = 0.01F;  // m
 
-    using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::Science, ScienceDevice>>;
+    using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>>;
 
   public:
     ScienceDevice() = default;
 
     void init()
     {
-        _linAct.init();
-        _linAct.setSpeed(FULL_STOP_SPEED);
-        _servoCtrl.init();
+        this->_linAct.init();
+        this->_linAct.setSpeed(FULL_STOP_SPEED);
+        this->_servoCtrl.init();
     }
 
     void update()
@@ -43,48 +43,43 @@ class ScienceDevice
             return;
         }
 
-        _linAct.update();
-        _servoCtrl.update();
+        this->_linAct.update();
+        this->_servoCtrl.update();
 
         if (_pbUp.isClicked())
         {
-            _linAct.setSpeed(JOG_SPEED);
+            this->_linAct.setSpeed(JOG_SPEED);
         }
-        else if (_pbDown.isClicked())
+        else if (this->_pbDown.isClicked())
         {
-            _linAct.setSpeed(-JOG_SPEED);
+            this->_linAct.setSpeed(-JOG_SPEED);
         }
-        else
+        else if (this->_canWatchdog.isOk() && !IN_ERROR(_linActTargetSpeed, 0.001F, 0.0F))
         {
-            _linAct.setSpeed(FULL_STOP_SPEED);
-        }
-
-        if (_pbGrinder.isClicked())
-        {
-            _grinder.write(IO::eIOState::HIGH_);
+            this->_linAct.setSpeed(_linActTargetSpeed);
         }
         else
         {
-            _grinder.write(IO::eIOState::LOW_);
+            this->_linAct.setSpeed(FULL_STOP_SPEED);
         }
 
-        if (_pbCarroussel.isClicked())
+        if (this->_pbGrinder.isClicked() || (this->_canWatchdog.isOk() && this->_grinderOn))
         {
-            if (this->_currentCarrouselPosition >= 180.0F)
-            {
-                this->_currentCarrouselPosition = 0.0F;
-            }
-            else
-            {
-                this->_currentCarrouselPosition += 45.0F;
-            }
+            this->_grinder.write(IO::eIOState::HIGH_);
+        }
+        else
+        {
+            this->_grinder.write(IO::eIOState::LOW_);
+        }
 
-            this->_servoCtrl.setPosition(this->_currentCarrouselPosition, eServoType::CARROUSEL);
+        if (this->_pbCarroussel.isClicked() || (this->_canWatchdog.isOk() && this->_carrouselOn))
+        {
+            this->_servoCtrl.nextPosCarrousel();
         }
 
         if (_pbVacuum.isClicked())
         {
-            if (this->_currentBeakPosition >= 300.0F)
+            if (this->_currentBeakPosition >= 180)
             {
                 this->_currentBeakPosition = 0.0F;
             }
@@ -95,18 +90,29 @@ class ScienceDevice
 
             this->_servoCtrl.setPosition(this->_currentBeakPosition, eServoType::BEAK);
         }
+        else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
+        {
+            this->_servoCtrl.setBeakPositionFromCAN(this->_beakPos);
+        }
+        else
+        {
+            this->_servoCtrl.setPosition(0.0F, eServoType::BEAK);
+        }
     }
 
     DeviceT& getUnderlyingCanDevice()
     {
-        return _scienceCanDevice;
+        return this->_scienceCanDevice;
     }
 
   private:
-    void CB_ScienceCmd(const RoverCan2::Msgs::Science& msg_)
+    void CB_ScienceCmd(const RoverCan2::Msgs::ScienceCmd& msg_)
     {
-        _scienceCanWatchdog.reset();
-        _linActTargetSpeed = msg_.getData().lin_act_speed;
+        this->_canWatchdog.reset();
+        this->_linActTargetSpeed = msg_.getData().lin_act_speed;
+        this->_grinderOn = msg_.getData().grinder_on;
+        this->_beakPos = msg_.getData().beak_pos;
+        this->_carrouselOn = msg_.getData().carrousel_on;
     }
 
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};
@@ -114,7 +120,6 @@ class ScienceDevice
 
     ServoController _servoCtrl;
     float _currentBeakPosition = 0.0F;
-    float _currentCarrouselPosition = 0.0F;
 
     PushButton _pbUp = {PIN_PB_UP};
     PushButton _pbDown = {PIN_PB_DOWN};
@@ -125,13 +130,17 @@ class ScienceDevice
     IO::DigitalOutput _grinder = IO::DigitalOutput(PIN_GRINDER_PWM);
 
     float _linActTargetSpeed = 0.0F;
-    Watchdog<uint64_t, &Time::millis> _scienceCanWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
+    bool _grinderOn = false;
+    float _beakPos = false;
+    bool _carrouselOn = false;
+
+    Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
 
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
 
     DeviceT _scienceCanDevice
         = DeviceT(RoverCan2::Constant::eDeviceId::SCIENCE,
-                  RoverCan2::SubscriberMember<RoverCan2::Msgs::Science, ScienceDevice>(*this, &ScienceDevice::CB_ScienceCmd));
+                  RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>(*this, &ScienceDevice::CB_ScienceCmd));
 
     VALIDATE_CONCEPT(RoverObject, ScienceDevice);
 };

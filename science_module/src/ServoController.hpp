@@ -11,22 +11,22 @@
 
 class ServoController
 {
-    static constexpr uint64_t CONTROL_LOOP_PERIOD_US = 69UL;
+    static constexpr float CARROUSEL_STEP_INCREMENT_RAD = 45.0F * static_cast<float>(DEG_TO_RAD);
 
   public:
     void init()
     {
-        _servoBeak.init();
-        _servoCarrousel.init();
+        this->_servoBeak.init();
+        this->_servoCarrousel.init();
 
-        _servoBeak.setPosition(this->_beakServoConfig.alignedPosition);
-        _servoCarrousel.setPosition(this->_carrouselServoConfig.alignedPosition);
+        this->_servoBeak.setPosition(this->_beakServoConfig.alignedPosition);
+        this->_servoCarrousel.setPosition(this->_carrouselServoConfig.alignedPosition);
     };
 
     void update()
     {
-        _servoBeak.update();
-        _servoCarrousel.update();
+        this->_servoBeak.update();
+        this->_servoCarrousel.update();
     };
 
     void setPosition(float position_, eServoType servoId_)
@@ -34,12 +34,13 @@ class ServoController
         switch (servoId_)
         {
             case eServoType::BEAK:
-                _servoBeak.setPosition(std::clamp(position_, _beakServoConfig.minPosition, _beakServoConfig.maxPosition));
+                this->_servoBeak.setPosition(
+                    std::clamp(position_, this->_beakServoConfig.minPosition, this->_beakServoConfig.maxPosition));
                 break;
 
             case eServoType::CARROUSEL:
-                _servoCarrousel.setPosition(
-                    std::clamp(position_, _carrouselServoConfig.minPosition, _carrouselServoConfig.maxPosition));
+                this->_servoCarrousel.setPosition(
+                    std::clamp(position_, this->_carrouselServoConfig.minPosition, this->_carrouselServoConfig.maxPosition));
                 break;
 
             default:
@@ -47,9 +48,29 @@ class ServoController
         }
     };
 
+    void nextPosCarrousel()
+    {
+        this->_currentCarrouselPosition += CARROUSEL_STEP_INCREMENT_RAD;
+
+        if (this->_currentCarrouselPosition >= this->_carrouselServoConfig.maxPosition)
+        {
+            this->_currentCarrouselPosition = 0.0F;
+        }
+
+        this->setPosition(this->_currentCarrouselPosition, eServoType::CARROUSEL);
+    }
+
+    void setBeakPositionFromCAN(float pos_)
+    {
+        float position = MAP(pos_, 0.0F, 1.0F, _beakServoConfig.minPosition, _beakServoConfig.maxPosition);
+        this->setPosition(position, eServoType::BEAK);
+    }
+
   private:
     static constexpr Actuators::ServoT::sTimingConfig _beakServoConfig = GET_SERVO_TIMING_CONFIG<eServoType::BEAK>();
     static constexpr Actuators::ServoT::sTimingConfig _carrouselServoConfig = GET_SERVO_TIMING_CONFIG<eServoType::CARROUSEL>();
+
+    float _currentCarrouselPosition = 0.0F;
 
     PWMGenerators::MCPWMTimer __pwmGenTimer
         = PWMGenerators::MCPWMTimer(_beakServoConfig.frequency, PWMGenerators::MCPWMTimer::eMCPWMGroupID::GROUP_0);
