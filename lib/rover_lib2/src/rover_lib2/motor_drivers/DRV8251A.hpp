@@ -30,7 +30,7 @@ namespace MotorDrivers
     template<PWMGenerators::PWMGenerator PwmGenerator1T, PWMGenerators::PWMGenerator PwmGenerator2T>
     class DRV8251A
     {
-        static constexpr float FULL_STOP_CMD              = 0.0F;
+        static constexpr float FULL_STOP_CMD = 0.0F;
         static constexpr float COAST_STOPPED_ERROR_TOLERANCE = 0.001F;
 
       public:
@@ -72,22 +72,22 @@ namespace MotorDrivers
                     if (_goalCmd == FULL_STOP_CMD)
                     {
                         LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE STOP | A: 0, B: 0");
-                        _pwmA.setDutyCycle(FULL_STOP_CMD);   // IN1 = 0 |
-                        _pwmB.setDutyCycle(FULL_STOP_CMD);   // IN2 = 0 | → Brake
+                        _pwmA.setDutyCycle(FULL_STOP_CMD);  // IN1 = 0 |
+                        _pwmB.setDutyCycle(FULL_STOP_CMD);  // IN2 = 0 | → Brake
                     }
                     else if (_goalCmd > FULL_STOP_CMD)
                     {
                         float cmd = std::abs(_goalCmd);
                         LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE FWD | A: %f, B: 0", cmd);
-                        _pwmA.setDutyCycle(cmd);             // IN1 = PWM |
-                        _pwmB.setDutyCycle(FULL_STOP_CMD);   // IN2 = 0   | → Forward
+                        _pwmA.setDutyCycle(cmd);            // IN1 = PWM |
+                        _pwmB.setDutyCycle(FULL_STOP_CMD);  // IN2 = 0   | → Forward
                     }
                     else  // _goalCmd < FULL_STOP_CMD
                     {
                         float cmd = std::abs(_goalCmd);
                         LOG_DEBUG(Logger::Nodes::DRV8251A, "BRAKE REV | A: 0, B: %f", cmd);
-                        _pwmA.setDutyCycle(FULL_STOP_CMD);   // IN1 = 0   |
-                        _pwmB.setDutyCycle(cmd);             // IN2 = PWM | → Reverse
+                        _pwmA.setDutyCycle(FULL_STOP_CMD);  // IN1 = 0   |
+                        _pwmB.setDutyCycle(cmd);            // IN2 = PWM | → Reverse
                     }
                     break;
                 }
@@ -108,22 +108,22 @@ namespace MotorDrivers
                     {
                         // Both INx HIGH → Hi-Z output (coast)
                         LOG_DEBUG(Logger::Nodes::DRV8251A, "COAST STOP | A: 100, B: 100");
-                        _pwmA.setDutyCycle(MAX_CMD_OPEN_LOOP);   // IN1 = 1 |
-                        _pwmB.setDutyCycle(MAX_CMD_OPEN_LOOP);   // IN2 = 1 | → Coast
+                        _pwmA.setDutyCycle(MAX_CMD_OPEN_LOOP);  // IN1 = 1 |
+                        _pwmB.setDutyCycle(MAX_CMD_OPEN_LOOP);  // IN2 = 1 | → Coast
                     }
                     else if (_goalCmd > FULL_STOP_CMD)
                     {
                         float cmd = std::abs(_goalCmd);
                         LOG_DEBUG(Logger::Nodes::DRV8251A, "COAST FWD | A: %f, B: 0", cmd);
-                        _pwmA.setDutyCycle(cmd);                 // IN1 = PWM |
-                        _pwmB.setDutyCycle(FULL_STOP_CMD);       // IN2 = 0   | → Forward
+                        _pwmA.setDutyCycle(cmd);            // IN1 = PWM |
+                        _pwmB.setDutyCycle(FULL_STOP_CMD);  // IN2 = 0   | → Forward
                     }
                     else  // _goalCmd < -COAST_STOPPED_ERROR_TOLERANCE
                     {
                         float cmd = std::abs(_goalCmd);
                         LOG_DEBUG(Logger::Nodes::DRV8251A, "COAST REV | A: 0, B: %f", cmd);
-                        _pwmA.setDutyCycle(FULL_STOP_CMD);       // IN1 = 0   |
-                        _pwmB.setDutyCycle(cmd);                 // IN2 = PWM | → Reverse
+                        _pwmA.setDutyCycle(FULL_STOP_CMD);  // IN1 = 0   |
+                        _pwmB.setDutyCycle(cmd);            // IN2 = PWM | → Reverse
                     }
                     break;
                 }
@@ -200,7 +200,7 @@ namespace MotorDrivers
 
         void setMaxVoltage(float alim_, float maxVoltage_)
         {
-            float absAlim       = std::abs(alim_);
+            float absAlim = std::abs(alim_);
             float absMaxVoltage = std::clamp(std::abs(maxVoltage_), 0.0F, absAlim);
             this->setMaxCmd((absMaxVoltage / absAlim) * MotorDrivers::MAX_CMD_OPEN_LOOP);
         }
@@ -209,9 +209,9 @@ namespace MotorDrivers
         PwmGenerator1T& _pwmA;
         PwmGenerator2T& _pwmB;
 
-        float      _maxCommand = MotorDrivers::MAX_CMD_OPEN_LOOP;
-        float      _goalCmd;
-        bool       _reversed;
+        float _maxCommand = MotorDrivers::MAX_CMD_OPEN_LOOP;
+        float _goalCmd;
+        bool _reversed;
         eBrakeMode _brakeMode;
 
         VALIDATE_CONCEPT(MotorDriver, DRV8251A);

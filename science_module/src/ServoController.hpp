@@ -12,6 +12,7 @@
 class ServoController
 {
     static constexpr float CARROUSEL_STEP_INCREMENT_RAD = 45.0F * static_cast<float>(DEG_TO_RAD);
+    static constexpr uint64_t LOOP_PERIOD_MS = 50ULL;
 
   public:
     void init()
@@ -25,6 +26,11 @@ class ServoController
 
     void update()
     {
+        if (!_loopTimer.isReady())
+        {
+            return;
+        }
+
         this->_servoBeak.update();
         this->_servoCarrousel.update();
     };
@@ -93,6 +99,8 @@ class ServoController
                                                  __carrouselServoPwmGen,
                                                  true,
                                                  static_cast<float>(DEG_TO_RAD) * 180.0F);
+
+    LoopTimer<uint64_t, &Time::millis> _loopTimer = {LOOP_PERIOD_MS};
 };
 
 #endif  // SERVO_CONTROLLER_HPP

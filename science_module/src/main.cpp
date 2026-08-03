@@ -26,10 +26,10 @@ void setup(void)
     RoverCan2::ManagerSlave canManager(canDriver, scienceDevice.getUnderlyingCanDevice());
     canManager.init();
 
-    LOG_INFO(Logger::Nodes::Main, "J1 Init done, starting main loop!");
+    LOG_INFO(Logger::Nodes::Main, "Science module init done, starting main loop!");
     for (EVER)
     {
-        statusLed.update();
+        // statusLed.update();
         scienceDevice.update();
         canManager.update();
     }

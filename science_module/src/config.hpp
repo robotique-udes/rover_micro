@@ -33,7 +33,7 @@ constexpr gpio_num_t PIN_PB_CARROUSSEL = GPIO_NUM_12;
 constexpr gpio_num_t PIN_PB_SPARE = GPIO_NUM_13;
 
 // Residues from old PCB - REV
-constexpr gpio_num_t PIN_PB_VACUUM = GPIO_NUM_38; // Used for beak servo testing
+constexpr gpio_num_t PIN_PB_VACUUM = GPIO_NUM_38;  // Used for beak servo testing
 constexpr gpio_num_t PIN_FAN_A = GPIO_NUM_9;
 constexpr gpio_num_t PIN_FAN_B = GPIO_NUM_3;
 
@@ -53,7 +53,8 @@ constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_5;
 constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_47;
 constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_48;
 
-enum class eServoType {
+enum class eServoType
+{
     BEAK,
     CARROUSEL,
 };
@@ -80,9 +81,9 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
             .minMs = 500.0F,
             .maxMs = 2500.0F,
             .minPosition = 0.0F,
-            .maxPosition = std::numbers::pi_v<float> * 1.6666F,
+            .maxPosition = std::numbers::pi_v<float> * 2.0F * 5.0f,
             .maxSpeed = 2.41F,
-            .alignedPosition = (std::numbers::pi_v<float> * 1.6666F - 0.0F) / 5.0F,  // (maxPos - minPos) / 5.0F
+            .alignedPosition = (std::numbers::pi_v<float> * 2.0F * 5.0f - 0.0F) / 5.0F,  // (maxPos - minPos) / 5.0F
         };
     }
     else

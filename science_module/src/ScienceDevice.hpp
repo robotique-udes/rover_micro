@@ -10,6 +10,8 @@
 #include "rover_can2/msgs/science_cmd.hpp"
 #include "rover_can2/rover_can2.hpp"
 
+DEFINE_LOG_NODE(ScienceDevice, Logger::eNodeState::OFF);
+
 class ScienceDevice
 {
     static constexpr uint64_t LOOP_PERIOD_US = 250ULL;
@@ -74,7 +76,16 @@ class ScienceDevice
 
         if (this->_pbCarroussel.isClicked() || (this->_canWatchdog.isOk() && this->_carrouselOn))
         {
-            this->_servoCtrl.nextPosCarrousel();
+            bool isOn = this->_pbCarroussel.isClicked() || this->_carrouselOn;
+            if (isOn != _wasCarrouselOn)
+            {
+                this->_servoCtrl.nextPosCarrousel();
+                this->_wasCarrouselOn = !this->_wasCarrouselOn;
+            }
+        }
+        else
+        {
+            this->_wasCarrouselOn = false;
         }
 
         if (_pbVacuum.isClicked())
@@ -120,12 +131,14 @@ class ScienceDevice
 
     ServoController _servoCtrl;
     float _currentBeakPosition = 0.0F;
+    bool _wasCarrouselOn = false;
 
     PushButton _pbUp = {PIN_PB_UP};
     PushButton _pbDown = {PIN_PB_DOWN};
     PushButton _pbGrinder = {PIN_PB_GRINDER};
     PushButton _pbCarroussel = {PIN_PB_CARROUSSEL};
     PushButton _pbVacuum = {PIN_PB_VACUUM};
+    PushButton _pbSpare = {PIN_PB_SPARE};
 
     IO::DigitalOutput _grinder = IO::DigitalOutput(PIN_GRINDER_PWM);
 
