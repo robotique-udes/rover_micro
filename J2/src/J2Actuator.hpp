@@ -14,7 +14,7 @@
 #include <algorithm>
 
 DEFINE_LOG_NODE(J2Actuator, Logger::eNodeState::OFF);
-DEFINE_LOG_NODE(J2ActuatorPlot, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(J2ActuatorPlot, Logger::eNodeState::ON);
 
 class J2Actuator
 {
@@ -23,8 +23,10 @@ class J2Actuator
     static constexpr float MAX_MOTOR_SPEED_RAD_S = 0.2F;
     static_assert(MAX_MOTOR_SPEED_RAD_S >= 0.0F);
 
-    static constexpr float J2_MIN_JOINT_LIMIT = -2.45F;
-    static constexpr float J2_MAX_JOINT_LIMIT = 2.45F;
+    // static constexpr float J2_MIN_JOINT_LIMIT = -1.27F;  // J1
+    static constexpr float J2_MIN_JOINT_LIMIT = -2.9879F; // J2
+    // static constexpr float J2_MAX_JOINT_LIMIT = 2.0F;  // J1
+    static constexpr float J2_MAX_JOINT_LIMIT = 1.1F; // J2
     static_assert(J2_MIN_JOINT_LIMIT <= J2_MAX_JOINT_LIMIT);
 
     static constexpr float RATIO_OUTPUT_TO_MOTOR = 100.0F;
@@ -89,6 +91,7 @@ class J2Actuator
 
     float getPosition() const
     {
+        // J1 Takes a * -1 to invert encoder direction
         return _encoder.getPosition();
     }
 

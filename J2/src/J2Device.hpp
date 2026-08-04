@@ -54,7 +54,7 @@ class J2Device
 
         _j2.update();
 
-        if (_pbCalib.isClicked())
+        if (_pbJogPlus.isClicked() && _pbJogNeg.isClicked())
         {
             _j2.setSpeed(FULL_STOP_SPEED);
 
