@@ -11,6 +11,7 @@
 
 #include "rover_can2/device.hpp"
 #include "rover_can2/msgs/science_cmd.hpp"
+#include "rover_can2/msgs/science_info.hpp"
 #include "rover_can2/rover_can2.hpp"
 
 DEFINE_LOG_NODE(ScienceDevice, Logger::eNodeState::OFF);
@@ -30,8 +31,12 @@ class ScienceDevice
     static constexpr float FULL_STOP_SPEED_ERROR_TOLERANCE = 0.01F;  // m
 
     static constexpr uint8_t DEFAULT_SENSOR_ADDRESS = 0x68;
+    static constexpr uint8_t SENSOR_1_ADDRESS = 0x68;
+    static constexpr uint8_t SENSOR_2_ADDRESS = 0x69;
+    static constexpr uint8_t SENSOR_3_ADDRESS = 0x70;
 
-    using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>>;
+    using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>,
+                                      RoverCan2::Publisher<RoverCan2::Msgs::ScienceInfo>>;
 
   public:
     ScienceDevice() = default;
@@ -53,8 +58,8 @@ class ScienceDevice
         }
 
         // Serial.print("CO2: ");
-        // Serial.println(this->_sense1.getCO2());
-        // Serial.print("Error: ");
+        // Serial.print(this->_sense1.getCO2());
+        // Serial.print(" \tError: ");
         // Serial.println(this->_sense1.getErrorStatus());
 
         this->_linAct.update();
@@ -126,11 +131,22 @@ class ScienceDevice
         // {
         //     this->_sense1.changeAddress(0x69);
         // }
+
+        if (_timerCanSend.isReady())
+        {
+            RoverCan2::Msgs::ScienceInfo infoMsg;
+
+            infoMsg.data().sensor_1 = this->_sense1.getCO2();
+            infoMsg.data().sensor_2 = this->_sense2.getCO2();
+            infoMsg.data().sensor_3 = this->_sense3.getCO2();
+
+            this->_canDevice.sendMsg(infoMsg);
+        }
     }
 
     DeviceT& getUnderlyingCanDevice()
     {
-        return this->_scienceCanDevice;
+        return this->_canDevice;
     }
 
   private:
@@ -164,14 +180,17 @@ class ScienceDevice
     float _beakPos = false;
     bool _carrouselOn = false;
 
-    K30 _sense1 = K30(Wire, DEFAULT_SENSOR_ADDRESS);
+    K30 _sense1 = K30(Wire, SENSOR_1_ADDRESS);
+    K30 _sense2 = K30(Wire, SENSOR_2_ADDRESS);
+    K30 _sense3 = K30(Wire, SENSOR_3_ADDRESS);
 
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
 
-    DeviceT _scienceCanDevice
+    DeviceT _canDevice
         = DeviceT(RoverCan2::Constant::eDeviceId::SCIENCE,
-                  RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>(*this, &ScienceDevice::CB_ScienceCmd));
+                  RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>(*this, &ScienceDevice::CB_ScienceCmd),
+                  RoverCan2::Publisher<RoverCan2::Msgs::ScienceInfo>());
 
     VALIDATE_CONCEPT(RoverObject, ScienceDevice);
 };
