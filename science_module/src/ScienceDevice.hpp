@@ -1,13 +1,15 @@
 #ifndef SCIENCE_DEVICE_HPP
 #define SCIENCE_DEVICE_HPP
 
+#include "config.hpp"
+
 #include "LinActuator.hpp"
 #include "ServoController.hpp"
+
 #include "rover_lib2/sensors/K30.hpp"
-#include "config.hpp"
-#include "rover_can2/device.hpp"
 #include "rover_lib2/sensors/push_button.hpp"
 
+#include "rover_can2/device.hpp"
 #include "rover_can2/msgs/science_cmd.hpp"
 #include "rover_can2/rover_can2.hpp"
 
@@ -26,9 +28,9 @@ class ScienceDevice
     static constexpr float CALIB_POSITION = 0.0F;
 
     static constexpr float FULL_STOP_SPEED_ERROR_TOLERANCE = 0.01F;  // m
-    
+
     static constexpr uint8_t DEFAULT_SENSOR_ADDRESS = 0x68;
-    
+
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>>;
 
   public:
@@ -50,8 +52,8 @@ class ScienceDevice
             return;
         }
 
-        Serial.print("CO2: ");
-        Serial.println(this->_sense1.getCO2());
+        // Serial.print("CO2: ");
+        // Serial.println(this->_sense1.getCO2());
         // Serial.print("Error: ");
         // Serial.println(this->_sense1.getErrorStatus());
 
@@ -66,7 +68,7 @@ class ScienceDevice
         {
             this->_linAct.setSpeed(-JOG_SPEED);
         }
-        else if (this->_canWatchdog.isOk() && !IN_ERROR(_linActTargetSpeed, 0.001F, 0.0F))
+        else if (this->_canWatchdog.isOk() && !IN_ERROR(_linActTargetSpeed, FULL_STOP_SPEED_ERROR_TOLERANCE, 0.0F))
         {
             this->_linAct.setSpeed(_linActTargetSpeed);
         }
@@ -98,7 +100,7 @@ class ScienceDevice
             this->_wasCarrouselOn = false;
         }
 
-        if (_pbVacuum.isClicked())
+        if (_pbBeak.isClicked())
         {
             if (this->_currentBeakPosition >= 180)
             {
@@ -152,7 +154,7 @@ class ScienceDevice
     PushButton _pbDown = {PIN_PB_DOWN};
     PushButton _pbGrinder = {PIN_PB_GRINDER};
     PushButton _pbCarroussel = {PIN_PB_CARROUSSEL};
-    PushButton _pbVacuum = {PIN_PB_VACUUM};
+    PushButton _pbBeak = {PIN_PB_VACUUM};
     PushButton _pbSpare = {PIN_PB_SPARE};
 
     IO::DigitalOutput _grinder = IO::DigitalOutput(PIN_GRINDER_PWM);
@@ -165,7 +167,6 @@ class ScienceDevice
     K30 _sense1 = K30(Wire, DEFAULT_SENSOR_ADDRESS);
 
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
-
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
 
     DeviceT _scienceCanDevice
