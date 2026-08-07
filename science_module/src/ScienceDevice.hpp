@@ -136,6 +136,7 @@ class ScienceDevice
         {
             RoverCan2::Msgs::ScienceInfo infoMsg;
 
+            infoMsg.data().sample_index = this->_sampleIndex++;
             infoMsg.data().sensor_1 = this->_sense1.getCO2();
             infoMsg.data().sensor_2 = this->_sense2.getCO2();
             infoMsg.data().sensor_3 = this->_sense3.getCO2();
@@ -183,6 +184,7 @@ class ScienceDevice
     K30 _sense1 = K30(Wire, SENSOR_1_ADDRESS);
     K30 _sense2 = K30(Wire, SENSOR_2_ADDRESS);
     K30 _sense3 = K30(Wire, SENSOR_3_ADDRESS);
+    uint32_t _sampleIndex = 0U;
 
     Watchdog<uint64_t, &Time::millis> _canWatchdog = {CAN_WATCHDOG_VALIDITY_PERIOD};
     LoopTimer<uint64_t, &Time::millis> _timerCanSend = {CAN_SEND_PERIOD_MS};
