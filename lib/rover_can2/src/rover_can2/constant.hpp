@@ -126,7 +126,7 @@ namespace RoverCan2::Constant
         eMsgId::PTZ_CONFIG,        eMsgId::ARM_JOINT_CMD,
         eMsgId::ARM_JOINT_STATUS,  eMsgId::ARM_JOINT_ADVANCED_STATUS,
         eMsgId::ARM_JOINT_CONFIG,  eMsgId::SENSOR_BOX,
-        eMsgId::SCIENCE_CMD,       eMsgID::SCIENCE_INFO
+        eMsgId::SCIENCE_CMD,       eMsgId::SCIENCE_INFO
     };
 
     /**
