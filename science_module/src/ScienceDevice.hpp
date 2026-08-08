@@ -36,6 +36,9 @@ class ScienceDevice
     static constexpr uint8_t SENSOR_3_ADDRESS = 0x70;
     static constexpr uint8_t ALL_SENSOR_ADDRESS = 0x7F;
 
+    static constexpr uint16_t WET_VALUE = 3000;
+    static constexpr uint16_t DRY_VALUE = 1000;
+
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>,
                                       RoverCan2::Publisher<RoverCan2::Msgs::ScienceInfo>>;
 
@@ -117,7 +120,7 @@ class ScienceDevice
                 this->_currentBeakPosition += 5.0F;
             }
 
-            this->_servoCtrl.setPosition(this->_currentBeakPosition, eServoType::BEAK);
+            this->_servoCtrl.setPosition(this->_currentBeakPosition * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
         }
         else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
         {
@@ -128,11 +131,6 @@ class ScienceDevice
             this->_servoCtrl.setPosition(0.0F, eServoType::BEAK);
         }
 
-        // if (_pbSpare.isClicked())
-        // {
-        //     this->_sense1.changeAddress(0x69);
-        // }
-
         if (_timerCanSend.isReady())
         {
             RoverCan2::Msgs::ScienceInfo infoMsg;
@@ -141,6 +139,7 @@ class ScienceDevice
             infoMsg.data().sensor_1 = this->_sense1.getCO2();
             infoMsg.data().sensor_2 = this->_sense2.getCO2();
             infoMsg.data().sensor_3 = this->_sense3.getCO2();
+            infoMsg.data().humidity = readAveraged(PIN_SERVO_2);
 
             this->_canDevice.sendMsg(infoMsg);
         }
@@ -161,6 +160,24 @@ class ScienceDevice
         this->_carrouselOn = msg_.getData().carrousel_on;
     }
 
+    int readAveraged(int pin, int samples = 16)
+    {
+        long sum = 0;
+        for (int i = 0; i < samples; i++)
+        {
+            sum += analogRead(pin);
+            delayMicroseconds(200);
+        }
+        return sum / samples;
+    }
+
+    float readMoisturePercent(int pin)
+    {
+        int raw = readAveraged(pin);
+        raw = constrain(raw, WET_VALUE, DRY_VALUE);
+        return 100.0 * (DRY_VALUE - raw) / (float)(DRY_VALUE - WET_VALUE);
+    }
+
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};
     LinearAct _linAct;
 
@@ -176,6 +193,7 @@ class ScienceDevice
     PushButton _pbSpare = {PIN_PB_SPARE};
 
     IO::DigitalOutput _grinder = IO::DigitalOutput(PIN_GRINDER_PWM);
+    // IO::AnalogInput _humiditySensor = IO::DigitalInput(PIN_SERVO_2);
 
     float _linActTargetSpeed = 0.0F;
     bool _grinderOn = false;
