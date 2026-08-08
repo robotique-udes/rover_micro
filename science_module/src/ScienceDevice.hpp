@@ -34,6 +34,7 @@ class ScienceDevice
     static constexpr uint8_t SENSOR_1_ADDRESS = 0x68;
     static constexpr uint8_t SENSOR_2_ADDRESS = 0x69;
     static constexpr uint8_t SENSOR_3_ADDRESS = 0x70;
+    static constexpr uint8_t ALL_SENSOR_ADDRESS = 0x7F;
 
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>,
                                       RoverCan2::Publisher<RoverCan2::Msgs::ScienceInfo>>;
