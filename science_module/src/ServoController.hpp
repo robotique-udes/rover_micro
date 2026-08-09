@@ -20,8 +20,8 @@ class ServoController
         this->_servoBeak.init();
         this->_servoCarrousel.init();
 
-        this->_servoBeak.setPosition(this->_beakServoConfig.alignedPosition);
-        this->_servoCarrousel.setPosition(this->_carrouselServoConfig.alignedPosition);
+        this->_servoBeak.setPosition(1.06F);
+        this->_servoCarrousel.setPosition(0.0F);
     };
 
     void update()

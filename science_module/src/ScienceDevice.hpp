@@ -13,7 +13,6 @@
 #include "rover_can2/msgs/science_cmd.hpp"
 #include "rover_can2/msgs/science_info.hpp"
 #include "rover_can2/rover_can2.hpp"
-#include "WiFiScienceLogger.hpp"
 
 DEFINE_LOG_NODE(ScienceDevice, Logger::eNodeState::OFF);
 
@@ -40,23 +39,35 @@ class ScienceDevice
     static constexpr uint16_t WET_VALUE = 3000;
     static constexpr uint16_t DRY_VALUE = 1000;
 
+    static constexpr float HOME_POS_RAD = 0.85F;
+    static constexpr float POUR_POS_RAD = 1.9F;
+    static constexpr float DUMP_POS_RAD = std::numbers::pi_v<float>;
+
+    enum class eServoPos : uint8_t
+    {
+        HOME = 0,
+        POUR,
+        DUMP,
+    };
+
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>,
                                       RoverCan2::Publisher<RoverCan2::Msgs::ScienceInfo>>;
 
   public:
     ScienceDevice() = default;
-    WiFiScienceLogger wifiLogger;
     LoopTimer<uint64_t, &Time::millis> timer1Hz = {1000ULL};
     void init()
     {
-        Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
+        Wire.setPins(PIN_I2C_SDA, PIN_I2C_SCL);
+        Wire.begin();
         this->_linAct.init();
         this->_linAct.setSpeed(FULL_STOP_SPEED);
         this->_servoCtrl.init();
         this->_sense1.init();
         this->_sense2.init();
         this->_sense3.init();
-        this->wifiLogger.init(true);
+
+        this->_grinder.write(IO::eIOState::LOW_);
     }
 
     void update()
@@ -73,15 +84,6 @@ class ScienceDevice
 
         this->_linAct.update();
         this->_servoCtrl.update();
-        this->wifiLogger.update();
-        if(this->timer1Hz.isReady())
-        {
-            this->wifiLogger.logSample(
-                this->_sampleIndex,
-                this->_sense1.getCO2(), 
-                this->_sense2.getCO2(), 
-                this->_sense3.getCO2());
-        }
         if (_pbUp.isClicked())
         {
             this->_linAct.setSpeed(JOG_SPEED);
@@ -124,16 +126,11 @@ class ScienceDevice
 
         if (_pbBeak.isClicked())
         {
-            if (this->_currentBeakPosition >= 180.0F)
-            {
-                this->_currentBeakPosition = 0.0F;
-            }
-            else
-            {
-                this->_currentBeakPosition += 5.0F;
-            }
-
-            this->_servoCtrl.setPosition(this->_currentBeakPosition * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
+            this->_servoCtrl.setPosition(POUR_POS_RAD, eServoType::BEAK);
+        }
+        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::HOME)
+        {
+            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
         }
         else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
         {
@@ -141,7 +138,7 @@ class ScienceDevice
         }
         else
         {
-            this->_servoCtrl.setPosition(0.0F, eServoType::BEAK);
+            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
         }
 
         if (_timerCanSend.isReady())
