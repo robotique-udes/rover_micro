@@ -67,11 +67,6 @@ class MorseDevice
   private:
     void CB_morseCodeStream(const RoverCan2::Msgs::MorseCode& msg_)
     {
-        if (_morsePlayer.isBusy())
-        {
-            return;
-        }
-
         const bool start = msg_.getData().start;
         const uint8_t length = msg_.getData().msg_length;
         const uint8_t index = msg_.getData().index;
@@ -82,9 +77,15 @@ class MorseDevice
         {
             resetMorseState();
 
+            if (_morsePlayer.isBusy())
+            {
+                LOG_DEBUG(Logger::Nodes::MorseDevice, "Player busy, ignoring new morse message");
+                return;
+            }
+
             if (length > MORSE_MAX_LEN)
             {
-                LOG_WARN(Logger::Nodes::MorseDevice,
+                LOG_DEBUG(Logger::Nodes::MorseDevice,
                          "Morse message length %u exceeds buffer of %u, dropping",
                          length,
                          MORSE_MAX_LEN);
@@ -97,7 +98,7 @@ class MorseDevice
 
         if (!_morseInProgress)
         {
-            LOG_WARN(Logger::Nodes::MorseDevice, "Morse frame received with no message in progress, ignoring");
+            LOG_DEBUG(Logger::Nodes::MorseDevice, "Morse frame received with no message in progress, ignoring");
             return;
         }
 
@@ -133,7 +134,10 @@ class MorseDevice
 
         if (_morseExpectedIndex == _morseExpectedLength)
         {
-            _morsePlayer.start(_morseBuffer, _morseExpectedLength);
+            if (!_morsePlayer.isBusy())
+            {
+                _morsePlayer.start(_morseBuffer, _morseExpectedLength);
+            }
             resetMorseState();
         }
     }
