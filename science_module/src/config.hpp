@@ -56,6 +56,12 @@ constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_48;
 constexpr gpio_num_t PIN_I2C_SDA = GPIO_NUM_39;
 constexpr gpio_num_t PIN_I2C_SCL = GPIO_NUM_40;
 
+constexpr float BEAK_MAX_POS = std::numbers::pi_v<float>;
+constexpr float BEAK_MIN_POS = 0.175F;
+constexpr float CARROUSEL_MAX_POS = std::numbers::pi_v<float> * 2 * 5;
+constexpr float CARROUSEL_MIN_POS = 0.175F;
+constexpr float SERVO_MAX_SPEED = 2.41F;
+
 enum class eServoType
 {
     BEAK,
@@ -71,10 +77,10 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
             .frequency = 50.0F,
             .minMs = 500.0F,
             .maxMs = 2500.0F,
-            .minPosition = 0.0F,
-            .maxPosition = std::numbers::pi_v<float>,
-            .maxSpeed = 2.41F,
-            .alignedPosition = (std::numbers::pi_v<float> - 0.0F) / 5.0F,  // (maxPos - minPos) / 5.0F
+            .minPosition = BEAK_MIN_POS,
+            .maxPosition = BEAK_MAX_POS,
+            .maxSpeed = SERVO_MAX_SPEED,
+            .alignedPosition = BEAK_MIN_POS,
         };
     }
     else if constexpr (servoType_ == eServoType::CARROUSEL)
@@ -83,10 +89,10 @@ constexpr Actuators::ServoT::sTimingConfig GET_SERVO_TIMING_CONFIG(void)
             .frequency = 50.0F,
             .minMs = 500.0F,
             .maxMs = 2500.0F,
-            .minPosition = 0.0F,
-            .maxPosition = std::numbers::pi_v<float> * 2.0F * 5.0f,
-            .maxSpeed = 2.41F,
-            .alignedPosition = (std::numbers::pi_v<float> * 2.0F * 5.0f - 0.0F) / 5.0F,  // (maxPos - minPos) / 5.0F
+            .minPosition = CARROUSEL_MIN_POS,
+            .maxPosition = CARROUSEL_MAX_POS,
+            .maxSpeed = SERVO_MAX_SPEED,
+            .alignedPosition = CARROUSEL_MIN_POS,
         };
     }
     else

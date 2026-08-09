@@ -66,12 +66,6 @@ class ServoController
         this->setPosition(this->_currentCarrouselPosition, eServoType::CARROUSEL);
     }
 
-    void setBeakPositionFromCAN(float pos_)
-    {
-        float position = MAP(pos_, 0.0F, 1.0F, _beakServoConfig.minPosition, _beakServoConfig.maxPosition);
-        this->setPosition(position, eServoType::BEAK);
-    }
-
   private:
     static constexpr Actuators::ServoT::sTimingConfig _beakServoConfig = GET_SERVO_TIMING_CONFIG<eServoType::BEAK>();
     static constexpr Actuators::ServoT::sTimingConfig _carrouselServoConfig = GET_SERVO_TIMING_CONFIG<eServoType::CARROUSEL>();

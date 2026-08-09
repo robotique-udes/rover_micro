@@ -111,20 +111,20 @@ class ScienceDevice
 
         if (_pbBeak.isClicked())
         {
-            if (this->_currentBeakPosition >= 180)
-            {
-                this->_currentBeakPosition = 0.0F;
-            }
-            else
-            {
-                this->_currentBeakPosition += 5.0F;
-            }
+            // if (this->_currentBeakPosition >= 180)
+            // {
+            //     this->_currentBeakPosition = 0.0F;
+            // }
+            // else
+            // {
+            //     this->_currentBeakPosition += 5.0F;
+            // }
 
-            this->_servoCtrl.setPosition(this->_currentBeakPosition * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
+            // this->_servoCtrl.setPosition(this->_currentBeakPosition * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
         }
         else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
         {
-            this->_servoCtrl.setBeakPositionFromCAN(this->_beakPos);
+            this->_servoCtrl.setPosition(this->_beakPos, eServoType::BEAK);
         }
         else
         {
@@ -139,7 +139,8 @@ class ScienceDevice
             infoMsg.data().sensor_1 = this->_sense1.getCO2();
             infoMsg.data().sensor_2 = this->_sense2.getCO2();
             infoMsg.data().sensor_3 = this->_sense3.getCO2();
-            infoMsg.data().humidity = readAveraged(PIN_SERVO_2);
+            // infoMsg.data().humidity = readAveraged(PIN_SERVO_2);
+            infoMsg.data().humidity = 0;
 
             this->_canDevice.sendMsg(infoMsg);
         }
@@ -153,6 +154,7 @@ class ScienceDevice
   private:
     void CB_ScienceCmd(const RoverCan2::Msgs::ScienceCmd& msg_)
     {
+        LOG_INFO(Logger::Nodes::ScienceDevice, "Here");
         this->_canWatchdog.reset();
         this->_linActTargetSpeed = msg_.getData().lin_act_speed;
         this->_grinderOn = msg_.getData().grinder_on;
