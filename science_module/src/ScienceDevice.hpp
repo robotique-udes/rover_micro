@@ -13,8 +13,9 @@
 #include "rover_can2/msgs/science_cmd.hpp"
 #include "rover_can2/msgs/science_info.hpp"
 #include "rover_can2/rover_can2.hpp"
+#include "WiFiScienceLogger.hpp"
 
-DEFINE_LOG_NODE(ScienceDevice, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(ScienceDevice, Logger::eNodeState::OFF);
 
 class ScienceDevice
 {
@@ -39,23 +40,13 @@ class ScienceDevice
     static constexpr uint16_t WET_VALUE = 3000;
     static constexpr uint16_t DRY_VALUE = 1000;
 
-    static constexpr float HOME_POS_RAD = 1.06F;
-    static constexpr float POUR_POS_RAD = 1.9F;
-    static constexpr float DUMP_POS_RAD = std::numbers::pi_v<float>;
-
-    enum class eServoPos : uint8_t
-    {
-        HOME = 0,
-        POUR,
-        DUMP,
-    };
-
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>,
                                       RoverCan2::Publisher<RoverCan2::Msgs::ScienceInfo>>;
 
   public:
     ScienceDevice() = default;
-
+    WiFiScienceLogger wifiLogger;
+    LoopTimer<uint64_t, &Time::millis> timer1Hz = {1000ULL};
     void init()
     {
         Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
@@ -63,8 +54,9 @@ class ScienceDevice
         this->_linAct.setSpeed(FULL_STOP_SPEED);
         this->_servoCtrl.init();
         this->_sense1.init();
-
-        this->_grinder.write(IO::eIOState::LOW_);
+        this->_sense2.init();
+        this->_sense3.init();
+        this->wifiLogger.init(true);
     }
 
     void update()
@@ -81,7 +73,15 @@ class ScienceDevice
 
         this->_linAct.update();
         this->_servoCtrl.update();
-
+        this->wifiLogger.update();
+        if(this->timer1Hz.isReady())
+        {
+            this->wifiLogger.logSample(
+                this->_sampleIndex,
+                this->_sense1.getCO2(), 
+                this->_sense2.getCO2(), 
+                this->_sense3.getCO2());
+        }
         if (_pbUp.isClicked())
         {
             this->_linAct.setSpeed(JOG_SPEED);
@@ -99,11 +99,7 @@ class ScienceDevice
             this->_linAct.setSpeed(FULL_STOP_SPEED);
         }
 
-        if (this->_canWatchdog.isOk() && this->_grinderOn)
-        {
-            this->_grinder.write(IO::eIOState::HIGH_);
-        }
-        else if (this->_pbGrinder.isClicked())
+        if (this->_pbGrinder.isClicked() || (this->_canWatchdog.isOk() && this->_grinderOn))
         {
             this->_grinder.write(IO::eIOState::HIGH_);
         }
@@ -112,13 +108,13 @@ class ScienceDevice
             this->_grinder.write(IO::eIOState::LOW_);
         }
 
-        if (this->_pbCarroussel.isClicked() || (this->_canWatchdog.isOk() && this->_carrouselOn))
+        bool isCarrouselActive = this->_pbCarroussel.isClicked() || (this->_canWatchdog.isOk() && this->_carrouselOn);
+        if (isCarrouselActive)
         {
-            bool isOn = this->_pbCarroussel.isClicked() || this->_carrouselOn;
-            if (isOn != _wasCarrouselOn)
+            if (!this->_wasCarrouselOn)
             {
                 this->_servoCtrl.nextPosCarrousel();
-                this->_wasCarrouselOn = !this->_wasCarrouselOn;
+                this->_wasCarrouselOn = true;
             }
         }
         else
@@ -128,19 +124,24 @@ class ScienceDevice
 
         if (_pbBeak.isClicked())
         {
-            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
+            if (this->_currentBeakPosition >= 180.0F)
+            {
+                this->_currentBeakPosition = 0.0F;
+            }
+            else
+            {
+                this->_currentBeakPosition += 5.0F;
+            }
+
+            this->_servoCtrl.setPosition(this->_currentBeakPosition * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
         }
-        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::HOME)
+        else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
         {
-            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
+            this->_servoCtrl.setPosition(this->_beakPos * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
         }
-        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::POUR)
+        else
         {
-            this->_servoCtrl.setPosition(POUR_POS_RAD, eServoType::BEAK);
-        }
-        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::DUMP)
-        {
-            this->_servoCtrl.setPosition(DUMP_POS_RAD, eServoType::BEAK);
+            this->_servoCtrl.setPosition(0.0F, eServoType::BEAK);
         }
 
         if (_timerCanSend.isReady())
@@ -166,6 +167,7 @@ class ScienceDevice
   private:
     void CB_ScienceCmd(const RoverCan2::Msgs::ScienceCmd& msg_)
     {
+        LOG_INFO(Logger::Nodes::ScienceDevice, "Here");
         this->_canWatchdog.reset();
         this->_linActTargetSpeed = msg_.getData().lin_act_speed;
         this->_grinderOn = msg_.getData().grinder_on;
@@ -198,19 +200,19 @@ class ScienceDevice
     float _currentBeakPosition = 0.0F;
     bool _wasCarrouselOn = false;
 
-    PushButton _pbUp = {PIN_PB_UP};
-    PushButton _pbDown = {PIN_PB_DOWN};
-    PushButton _pbGrinder = {PIN_PB_GRINDER};
-    PushButton _pbCarroussel = {PIN_PB_CARROUSSEL};
-    PushButton _pbBeak = {PIN_PB_VACUUM};
-    PushButton _pbSpare = {PIN_PB_SPARE};
+    PushButton _pbUp = {PIN_PB_UP, PushButton::ePullMode::PULL_UP, GPIO_PULLUP_ONLY};
+    PushButton _pbDown = {PIN_PB_DOWN, PushButton::ePullMode::PULL_UP, GPIO_PULLUP_ONLY};
+    PushButton _pbGrinder = {PIN_PB_GRINDER, PushButton::ePullMode::PULL_UP, GPIO_PULLUP_ONLY};
+    PushButton _pbCarroussel = {PIN_PB_CARROUSSEL, PushButton::ePullMode::PULL_UP, GPIO_PULLUP_ONLY};
+    PushButton _pbBeak = {PIN_PB_VACUUM, PushButton::ePullMode::PULL_UP, GPIO_PULLUP_ONLY};
+    PushButton _pbSpare = {PIN_PB_SPARE, PushButton::ePullMode::PULL_UP, GPIO_PULLUP_ONLY};
 
     IO::DigitalOutput _grinder = IO::DigitalOutput(PIN_GRINDER_PWM);
     // IO::AnalogInput _humiditySensor = IO::DigitalInput(PIN_SERVO_2);
 
     float _linActTargetSpeed = 0.0F;
     bool _grinderOn = false;
-    uint8_t _beakPos = false;
+    float _beakPos = false;
     bool _carrouselOn = false;
 
     K30 _sense1 = K30(Wire, SENSOR_1_ADDRESS);
