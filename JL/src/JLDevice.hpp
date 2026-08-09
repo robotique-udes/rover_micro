@@ -29,7 +29,7 @@ class JLDevice
     static constexpr uint64_t CAN_RECV_WATCHDOG_PERIOD = static_cast<uint64_t>(2.0F * 1'000.0F / CAN_RECV_FREQ);
 
     static constexpr float J1_MIN_JOINT_LIMIT = -0.3F;  // m
-    static constexpr float J1_MAX_JOINT_LIMIT = 0.0F;    // m
+    static constexpr float J1_MAX_JOINT_LIMIT = 0.0F;   // m
     static_assert(J1_MIN_JOINT_LIMIT <= J1_MAX_JOINT_LIMIT);
 
     using CanDeviceT = RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::ArmJointStatus>,
