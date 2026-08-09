@@ -102,12 +102,10 @@ class ScienceDevice
         if (this->_canWatchdog.isOk() && this->_grinderOn)
         {
             this->_grinder.write(IO::eIOState::HIGH_);
-            Serial.println("CAN true");
         }
         else if (this->_pbGrinder.isClicked())
         {
             this->_grinder.write(IO::eIOState::HIGH_);
-            Serial.println("PB pressed");
         }
         else
         {
