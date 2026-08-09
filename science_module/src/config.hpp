@@ -26,8 +26,8 @@
 constexpr float ALIM_VOLTAGE = 25.2F;
 constexpr float MAX_MOTOR_VOLTAGE = 18.0F;
 
-constexpr gpio_num_t PIN_PB_UP = GPIO_NUM_14;
-constexpr gpio_num_t PIN_PB_DOWN = GPIO_NUM_21;
+constexpr gpio_num_t PIN_PB_UP = GPIO_NUM_21;
+constexpr gpio_num_t PIN_PB_DOWN = GPIO_NUM_14;
 constexpr gpio_num_t PIN_PB_GRINDER = GPIO_NUM_11;
 constexpr gpio_num_t PIN_PB_CARROUSSEL = GPIO_NUM_12;
 constexpr gpio_num_t PIN_PB_SPARE = GPIO_NUM_13;
@@ -50,16 +50,16 @@ constexpr gpio_num_t PIN_SERVO_3 = GPIO_NUM_17;
 constexpr gpio_num_t PIN_GRINDER_PWM = GPIO_NUM_10;
 
 constexpr gpio_num_t PIN_CAN_LED = GPIO_NUM_5;
-constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_47;
-constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_48;
+constexpr gpio_num_t PIN_CAN_RX = GPIO_NUM_48;
+constexpr gpio_num_t PIN_CAN_TX = GPIO_NUM_47;
 
 constexpr gpio_num_t PIN_I2C_SDA = GPIO_NUM_39;
 constexpr gpio_num_t PIN_I2C_SCL = GPIO_NUM_40;
 
 constexpr float BEAK_MAX_POS = std::numbers::pi_v<float>;
-constexpr float BEAK_MIN_POS = 0.175F;
-constexpr float CARROUSEL_MAX_POS = std::numbers::pi_v<float> * 2 * 5;
-constexpr float CARROUSEL_MIN_POS = 0.175F;
+constexpr float BEAK_MIN_POS = 0.0F;
+constexpr float CARROUSEL_MAX_POS = std::numbers::pi_v<float> * 2.0F * 5.0F;
+constexpr float CARROUSEL_MIN_POS = 0.0F;
 constexpr float SERVO_MAX_SPEED = 2.41F;
 
 enum class eServoType

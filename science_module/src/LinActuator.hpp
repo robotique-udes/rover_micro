@@ -53,10 +53,9 @@ class LinearAct
   private:
     void runningUpdateLoop()
     {
-        _linAct.update();
         float speedCmd = _linActSpeedGoal;
-
         _linAct.setSpeed(speedCmd);
+        _linAct.update();
     }
 
     LoopTimer<uint64_t, &Time::micros> _controlLoopTimer = {CONTROL_LOOP_PERIOD_US};

@@ -11,7 +11,7 @@
 
 class ServoController
 {
-    static constexpr float CARROUSEL_STEP_INCREMENT_RAD = 45.0F * static_cast<float>(DEG_TO_RAD);
+    static constexpr float CARROUSEL_STEP_INCREMENT_RAD = 90.0F * static_cast<float>(DEG_TO_RAD);
     static constexpr uint64_t LOOP_PERIOD_MS = 50ULL;
 
   public:

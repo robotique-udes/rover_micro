@@ -14,7 +14,7 @@
 #include "rover_can2/msgs/science_info.hpp"
 #include "rover_can2/rover_can2.hpp"
 
-DEFINE_LOG_NODE(ScienceDevice, Logger::eNodeState::OFF);
+DEFINE_LOG_NODE(ScienceDevice, Logger::eNodeState::ON);
 
 class ScienceDevice
 {
@@ -39,6 +39,17 @@ class ScienceDevice
     static constexpr uint16_t WET_VALUE = 3000;
     static constexpr uint16_t DRY_VALUE = 1000;
 
+    static constexpr float HOME_POS_RAD = 1.06F;
+    static constexpr float POUR_POS_RAD = 1.9F;
+    static constexpr float DUMP_POS_RAD = std::numbers::pi_v<float>;
+
+    enum class eServoPos : uint8_t
+    {
+        HOME = 0,
+        POUR,
+        DUMP,
+    };
+
     using DeviceT = RoverCan2::Device<RoverCan2::SubscriberMember<RoverCan2::Msgs::ScienceCmd, ScienceDevice>,
                                       RoverCan2::Publisher<RoverCan2::Msgs::ScienceInfo>>;
 
@@ -52,6 +63,8 @@ class ScienceDevice
         this->_linAct.setSpeed(FULL_STOP_SPEED);
         this->_servoCtrl.init();
         this->_sense1.init();
+
+        this->_grinder.write(IO::eIOState::LOW_);
     }
 
     void update()
@@ -86,9 +99,15 @@ class ScienceDevice
             this->_linAct.setSpeed(FULL_STOP_SPEED);
         }
 
-        if (this->_pbGrinder.isClicked() || (this->_canWatchdog.isOk() && this->_grinderOn))
+        if (this->_canWatchdog.isOk() && this->_grinderOn)
         {
             this->_grinder.write(IO::eIOState::HIGH_);
+            Serial.println("CAN true");
+        }
+        else if (this->_pbGrinder.isClicked())
+        {
+            this->_grinder.write(IO::eIOState::HIGH_);
+            Serial.println("PB pressed");
         }
         else
         {
@@ -111,24 +130,19 @@ class ScienceDevice
 
         if (_pbBeak.isClicked())
         {
-            // if (this->_currentBeakPosition >= 180)
-            // {
-            //     this->_currentBeakPosition = 0.0F;
-            // }
-            // else
-            // {
-            //     this->_currentBeakPosition += 5.0F;
-            // }
-
-            // this->_servoCtrl.setPosition(this->_currentBeakPosition * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
+            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
         }
-        else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
+        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::HOME)
         {
-            this->_servoCtrl.setPosition(this->_beakPos, eServoType::BEAK);
+            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
         }
-        else
+        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::POUR)
         {
-            this->_servoCtrl.setPosition(0.0F, eServoType::BEAK);
+            this->_servoCtrl.setPosition(POUR_POS_RAD, eServoType::BEAK);
+        }
+        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::DUMP)
+        {
+            this->_servoCtrl.setPosition(DUMP_POS_RAD, eServoType::BEAK);
         }
 
         if (_timerCanSend.isReady())
@@ -154,7 +168,6 @@ class ScienceDevice
   private:
     void CB_ScienceCmd(const RoverCan2::Msgs::ScienceCmd& msg_)
     {
-        LOG_INFO(Logger::Nodes::ScienceDevice, "Here");
         this->_canWatchdog.reset();
         this->_linActTargetSpeed = msg_.getData().lin_act_speed;
         this->_grinderOn = msg_.getData().grinder_on;
@@ -199,7 +212,7 @@ class ScienceDevice
 
     float _linActTargetSpeed = 0.0F;
     bool _grinderOn = false;
-    float _beakPos = false;
+    uint8_t _beakPos = false;
     bool _carrouselOn = false;
 
     K30 _sense1 = K30(Wire, SENSOR_1_ADDRESS);
