@@ -125,13 +125,13 @@ class ScienceDevice
         {
             this->_servoCtrl.setPosition(POUR_POS_RAD, eServoType::BEAK);
         }
-        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::HOME)
+        else if (this->_canWatchdog.isOk() && _beakPos == eServoPos::POUR)
         {
-            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
+            this->_servoCtrl.setPosition(POUR_POS_RAD, eServoType::BEAK);
         }
-        else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
+        else if (this->_canWatchdog.isOk() && _beakPos == eServoPos::DUMP)
         {
-            this->_servoCtrl.setPosition(this->_beakPos * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
+            this->_servoCtrl.setPosition(DUMP_POS_RAD, eServoType::BEAK);
         }
         else
         {
@@ -164,7 +164,7 @@ class ScienceDevice
         this->_canWatchdog.reset();
         this->_linActTargetSpeed = msg_.getData().lin_act_speed;
         this->_grinderOn = msg_.getData().grinder_on;
-        this->_beakPos = msg_.getData().beak_pos;
+        this->_beakPos = static_cast<eServoPos>(msg_.getData().beak_pos);
         this->_carrouselOn = msg_.getData().carrousel_on;
     }
 
@@ -205,7 +205,7 @@ class ScienceDevice
 
     float _linActTargetSpeed = 0.0F;
     bool _grinderOn = false;
-    float _beakPos = 0.0F;
+    eServoPos _beakPos = eServoPos::HOME;
     bool _carrouselOn = false;
 
     K30 _sense1 = K30(Wire, SENSOR_1_ADDRESS);
