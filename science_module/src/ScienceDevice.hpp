@@ -2,6 +2,8 @@
 #define SCIENCE_DEVICE_HPP
 
 #include "config.hpp"
+#include <Arduino.h>
+#include <algorithm>
 
 #include "LinActuator.hpp"
 #include "ServoController.hpp"
@@ -76,11 +78,6 @@ class ScienceDevice
         {
             return;
         }
-
-        // Serial.print("CO2: ");
-        // Serial.print(this->_sense1.getCO2());
-        // Serial.print(" \tError: ");
-        // Serial.println(this->_sense1.getErrorStatus());
 
         this->_linAct.update();
         this->_servoCtrl.update();
@@ -164,7 +161,6 @@ class ScienceDevice
   private:
     void CB_ScienceCmd(const RoverCan2::Msgs::ScienceCmd& msg_)
     {
-        LOG_INFO(Logger::Nodes::ScienceDevice, "Here");
         this->_canWatchdog.reset();
         this->_linActTargetSpeed = msg_.getData().lin_act_speed;
         this->_grinderOn = msg_.getData().grinder_on;
@@ -186,7 +182,7 @@ class ScienceDevice
     float readMoisturePercent(int pin)
     {
         int raw = readAveraged(pin);
-        raw = constrain(raw, WET_VALUE, DRY_VALUE);
+        raw = constrain(raw, DRY_VALUE, WET_VALUE);
         return 100.0 * (DRY_VALUE - raw) / (float)(DRY_VALUE - WET_VALUE);
     }
 
@@ -209,7 +205,7 @@ class ScienceDevice
 
     float _linActTargetSpeed = 0.0F;
     bool _grinderOn = false;
-    float _beakPos = false;
+    float _beakPos = 0.0F;
     bool _carrouselOn = false;
 
     K30 _sense1 = K30(Wire, SENSOR_1_ADDRESS);
@@ -228,4 +224,4 @@ class ScienceDevice
     VALIDATE_CONCEPT(RoverObject, ScienceDevice);
 };
 
-#endif  // J34_DEVICE_HPP
+#endif  // SCIENCE_DEVICE_HPP
