@@ -1,5 +1,5 @@
-#ifndef SCIENCE_INFO_HPP
-#define SCIENCE_INFO_HPP
+#ifndef ROVER_CAN2_MSGS_SCIENCE_INFO_HPP
+#define ROVER_CAN2_MSGS_SCIENCE_INFO_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
@@ -207,4 +207,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // SCIENCE_INFO_HPP
+#endif  // ROVER_CAN2_MSGS_SCIENCE_INFO_HPP
