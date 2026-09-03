@@ -86,9 +86,9 @@ class MorseDevice
             if (length > MORSE_MAX_LEN)
             {
                 LOG_DEBUG(Logger::Nodes::MorseDevice,
-                         "Morse message length %u exceeds buffer of %u, dropping",
-                         length,
-                         MORSE_MAX_LEN);
+                          "Morse message length %u exceeds buffer of %u, dropping",
+                          length,
+                          MORSE_MAX_LEN);
                 return;
             }
 
