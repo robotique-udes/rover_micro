@@ -2,6 +2,8 @@
 #define SCIENCE_DEVICE_HPP
 
 #include "config.hpp"
+#include <Arduino.h>
+#include <algorithm>
 
 #include "LinActuator.hpp"
 #include "ServoController.hpp"
@@ -77,11 +79,6 @@ class ScienceDevice
             return;
         }
 
-        // Serial.print("CO2: ");
-        // Serial.print(this->_sense1.getCO2());
-        // Serial.print(" \tError: ");
-        // Serial.println(this->_sense1.getErrorStatus());
-
         this->_linAct.update();
         this->_servoCtrl.update();
         if (_pbUp.isClicked())
@@ -128,13 +125,13 @@ class ScienceDevice
         {
             this->_servoCtrl.setPosition(POUR_POS_RAD, eServoType::BEAK);
         }
-        else if (this->_canWatchdog.isOk() && static_cast<eServoPos>(_beakPos) == eServoPos::HOME)
+        else if (this->_canWatchdog.isOk() && _beakPos == eServoPos::POUR)
         {
-            this->_servoCtrl.setPosition(HOME_POS_RAD, eServoType::BEAK);
+            this->_servoCtrl.setPosition(POUR_POS_RAD, eServoType::BEAK);
         }
-        else if (this->_canWatchdog.isOk() && !IN_ERROR(this->_beakPos, 0.001F, 0.0F))
+        else if (this->_canWatchdog.isOk() && _beakPos == eServoPos::DUMP)
         {
-            this->_servoCtrl.setPosition(this->_beakPos * static_cast<float>(DEG_TO_RAD), eServoType::BEAK);
+            this->_servoCtrl.setPosition(DUMP_POS_RAD, eServoType::BEAK);
         }
         else
         {
@@ -164,11 +161,10 @@ class ScienceDevice
   private:
     void CB_ScienceCmd(const RoverCan2::Msgs::ScienceCmd& msg_)
     {
-        LOG_INFO(Logger::Nodes::ScienceDevice, "Here");
         this->_canWatchdog.reset();
         this->_linActTargetSpeed = msg_.getData().lin_act_speed;
         this->_grinderOn = msg_.getData().grinder_on;
-        this->_beakPos = msg_.getData().beak_pos;
+        this->_beakPos = static_cast<eServoPos>(msg_.getData().beak_pos);
         this->_carrouselOn = msg_.getData().carrousel_on;
     }
 
@@ -186,7 +182,7 @@ class ScienceDevice
     float readMoisturePercent(int pin)
     {
         int raw = readAveraged(pin);
-        raw = constrain(raw, WET_VALUE, DRY_VALUE);
+        raw = constrain(raw, DRY_VALUE, WET_VALUE);
         return 100.0 * (DRY_VALUE - raw) / (float)(DRY_VALUE - WET_VALUE);
     }
 
@@ -209,7 +205,7 @@ class ScienceDevice
 
     float _linActTargetSpeed = 0.0F;
     bool _grinderOn = false;
-    float _beakPos = false;
+    eServoPos _beakPos = eServoPos::HOME;
     bool _carrouselOn = false;
 
     K30 _sense1 = K30(Wire, SENSOR_1_ADDRESS);
@@ -228,4 +224,4 @@ class ScienceDevice
     VALIDATE_CONCEPT(RoverObject, ScienceDevice);
 };
 
-#endif  // J34_DEVICE_HPP
+#endif  // SCIENCE_DEVICE_HPP
