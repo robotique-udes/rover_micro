@@ -182,8 +182,7 @@ class ScienceDevice
     float readMoisturePercent(int pin)
     {
         int raw = readAveraged(pin);
-        raw = constrain(raw, DRY_VALUE, WET_VALUE);
-        return 100.0 * (DRY_VALUE - raw) / (float)(DRY_VALUE - WET_VALUE);
+        return MAP<float>(raw, DRY_VALUE. WET_VALUE, 0.0f, 100.0f) ;
     }
 
     LoopTimer<uint64_t, &Time::micros> _loopTimer = {LOOP_PERIOD_US};

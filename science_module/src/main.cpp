@@ -6,7 +6,7 @@
 #include "rover_lib2/helpers/loop_timer.hpp"
 #include "rover_can2/rover_can2.hpp"
 
-DEFINE_LOG_NODE(Main, Logger::eNodeState::ON);
+DEFINE_LOG_NODE(Main, Logger::eNodeState::OFF);
 DEFINE_LOG_NODE(MainPlot, Logger::eNodeState::OFF);
 
 void setup(void)
