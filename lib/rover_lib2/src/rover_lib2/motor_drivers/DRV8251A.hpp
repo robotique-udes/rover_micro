@@ -42,7 +42,6 @@ namespace MotorDrivers
             _brakeMode(brakeMode_)
         {
             this->setReversed(_reversed);
-            this->setBrakeMode(brakeMode_);
         }
 
         void init(void)
