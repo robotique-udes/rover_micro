@@ -170,8 +170,9 @@ namespace MotorDrivers
 
         void setReversed(bool reversed_)
         {
+            const float userCmd = this->getCmd();
             _reversed = reversed_;
-            this->setCmd(this->getCmd());
+            this->setCmd(userCmd);
         }
 
         bool isReversed(void) const
