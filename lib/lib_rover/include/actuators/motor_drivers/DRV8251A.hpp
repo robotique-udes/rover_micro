@@ -1,10 +1,6 @@
 #ifndef __DRV8251A_HPP__
 #define __DRV8251A_HPP__
 
-#if !defined(ESP32)
-#error CPU is not supported
-#else
-
 #include "Arduino.h"
 #include "driver/ledc.h"
 
