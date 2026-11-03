@@ -15,6 +15,7 @@ namespace RoverCan2::Msgs
         {
             LATITUDE,
             LONGITUDE,
+            // here add altitude
             eLAST,
         };
 
@@ -23,10 +24,11 @@ namespace RoverCan2::Msgs
         {
             float latitude;
             float longitude;
+            // here add altitude
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
-            = {eMsgContentID::LATITUDE, eMsgContentID::LONGITUDE};
+            = {eMsgContentID::LATITUDE, eMsgContentID::LONGITUDE /*here add altitude*/};
 
       public:
         FixPosition():
@@ -34,6 +36,7 @@ namespace RoverCan2::Msgs
         {
             _data.latitude = static_cast<decltype(_data.latitude)>(0);
             _data.longitude = static_cast<decltype(_data.longitude)>(0);
+            // here add altitude
         }
 
         eLoadMsgCode _loadMsg(const CanMsg& msg_)
@@ -76,6 +79,8 @@ namespace RoverCan2::Msgs
                               success ? "success" : "failed");
                     break;
 
+                    // here add altitude
+
                 case eMsgContentID::eLAST:
                     [[fallthrough]];
                 default:
@@ -116,6 +121,8 @@ namespace RoverCan2::Msgs
                 case eMsgContentID::LONGITUDE:
                     Helpers::ROVER_MSG_CONTENT_TO_CAN_MSG(this->getMsgId(), msgContentId_, _data.longitude, msg_);
                     break;
+
+                    // here add altitude
 
                 case eMsgContentID::eLAST:
                     [[fallthrough]];

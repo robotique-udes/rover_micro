@@ -44,6 +44,7 @@ class CanGNSS : public RoverCan2::Device<RoverCan2::Publisher<RoverCan2::Msgs::F
     {
         _posMsg.data().latitude = newData_.latitude;
         _posMsg.data().longitude = newData_.longitude;
+        // here add altitude
 
         _headingMsg.data().headingDeg = newData_.headingDeg;
 

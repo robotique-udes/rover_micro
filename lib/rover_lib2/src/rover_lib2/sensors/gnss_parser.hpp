@@ -75,6 +75,7 @@ namespace GNSSParser
     {
         float latitude = 0.0F;
         float longitude = 0.0F;
+        // here add altitude
         Constants::eGGAQuality fixQuality = Constants::eGGAQuality::NO_FIX;
         uint8_t satellitesUsed = 0U;
     };
@@ -265,10 +266,13 @@ namespace GNSSParser
                 }
             }
 
+            // here add altitude
+
             if (problem)
             {
                 out_.latitude = 0.0F;
                 out_.longitude = 0.0F;
+                // here add altitude
                 out_.fixQuality = Constants::eGGAQuality::NO_FIX;
             }
 

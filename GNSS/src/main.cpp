@@ -34,6 +34,7 @@ void setup()
                      "Lat: %.6f, Lon: %.6f, Heading: %f deg, Fix Quality: %d, Heading Quality: %d, Satellites: %d\n",
                      data.latitude,
                      data.longitude,
+                     // here add altitude
                      data.headingDeg,
                      data.fixQuality,
                      data.headingQuality,
