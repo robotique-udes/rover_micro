@@ -76,7 +76,7 @@ void GNSSManager::parseMSG(std::array<char, MAX_SENTENCE_LENGTH>& buffer_, size_
             {
                 _currentData.latitude = GGA.latitude;
                 _currentData.longitude = GGA.longitude;
-                // here add altitude
+                _currentData.altitude = GGA.altitude;
                 _currentData.fixQuality = GGA.fixQuality;
                 _currentData.satellites = GGA.satellitesUsed;
             }
