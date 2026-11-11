@@ -269,7 +269,7 @@ namespace GNSSParser
             if (getField(rawSentence_, commaIndices, field, static_cast<size_t>(eGGAFields::MSL_ALTITUDE))
                 && getField(rawSentence_, commaIndices, secondField, static_cast<size_t>(eGGAFields::ALTITUDE_UNITS)) && !problem)
             {
-                auto altitude = 0.0F;
+                float altitude = 0.0F;
                 auto result = std::from_chars(field.data(), field.data() + std::strlen(field.data()), altitude);
                 if (result.ec != std::errc())
                 {
