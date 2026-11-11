@@ -1,9 +1,8 @@
-#ifndef FIX_POSITION_HPP
-#define FIX_POSITION_HPP
+#ifndef ROVER_CAN2_MSGS_FIX_POSITION_HPP
+#define ROVER_CAN2_MSGS_FIX_POSITION_HPP
 
 #include "rover_can2/msgs/msg.hpp"
 #include "rover_can2/helpers.hpp"
-
 
 DEFINE_LOG_NODE(FixPosition_msg, Logger::eNodeState::OFF)
 
@@ -27,9 +26,15 @@ namespace RoverCan2::Msgs
             float longitude;
             float altitude;
 
-            static_assert(sizeof(latitude) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(longitude) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
-            static_assert(sizeof(altitude) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA), "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(latitude) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                  - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(longitude) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                   - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
+            static_assert(sizeof(altitude) <= RoverCan2::Constant::CAN_MAX_DATA_LENGTH
+                                                  - TO_UNDERLYING(RoverCan2::Constant::eDataIndex::START_OF_DATA),
+                          "Can messages cannot include field longer than 6 bytes");
         };
 
         static constexpr CompileTimeArray<eMsgContentID, TO_UNDERLYING(eMsgContentID::eLAST)> VALID_MSG_IDS
@@ -164,4 +169,4 @@ namespace RoverCan2::Msgs
 
 }  // namespace RoverCan2::Msgs
 
-#endif  // FIX_POSITION_HPP
+#endif  // ROVER_CAN2_MSGS_FIX_POSITION_HPP
