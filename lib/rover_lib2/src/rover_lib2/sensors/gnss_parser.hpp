@@ -276,7 +276,7 @@ namespace GNSSParser
                     LOG_WARN(Logger::Nodes::GNSS_PARSER, "Failed to parse the altitude");
                     problem = true;
                 }
-                else if (secondField != 'M')
+                else if (secondField[0] != 'M')
                 {
                     LOG_WARN(Logger::Nodes::GNSS_PARSER, "Wrong altitude units parsed");
                     problem = true;
