@@ -11,6 +11,7 @@ struct sGNSSData
 {
     float latitude = 0.0F;
     float longitude = 0.0F;
+    float altitude = 0.0F;
     Constants::eGGAQuality fixQuality = Constants::eGGAQuality::NO_FIX;
     uint8_t satellites = 0U;
     float headingDeg = 0.0F;

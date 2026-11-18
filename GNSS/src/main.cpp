@@ -31,9 +31,10 @@ void setup()
         if (data.hasValidFix())
         {
             LOG_INFO(Logger::Nodes::Main,
-                     "Lat: %.6f, Lon: %.6f, Heading: %f deg, Fix Quality: %d, Heading Quality: %d, Satellites: %d\n",
+                     "Lat: %.6f, Lon: %.6f, Alt: %.6f, Heading: %f deg, Fix Quality: %d, Heading Quality: %d, Satellites: %d\n",
                      data.latitude,
                      data.longitude,
+                     data.altitude,
                      data.headingDeg,
                      data.fixQuality,
                      data.headingQuality,
