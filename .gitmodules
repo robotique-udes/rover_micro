@@ -1,0 +1,4 @@
+[submodule "lib/rover_lib"]
+	path = lib/rover_lib
+	url = git@github.com:robotique-udes/rover_lib.git
+	branch = dev/ES_initial_setup
