@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
 
       - name: Lint header guards
         run: |
@@ -40,8 +40,6 @@ jobs:
           
           script_cmd="python3 $script_path \
             --fix \
-            lib/rover_lib2/src/rover_lib2 \
-            lib/rover_can2/src/rover_can2 \
             camera_servo_controller/include:'' \
             camera_servo_controller/src:'' \
             compass/include:'' \
